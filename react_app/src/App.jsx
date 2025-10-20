@@ -5,7 +5,7 @@ export default function App() {
   return (
     <div className="app">
       <header>
-      <Header />
+        <Header />
       </header>
       <main className="main-content">
         <Main />
