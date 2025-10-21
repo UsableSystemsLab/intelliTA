@@ -1,4 +1,4 @@
-import { auth } from '../firebase';
+import { auth } from '../components/firebase';
 
 const Home = ({ user }) => {
   return (
@@ -32,7 +32,7 @@ const Home = ({ user }) => {
       ) : (
         <div>
           <p style={{ fontSize: '1.2rem', marginBottom: '20px' }}>
-            Please <a href="/auth" style={{ color: '#6366f1', fontWeight: '600' }}>login</a> to continue.
+            Please <a href="/login" style={{ color: '#6366f1', fontWeight: '600' }}>login</a> to continue.
           </p>
         </div>
       )}

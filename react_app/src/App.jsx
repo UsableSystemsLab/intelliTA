@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { onAuthStateChanged } from 'firebase/auth'
-import { auth } from './firebase'
-import Auth from './pages/Auth.jsx'
+import { auth } from './components/firebase.js'
+import Login from './pages/Login.jsx'
+import SignUp from './pages/SignUp.jsx'
 import Home from './pages/Home.jsx'
 import './App.css'
 
@@ -31,7 +32,8 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home user={user} />} />
-        <Route path="/auth" element={!user ? <Auth /> : <Navigate to="/" />} />
+        <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+        <Route path="/signup" element={!user ? <SignUp /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   )
