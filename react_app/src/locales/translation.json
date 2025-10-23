@@ -1,0 +1,36 @@
+{
+  "ar": {
+    "login": "تسجيل الدخول",
+    "or": "أو",
+    "email": "البريد الالكتروني",
+    "password": "كلمة المرور",
+    "forget": "نسيت كلمة المرور؟",
+    "enterEmail": "ادخل البريد الالكتروني",
+    "enterPass": "ادخل كلمة المرور",
+    "confirmPass": "تأكيد كلمة المرور",
+    "noAccount": "ليس لديك حساب؟",
+    "signUp": "تسجيل",
+    "create": "أنشئ حساب",
+    "fName": "الاسم الأول",
+    "lName": "الاسم الأخير",
+    "welcomeMsg": ".غيّر طريقة تعلمك للبرمجة"
+  },
+
+  
+  "en": {
+    "login": "Login",
+    "or": "OR",
+    "email": "Email",
+    "password": "Password",
+    "forget": "Forgot?",
+    "enterEmail": "Enter your email",
+    "enterPass": "Enter your password",
+    "confirmPass": "Confirm password",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign Up",
+    "create": "Create Account",
+    "fName": "First Name",
+    "lName": "Last Name",
+    "welcomeMsg": "Transform how you learn to code."
+  }
+}
