@@ -1,59 +1,13 @@
-import InstantFeedback from "../assets/InstantFeedback.jpg";
-import leaderboard from "../assets/Leaderboard.jpg";
-import CourseLabMaker from "../assets/CourseLabMaker.jpg";
-import JavaCode from "../assets/JavaCode.png";
-import CPCS_203 from "../assets/CPCS-203.jpeg";
-import CPCS_204 from "../assets/CPCS-204.jpg";
-import React_Php from "../assets/React-Php.png";
-import LogoLoop from "../components/lib/LogoLoop";
-import {
-  SiReact,
-  SiTailwindcss,
-  SiPython,
-  //SiJava,
-  SiHtml5,
-  SiCss3,
-  SiJavascript,
-  SiPhp,
-} from "react-icons/si";
-const techLogos = [
-  {
-    node: <SiReact color="#61DAFB" />,
-    title: "React",
-    href: "https://react.dev",
-  },
-  {
-    node: <SiTailwindcss color="#06B6D4" />,
-    title: "Tailwind CSS",
-    href: "https://tailwindcss.com",
-  },
-  {
-    node: <SiPython color="#3776AB" />,
-    title: "Python",
-    href: "https://www.python.org",
-  },
-  {
-    node: <SiHtml5 color="#E34F26" />,
-    title: "HTML5",
-    href: "https://developer.mozilla.org/docs/Web/HTML",
-  },
-  {
-    node: <SiCss3 color="#1572B6" />,
-    title: "CSS3",
-    href: "https://developer.mozilla.org/docs/Web/CSS",
-  },
-  {
-    node: <SiJavascript color="#F7DF1E" />,
-    title: "JavaScript",
-    href: "https://developer.mozilla.org/docs/Web/JavaScript",
-  },
-  {
-    node: <SiPhp color="#777BB4" />,
-    title: "PHP",
-    href: "https://www.php.net",
-  },
-  // { node:  <SiJava color="#007396" />, title: "Java", href: "https://www.java.com"}
-];
+import InstantFeedback from "@/assets/InstantFeedback.jpg";
+import leaderboard from "@/assets/Leaderboard.jpg";
+import CourseLabMaker from "@/assets/CourseLabMaker.jpg";
+import JavaCode from "@/assets/JavaCode.png";
+import CPCS_203 from "@/assets/CPCS-203.jpeg";
+import CPCS_204 from "@/assets/CPCS-204.jpg";
+import React_Php from "@/assets/React-Php.png";
+import LogoLoop from "@/components/lib/LogoLoop";
+import { imageLogos } from "@/utils/imageLogos";
+
 export default function HomeMain() {
   return (
     <>
@@ -204,7 +158,7 @@ export default function HomeMain() {
               </h5>
 
               <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
-                Learn through fun lab activites. Compete on the leaderboard,
+                Learn through fun lab activities. Compete on the leaderboard,
                 earn points for progress, and stay motivated as you climb your
                 way to the top.
               </p>
@@ -450,12 +404,12 @@ export default function HomeMain() {
         {/* Main content */}
         <div className="text-center">
           <h2 className="text-4xl font-semibold tracking-tight text-white mb-12 animate-bounce">
-            Supported Programming Languages
+            Supported Programming Languages !
           </h2>
 
           <LogoLoop
             className="loop-logos"
-            logos={techLogos}
+            logos={imageLogos}
             speed={120}
             direction="left"
             logoHeight={48}
