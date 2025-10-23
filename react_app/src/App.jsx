@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { onAuthStateChanged } from 'firebase/auth'
-import { auth } from './components/firebase.js'
+import { auth } from './utils/firebase.js'
 import Login from './pages/Login.jsx'
 import SignUp from './pages/SignUp.jsx'
 import Home from './pages/Home.jsx'
-import './App.css'
+import './styles/App.css'
 
 function App() {
   const [user, setUser] = useState(null)

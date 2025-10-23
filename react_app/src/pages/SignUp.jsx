@@ -5,8 +5,8 @@ import {
   signInWithPopup,
   GoogleAuthProvider
 } from 'firebase/auth';
-import { auth } from '../components/firebase';
-import './styles/SignUp.css';
+import { auth } from '../utils/firebase';
+import '../styles/SignUp.css';
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState('');
@@ -86,7 +86,7 @@ const SignUp = () => {
       </div>
 
       <div className="signup-card">
-        <h2 className="signup-title">Create Your Account</h2>
+        <h2 className="signup-title">Create Account</h2>
 
         <button
           type="button"
@@ -140,7 +140,7 @@ const SignUp = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="bobannie@gmail.com"
+              placeholder="Enter Your Email"
               required
             />
           </div>
@@ -179,14 +179,14 @@ const SignUp = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="confirmPassword">Re-Type Your Password</label>
+            <label htmlFor="confirmPassword">Confirm Password</label>
             <div className="password-input-wrapper">
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Enter your password"
+                placeholder="Confirm your password"
                 required
                 minLength="6"
               />
@@ -214,7 +214,7 @@ const SignUp = () => {
           {error && <div className="error-message">{error}</div>}
 
           <button type="submit" className="signup-button" disabled={loading}>
-            {loading ? 'Loading...' : 'Create Your Account'}
+            {loading ? 'Loading...' : 'Create Account'}
           </button>
         </form>
 

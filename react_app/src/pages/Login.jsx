@@ -5,8 +5,8 @@ import {
   signInWithPopup,
   GoogleAuthProvider
 } from 'firebase/auth';
-import { auth } from '../components/firebase';
-import './styles/login.css';
+import { auth } from '../utils/firebase';
+import '../styles/login.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -77,7 +77,7 @@ const Login = () => {
       </div>
 
       <div className="login-card">
-        <h2 className="login-title">Login To Your Account</h2>
+        <h2 className="login-title">Login</h2>
 
         <button
           type="button"
@@ -106,7 +106,7 @@ const Login = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="bobannie@gmail.com"
+              placeholder="Enter Your Email"
               required
             />
           </div>
@@ -114,9 +114,7 @@ const Login = () => {
           <div className="form-group">
             <div className="password-header">
               <label htmlFor="password">Password</label>
-              <Link to="/forgot-password" className="forgot-link">
-                Forget ?
-              </Link>
+            
             </div>
             <div className="password-input-wrapper">
               <input
@@ -147,6 +145,9 @@ const Login = () => {
                 )}
               </button>
             </div>
+            <Link to="/forgot-password" className="forgot-link">
+                Forgot ?
+              </Link>
           </div>
 
           {error && <div className="error-message">{error}</div>}
