@@ -12,7 +12,7 @@ export default function HomeMain() {
   return (
     <>
       {/* HERO SECTION */}
-      <div className="isolate px-6 pt-14 lg:px-8 overflow-hidden">
+      <div className="isolate px-6 pt-0 lg:px-8 overflow-hidden">
         {" "}
         <div
           aria-hidden="true"
