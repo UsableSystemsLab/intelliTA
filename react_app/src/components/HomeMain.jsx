@@ -89,7 +89,9 @@ export default function HomeMain() {
 
       {/* CARD SECTION */}
       {/* Ask if we maybe need to change Background color */}
-      <section className="py-20 bg-gray-900 text-white">
+      <section className="relative z-10 py-20 bg-gray-900 text-white">
+    
+        {" "}
         <div className="text-center mb-12">
           <h2 className="text-5xl font-semibold tracking-tight">
             Core features
@@ -98,7 +100,6 @@ export default function HomeMain() {
             IntelliTA core features that makes it unique!
           </p>
         </div>
-
         <div className="flex flex-wrap justify-center gap-8 px-6">
           {/* CARD 1 */}
           <div className="max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
