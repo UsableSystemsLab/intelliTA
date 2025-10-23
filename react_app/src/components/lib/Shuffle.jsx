@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText as GSAPSplitText } from 'gsap/SplitText';
 import { useGSAP } from '@gsap/react';
 import './Shuffle.css';
+import PropTypes from 'prop-types';
 
 gsap.registerPlugin(ScrollTrigger, GSAPSplitText, useGSAP);
 
@@ -31,6 +32,7 @@ const Shuffle = ({
   triggerOnce = true,
   respectReducedMotion = true,
   triggerOnHover = true
+  
 }) => {
   const ref = useRef(null);
   const [fontsLoaded, setFontsLoaded] = useState(false);
@@ -337,6 +339,31 @@ const Shuffle = ({
   const classes = `shuffle-parent ${ready ? 'is-ready' : ''} ${className}`;
   const Tag = tag || 'p';
   return React.createElement(Tag, { ref, className: classes, style: commonStyle }, text);
+};
+Shuffle.propTypes = {
+  text: PropTypes.string.isRequired,
+  className: PropTypes.string,
+  style: PropTypes.object,
+  shuffleDirection: PropTypes.oneOf(['left', 'right', 'up', 'down']),
+  duration: PropTypes.number,
+  maxDelay: PropTypes.number,
+  ease: PropTypes.string,
+  threshold: PropTypes.number,
+  rootMargin: PropTypes.string,
+  tag: PropTypes.string,
+  textAlign: PropTypes.string,
+  onShuffleComplete: PropTypes.func,
+  shuffleTimes: PropTypes.number,
+  animationMode: PropTypes.oneOf(['evenodd', 'random']),
+  loop: PropTypes.bool,
+  loopDelay: PropTypes.number,
+  stagger: PropTypes.number,
+  scrambleCharset: PropTypes.string,
+  colorFrom: PropTypes.string,
+  colorTo: PropTypes.string,
+  triggerOnce: PropTypes.bool,
+  respectReducedMotion: PropTypes.bool,
+  triggerOnHover: PropTypes.bool,
 };
 
 export default Shuffle;
