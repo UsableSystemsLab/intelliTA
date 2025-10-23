@@ -1,7 +1,6 @@
 import python from "@/assets/logos/python.svg";
 import js from "@/assets/logos/js.svg";
 import react from "@/assets/logos/react.svg";
-import tailwind from "@/assets/logos/tailwind.svg";
 import java from "@/assets/logos/java.svg";
 import html from "@/assets/logos/html.svg";
 import css from "@/assets/logos/css.svg";
@@ -14,11 +13,6 @@ export const imageLogos = [
     src: react,
     title: "React",
     href: "https://react.dev",
-  },
-  {
-    src: tailwind,
-    title: "Tailwind CSS",
-    href: "https://tailwindcss.com",
   },
   {
     src: python,
@@ -48,6 +42,6 @@ export const imageLogos = [
   {
     src: java,
     title: "Java",
-    href: "https://www.php.net",
+    href: "https://www.java.com",
   },
 ];

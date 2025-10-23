@@ -2,7 +2,7 @@ import Shuffle from "@/components/lib/Shuffle";
 export default function Nav() {
   return (
     <>
-      <header className="absolute inset-x-0 top-0 z-50">
+      <header className="sticky top-0 z-50 bg-black/50 backdrop-blur-lg">
         <nav
           aria-label="Global"
           className="flex items-center justify-between p-6 lg:px-8"
