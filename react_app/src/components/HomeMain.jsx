@@ -1,12 +1,12 @@
 import InstantFeedback from "@/assets/InstantFeedback.jpg";
 import leaderboard from "@/assets/Leaderboard.jpg";
 import CourseLabMaker from "@/assets/CourseLabMaker.jpg";
-import JavaCode from "@/assets/JavaCode.png";
 import CPCS_203 from "@/assets/CPCS-203.jpeg";
 import CPCS_204 from "@/assets/CPCS-204.jpg";
 import React_Php from "@/assets/React-Php.png";
 import LogoLoop from "@/components/lib/LogoLoop";
 import { imageLogos } from "@/utils/imageLogos";
+import CodeFrame from "@/components/CodeFrame";
 
 export default function HomeMain() {
   return (
@@ -36,13 +36,14 @@ export default function HomeMain() {
             </h1>
             <p className="mt-8 text-pretty text-lg font-medium text-gray-400 sm:text-xl/8">
               A platform that transforms traditional programming labs into
-              AI-powered interactive learning experiences!
+              AI-powered interactive learning experiences !
             </p>
             <br />
 
-            <div className="">
-              <img src={JavaCode} alt="Java code terminal page" />
+            <div >
+              <CodeFrame />
             </div>
+
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <a
                 href="#"
@@ -94,7 +95,7 @@ export default function HomeMain() {
             Core features
           </h2>
           <p className="mt-8 text-pretty text-lg text-gray-400">
-            IntelliTA core features that makes it unique!
+            IntelliTA core features that makes it unique !
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-8 px-6">
@@ -233,7 +234,7 @@ export default function HomeMain() {
         <div className="text-center mb-12">
           <h2 className="text-5xl font-semibold tracking-tight">Courses</h2>
           <p className="mt-8 text-pretty text-lg text-gray-400">
-            Courses that IntelliTA supports!
+            Courses that IntelliTA supports !
           </p>
         </div>
 
@@ -378,7 +379,7 @@ export default function HomeMain() {
             className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
                after:bg-white hover:after:w-full after:transition-all after:duration-300"
           >
-            See all courses
+            See all
           </span>
           <span aria-hidden="true" className="ml-2">
             →

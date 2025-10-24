@@ -84,24 +84,15 @@ export default function Nav() {
           <div className="hidden lg:flex lg:flex-1 lg:justify-end gap-6.5">
             <button
               type="button"
-              className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium 
-text-gray-900 bg-white border border-gray-300 rounded-lg 
-transition-all duration-300 ease-in-out 
-hover:bg-gray-200 hover:border-gray-400 
-focus:outline-none focus:ring-2 focus:ring-gray-300 
-dark:text-white dark:bg-gray-800 dark:border-gray-600 
-dark:hover:bg-gray-700 dark:hover:border-gray-500"
+              className="inline-flex items-center justify-center px-3 py-0 text-sm font-medium 
+                          text-gray-900 bg-white border border-gray-300 rounded-lg 
+                          transition-all duration-300 ease-in-out 
+                          hover:bg-gray-200 hover:border-gray-400 
+                          focus:outline-none focus:ring-2 focus:ring-gray-300 
+                          dark:text-white dark:bg-gray-800 dark:border-gray-600 
+                          dark:hover:bg-gray-700 dark:hover:border-gray-500 hover:cursor-pointer"
             >
-              <svg
-                className="w-5 h-5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                viewBox="0 0 16 16"
-              >
-                <path d="M4.545 6.714L4.11 8H3l1.862-5h1.284L8 8H6.833l-.435-1.286zm1.634-.736L5.5 3.956h-.049l-.679 2.022z" />
-                <path d="M0 2a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v3h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1zm7.138 9.995q.289.451.63.846c-.748.575-1.673 1.001-2.768 1.292.178.217.451.635.555.867 1.125-.359 2.08-.844 2.886-1.494.777.665 1.739 1.165 2.93 1.472.133-.254.414-.673.629-.89-1.125-.253-2.057-.694-2.82-1.284.681-.747 1.222-1.651 1.621-2.757H14V8h-3v1.047h.765c-.318.844-.74 1.546-1.272 2.13a6 6 0 0 1-.415-.492 2 2 0 0 1-.94.31z" />
-              </svg>
+              <p>عربي</p>
 
               <span className="sr-only">Icon description</span>
             </button>
@@ -113,7 +104,7 @@ dark:hover:bg-gray-700 dark:hover:border-gray-500"
                 className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
                after:bg-white hover:after:w-full after:transition-all after:duration-300"
               >
-                Log in{" "}
+                Login{" "}
               </span>{" "}
               <span aria-hidden="true">&rarr;</span>
             </a>
