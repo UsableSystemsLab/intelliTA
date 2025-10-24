@@ -40,7 +40,7 @@ export default function HomeMain() {
             </p>
             <br />
 
-            <div >
+            <div>
               <CodeFrame />
             </div>
 
@@ -371,20 +371,22 @@ export default function HomeMain() {
             </div>
           </div>
         </div>
-        <a
-          href="#"
-          className="flex justify-center pt-10.5 text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300"
-        >
-          <span
-            className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
-               after:bg-white hover:after:w-full after:transition-all after:duration-300"
+        <div className="flex justify-center">
+          <a
+            href="#"
+            className="inline-flex items-center pt-10.5 text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300"
           >
-            See all
-          </span>
-          <span aria-hidden="true" className="ml-2">
-            →
-          </span>
-        </a>
+            <span
+              className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
+         after:bg-white hover:after:w-full after:transition-all after:duration-300"
+            >
+              See all
+            </span>
+            <span aria-hidden="true" className="ml-2">
+              →
+            </span>
+          </a>
+        </div>
       </section>
       <section className="relative isolate px-6 py-30 lg:px-8 overflow-hidden bg-gray-900">
         {/* Top gradient background */}
