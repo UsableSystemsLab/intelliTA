@@ -87,6 +87,9 @@ services:
   react_app:
     environment:
       - REACT_APP_PORT=${REACT_APP_PORT}
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - WATCHPACK_POLLING_INTERVAL=1000
     build:
       context: react_app
       dockerfile: Dockerfile
