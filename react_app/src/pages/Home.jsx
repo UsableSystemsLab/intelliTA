@@ -1,4 +1,4 @@
-import { auth } from '../utils/firebase';
+import { auth } from '@/utils/firebase';
 
 const Home = ({ user }) => {
   return (

@@ -5,7 +5,8 @@ import {
   signInWithPopup,
   GoogleAuthProvider
 } from 'firebase/auth';
-import { auth } from '../utils/firebase';
+import { auth } from '@/utils/firebase';
+import logo from "@/assets/IntelliTA.svg";
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -100,9 +101,9 @@ const Login = () => {
         className="fixed top-8 right-8 flex items-center gap-2 h-10 no-underline z-10"
       >
         <img 
-          src="/logo.png" 
+          src={logo} 
           alt="IntelliTA Logo" 
-          className="w-24 h-24 object-contain"
+          className="w-20 h-20 object-contain"
         />
         <h1 className="text-2xl font-bold text-white tracking-tight italic leading-none">
           IntelliTA
@@ -135,7 +136,7 @@ const Login = () => {
           {/* Divider */}
           <div className="flex items-center gap-3 my-6 text-center">
             <div className="flex-1 h-px bg-gray-600/50"></div>
-            <span className="text-gray-400 text-sm flex-shrink-0">Or</span>
+            <span className="text-gray-400 text-sm flex-shrink-0">OR</span>
             <div className="flex-1 h-px bg-gray-600/50"></div>
           </div>
 
