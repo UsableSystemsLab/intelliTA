@@ -1,11 +1,11 @@
 import HomeMain from '@/components/HomeMain';
 import HomeFooter from '@/components/HomeFooter';
 import Nav from '@/components/Nav';
-export default function Home (){
+export default function Home({ user }) {
 
     return(  
         <>
-         <Nav />
+         <Nav user={ user } />
         <HomeMain />
         <HomeFooter />
         </>

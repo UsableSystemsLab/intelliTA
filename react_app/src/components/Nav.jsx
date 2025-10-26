@@ -1,5 +1,35 @@
 import Shuffle from "@/components/lib/Shuffle";
-export default function Nav() {
+import { Link } from "react-router-dom";
+import { signOut } from "firebase/auth";
+import { auth } from "@/utils/firebase";
+import { useState } from "react";
+
+export default function Nav({ user }) {
+
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const getUserInitials = () => {
+    if (user?.displayName) {
+      const names = user.displayName.split(" ");
+      if (names.length >= 2) {
+        return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+      }
+      return names[0].substring(0, 2).toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.substring(0, 2).toUpperCase();
+    }
+    return "U";
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setShowDropdown(false);
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
   return (
     <>
       <header className="sticky top-0 z-50 bg-black/50 backdrop-blur-lg">
@@ -96,18 +126,87 @@ export default function Nav() {
 
               <span className="sr-only">Icon description</span>
             </button>
-            <a
-              href="#"
-              className="relative text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300"
-            >
-              <span
-                className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
-               after:bg-white hover:after:w-full after:transition-all after:duration-300"
+            {user ? (
+              <div className="relative">
+                {/* Avatar Button */}
+                <button
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className="relative inline-flex items-center justify-center w-10 h-10 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600 cursor-pointer hover:ring-2 hover:ring-white transition-all"
+                >
+                  {user.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt="User profile"
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <span className="font-medium text-gray-600 dark:text-gray-300">
+                      {getUserInitials()}
+                    </span>
+                  )}
+                </button>
+
+                {/* Dropdown menu */}
+                {showDropdown && (
+                  <div className="absolute right-0 mt-2 z-10 bg-gray-900 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600">
+                    <div className="px-4 py-3 text-sm text-gray-100 dark:text-white">
+                      <div>{user.displayName || "User"}</div>
+                      <div className="font-medium truncate">{user.email}</div>
+                    </div>
+                    <ul className="py-2 text-sm text-gray-100 dark:text-gray-200">
+                      <li>
+                        <Link
+                          to="/dashboard"
+                          className="block px-4 py-2 hover:bg-gray-700 dark:hover:bg-gray-600 dark:hover:text-white"
+                          onClick={() => setShowDropdown(false)}
+                        >
+                          Dashboard
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/settings"
+                          className="block px-4 py-2 hover:bg-gray-700 dark:hover:bg-gray-600 dark:hover:text-white"
+                          onClick={() => setShowDropdown(false)}
+                        >
+                          Settings
+                        </Link>
+                      </li>
+                      <li>
+                        <Link
+                          to="/earnings"
+                          className="block px-4 py-2 hover:bg-gray-700 dark:hover:bg-gray-600 dark:hover:text-white"
+                          onClick={() => setShowDropdown(false)}
+                        >
+                          Earnings
+                        </Link>
+                      </li>
+                    </ul>
+                    <div className="py-1">
+                      <button
+                        onClick={handleLogout}
+                        className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-gray-100 hover:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                className="relative text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300"
               >
-                Login{" "}
-              </span>{" "}
-              <span aria-hidden="true">&rarr;</span>
-            </a>
+                <span
+                  className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
+     after:bg-white hover:after:w-full after:transition-all after:duration-300"
+                >
+                  Login{" "}
+                </span>{" "}
+                <span aria-hidden="true">&rarr;</span>
+              </Link>
+            )}
           </div>
         </nav>
       </header>
