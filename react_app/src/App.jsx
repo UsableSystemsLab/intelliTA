@@ -7,7 +7,7 @@ import SignUp from './pages/SignUp.jsx'
 import Home from './pages/Home.jsx'
 import './styles/App.css'
 
-function App() {
+ function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -38,3 +38,5 @@ function App() {
     </Router>
   )
 }
+
+export default App
