@@ -12,14 +12,12 @@ export default function Nav({ user }) {
     if (user?.displayName) {
       const names = user.displayName.split(" ");
       if (names.length >= 2) {
-        return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+        return `${names[0].charAt(0).toUpperCase() + names[0].slice(1).toLowerCase()} ${names[names.length - 1].charAt(0).toUpperCase() + names[names.length - 1].slice(1).toLowerCase()}`;
       }
-      return names[0].substring(0, 2).toUpperCase();
+      return names[0].charAt(0).toUpperCase() + names[0].slice(1).toLowerCase();
     }
-    if (user?.email) {
-      return user.email.substring(0, 2).toUpperCase();
-    }
-    return "U";
+    
+    return "No user name found";
   };
 
   const handleLogout = async () => {
@@ -137,11 +135,12 @@ export default function Nav({ user }) {
                     <img
                       src={user.photoURL}
                       alt="User profile"
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover rounded-full"
                     />
                   ) : (
                     <span className="font-medium text-gray-600 dark:text-gray-300">
-                      {getUserInitials()}
+                      
                     </span>
                   )}
                 </button>
@@ -150,8 +149,8 @@ export default function Nav({ user }) {
                 {showDropdown && (
                   <div className="absolute right-0 mt-2 z-10 bg-gray-900 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600">
                     <div className="px-4 py-3 text-sm text-gray-100 dark:text-white">
-                      <div>{user.displayName || "User"}</div>
-                      <div className="font-medium truncate">{user.email}</div>
+                      <div>{getUserInitials() || "User"}</div>
+                      
                     </div>
                     <ul className="py-2 text-sm text-gray-100 dark:text-gray-200">
                       <li>
