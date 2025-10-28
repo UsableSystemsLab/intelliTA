@@ -227,7 +227,7 @@ const Login = () => {
         </div>
       </div>
 
-      <style jsx>{`
+      <style >{`
         @keyframes blob1 {
           0%, 100% {
             transform: translateX(-50%) rotate(30deg) scale(1);
