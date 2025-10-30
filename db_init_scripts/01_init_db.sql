@@ -1,8 +1,12 @@
--- Create User table
-CREATE TABLE IF NOT EXISTS public."User" (
-    id CHARACTER VARYING(255),
-    user_name CHARACTER VARYING(255) NOT NULL,
-    first_name CHARACTER VARYING(120),
-    last_name CHARACTER VARYING(120),
-    CONSTRAINT "User_pkey" PRIMARY KEY (id)
+-- Create Tables
+
+-- USERS Table
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  fName VARCHAR(15) NOT NULL,
+  lName VARCHAR(15) NOT NULL,
+  email VARCHAR(50) UNIQUE NOT NULL,
+  role VARCHAR(10) CHECK (role IN ('student', 'instructor', 'admin')) DEFAULT 'student',
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
 );
