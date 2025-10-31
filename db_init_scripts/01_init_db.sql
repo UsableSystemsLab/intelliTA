@@ -10,3 +10,12 @@ CREATE TABLE users (
   password_hash TEXT NOT NULL,
   created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- COURSES
+CREATE TABLE courses (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(50) NOT NULL,
+  description TEXT,
+  instructor_id INT REFERENCES users(id),
+);
+
