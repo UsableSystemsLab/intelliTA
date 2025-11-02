@@ -28,8 +28,7 @@ CREATE TABLE users (
   lName VARCHAR(15) NOT NULL,
   email VARCHAR(50) UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW(),
-  points INT DEFAULT 0
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- STUDENTS Table (Sub)
@@ -37,15 +36,15 @@ CREATE TABLE students (
   user_id INT UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
   student_id SERIAL PRIMARY KEY,
   enrollment_date DATE DEFAULT CURRENT_DATE,
-  major VARCHAR(50)
+  level VARCHAR(50),
+  points INT DEFAULT 0
 );
 
 -- INSTRUCTORS Table (Sub)
 CREATE TABLE instructors (
   user_id INT UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
   instructor_id SERIAL PRIMARY KEY,
-  department VARCHAR(50),
-  hire_date DATE DEFAULT CURRENT_DATE
+  department VARCHAR(50)
 );
 
 -- ADMINS Table (Sub)
