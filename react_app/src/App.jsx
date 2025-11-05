@@ -1,31 +1,42 @@
-import { useState } from 'react'
-import reactLogo from '@/assets/react.svg'
-import viteLogo from '/vite.svg'
-import '@/styles/App.css'
+import { useState, useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from '@/utils/firebase.js'
+import Login from './pages/Login.jsx'
+import SignUp from './pages/SignUp.jsx'
+import Home from './pages/Home.jsx'
+import '@/styles/styles/App.css'
 import { useTranslation } from 'react-i18next';
 
-function App() {
-  const {t, i18n} = useTranslation();
+ function App() {
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  function changeLanguage() {
-    i18n.changeLanguage(i18n.language=="ar"?"en":"ar");
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser)
+      setLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [])
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <h2>Loading...</h2>
+      </div>
+    )
   }
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>React + Vite</h1>
-      <p className=''>{t("welcomeMsg")}</p>
-      <button onClick={changeLanguage}>{i18n.language=="ar"?"English":"عربي"}</button>
-
-    </>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home user={user} />} />
+        <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+        <Route path="/signup" element={!user ? <SignUp /> : <Navigate to="/" />} />
+      </Routes>
+    </Router>
   )
 }
 
