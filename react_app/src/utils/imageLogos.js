@@ -1,46 +1,37 @@
-import python from "@/assets/logos/python.svg";
-import js from "@/assets/logos/js.svg";
-import react from "@/assets/logos/react.svg";
-import java from "@/assets/logos/java.svg";
-import html from "@/assets/logos/html.svg";
-import css from "@/assets/logos/css.svg";
-import php from "@/assets/logos/php.svg";
-
-
 
 export const imageLogos = [
   {
-    src: react,
+    src: "https://intellita-media-storage.s3.us-east-1.amazonaws.com/logos/react.svg",
     title: "React",
     href: "https://react.dev",
   },
   {
-    src: python,
+    src: "https://intellita-media-storage.s3.us-east-1.amazonaws.com/logos/python.svg",
     title: "Python",
     href: "https://www.python.org",
   },
   {
-    src: html,
+    src: "https://intellita-media-storage.s3.us-east-1.amazonaws.com/logos/html.svg",
     title: "HTML5",
     href: "https://developer.mozilla.org/docs/Web/HTML",
   },
   {
-    src: css,
+    src: "https://intellita-media-storage.s3.us-east-1.amazonaws.com/logos/css.svg",
     title: "CSS3",
     href: "https://developer.mozilla.org/docs/Web/CSS",
   },
   {
-    src: js,
+    src: "https://intellita-media-storage.s3.us-east-1.amazonaws.com/logos/js.svg",
     title: "JavaScript",
     href: "https://developer.mozilla.org/docs/Web/JavaScript",
   },
   {
-    src: php,
+    src: "https://intellita-media-storage.s3.us-east-1.amazonaws.com/logos/php.svg",
     title: "PHP",
     href: "https://www.php.net",
   },
   {
-    src: java,
+    src: "https://intellita-media-storage.s3.us-east-1.amazonaws.com/logos/java.svg",
     title: "Java",
     href: "https://www.java.com",
   },

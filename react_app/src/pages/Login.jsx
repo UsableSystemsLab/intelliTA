@@ -6,26 +6,29 @@ import {
   GoogleAuthProvider
 } from 'firebase/auth';
 import { auth } from '@/utils/firebase';
-import logo from "@/assets/IntelliTA.svg";
+import { useTranslation } from "react-i18next";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === "ar";
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const getErrorMessage = (errorCode) => {
     switch (errorCode) {
-      case 'auth/invalid-credential':
-      case 'auth/user-not-found':
+      case "auth/invalid-credential":
+      case "auth/user-not-found":
         return "Account not found. Please sign up first.";
-      case 'auth/wrong-password':
+      case "auth/wrong-password":
         return "Incorrect password. Please try again.";
-      case 'auth/invalid-email':
+      case "auth/invalid-email":
         return "Please enter a valid email address.";
-      case 'auth/network-request-failed':
+      case "auth/network-request-failed":
         return "Network error. Please check your connection.";
       default:
         return "An error occurred. Please try again.";
@@ -34,14 +37,14 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate('/');
+      navigate("/");
     } catch (err) {
-      console.error('Login error:', err);
+      console.error("Login error:", err);
       setError(getErrorMessage(err.code));
     } finally {
       setLoading(false);
@@ -49,17 +52,17 @@ const Login = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    setError('');
+    setError("");
     setLoading(true);
     const provider = new GoogleAuthProvider();
 
     try {
       await signInWithPopup(auth, provider);
-      navigate('/');
+      navigate("/");
     } catch (err) {
-      console.error('Google sign in error:', err);
-      if (err.code === 'auth/popup-closed-by-user') {
-        setError('Sign in cancelled.');
+      console.error("Google sign in error:", err);
+      if (err.code === "auth/popup-closed-by-user") {
+        setError(t("cancelled"));
       } else {
         setError(getErrorMessage(err.code));
       }
@@ -72,37 +75,37 @@ const Login = () => {
     <div className="fixed inset-0 w-screen h-screen bg-gradient-to-br from-gray-900 to-gray-900 flex items-center justify-center p-4 sm:p-8 overflow-hidden">
       {/* Animated gradient blob 1 */}
       <div className="absolute left-[calc(50%-11rem)] top-[10%] w-[36.125rem] aspect-[1155/678] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 rounded-full blur-[80px] animate-blob1" />
-      
+
       {/* Animated gradient blob 2 */}
       <div className="absolute right-[calc(50%-11rem)] bottom-[10%] w-[36.125rem] aspect-[1155/678] translate-x-1/2 -rotate-[30deg] bg-gradient-to-bl from-[#9089fc] to-[#ff80b5] opacity-30 rounded-full blur-[80px] animate-blob2" />
 
       {/* Back button to home */}
-      <Link 
-        to="/" 
+      <Link
+        to="/"
         className="fixed top-8 left-8 flex items-center justify-center w-10 h-10 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white cursor-pointer transition-all duration-200 hover:bg-gray-700 hover:-translate-x-0.5 z-10"
       >
-        <svg 
-          width="20" 
-          height="20" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
           strokeWidth="2"
-          strokeLinecap="round" 
+          strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
+          <path d="M19 12H5M12 19l-7-7 7-7" />
         </svg>
       </Link>
 
       {/* Logo on the right */}
-      <Link 
-        to="/" 
+      <Link
+        to="/"
         className="fixed top-8 right-8 flex items-center gap-2 h-10 no-underline z-10"
       >
-        <img 
-          src={logo} 
-          alt="IntelliTA Logo" 
+        <img
+          src="https://intellita-media-storage.s3.us-east-1.amazonaws.com/logos/IntelliTA.svg"
+          alt="IntelliTA Logo"
           className="w-20 h-20 object-contain"
         />
         <h1 className="text-2xl font-bold text-white tracking-tight italic leading-none">
@@ -114,7 +117,7 @@ const Login = () => {
       <div className="w-full max-w-md relative z-[1]">
         <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-8 shadow-2xl">
           <h2 className="text-2xl font-semibold text-white mb-6 text-center">
-            Login
+            {t("login")}
           </h2>
 
           {/* Google Button */}
@@ -136,7 +139,9 @@ const Login = () => {
           {/* Divider */}
           <div className="flex items-center gap-3 my-6 text-center">
             <div className="flex-1 h-px bg-gray-600/50"></div>
-            <span className="text-gray-400 text-sm flex-shrink-0">OR</span>
+            <span className="text-gray-400 text-sm flex-shrink-0">
+              {t("or")}
+            </span>
             <div className="flex-1 h-px bg-gray-600/50"></div>
           </div>
 
@@ -144,15 +149,18 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {/* Email Field */}
             <div className="flex flex-col gap-2 text-left">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 text-left">
-                Email
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-300 text-left"
+              >
+                {t("email")}
               </label>
               <input
                 type="email"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter Your Email"
+                placeholder={t("enterEmail")}
                 required
                 className="w-full bg-gray-700/30 border border-gray-600/50 text-white rounded-lg py-3 px-4 transition-all duration-200 text-left placeholder:text-gray-500 placeholder:text-left focus:outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
               />
@@ -161,14 +169,17 @@ const Login = () => {
             {/* Password Field */}
             <div className="flex flex-col gap-2 text-left">
               <div className="flex items-center justify-between text-left">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300">
-                  Password
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-300"
+                >
+                  {t("password")}
                 </label>
-                <Link 
-                  to="/forgot-password" 
+                <Link
+                  to="/forgot-password"
                   className="text-sm text-blue-400 transition-colors duration-200 no-underline hover:text-blue-300"
                 >
-                  Forgot ?
+                  {t("forget")}
                 </Link>
               </div>
               <div className="relative">
@@ -177,7 +188,7 @@ const Login = () => {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder={t("enterPass")}
                   required
                   minLength="6"
                   className="w-full bg-gray-700/30 border border-gray-600/50 text-white rounded-lg py-3 px-4 pr-12 transition-all duration-200 text-left placeholder:text-gray-500 placeholder:text-left focus:outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
@@ -211,18 +222,25 @@ const Login = () => {
             )}
 
             {/* Login Button */}
-            <button 
-              type="submit" 
+            <button
+              dir={isArabic ? "rtl" : "ltr"}
+              type="submit"
               className="w-full bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 mt-6 border-none cursor-pointer hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             >
-              {loading ? 'Loading...' : 'Login'}
+              {loading ? t("loading") : t("login")}
             </button>
           </form>
 
           {/* Signup Prompt */}
           <div className="mt-6 text-center text-sm text-gray-400">
-            Don't Have An Account ? <Link to="/signup" className="text-blue-400 font-medium transition-colors duration-200 no-underline hover:text-blue-300">Sign Up</Link>
+            {t("noAccount")}{" "}
+            <Link
+              to="/signup"
+              className="text-blue-400 font-medium transition-colors duration-200 no-underline hover:text-blue-300"
+            >
+              {t("signUp")}
+            </Link>
           </div>
         </div>
       </div>

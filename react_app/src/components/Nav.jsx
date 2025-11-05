@@ -3,8 +3,14 @@ import { Link } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "@/utils/firebase";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function Nav({ user }) {
+  const { t, i18n } = useTranslation();
+
+  function changeLanguage() {
+    i18n.changeLanguage(i18n.language === "en" ? "ar" : "en");
+  }
 
   const [showDropdown, setShowDropdown] = useState(false);
 
@@ -88,7 +94,7 @@ export default function Nav({ user }) {
              after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
              after:bg-white hover:after:w-full after:transition-all after:duration-300"
             >
-              About
+              {t("about")}
             </a>
 
             <a
@@ -97,7 +103,7 @@ export default function Nav({ user }) {
              after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
              after:bg-white hover:after:w-full after:transition-all after:duration-300"
             >
-              Courses
+              {t("courses")}
             </a>
             <a
               href="#"
@@ -105,12 +111,13 @@ export default function Nav({ user }) {
              after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
              after:bg-white hover:after:w-full after:transition-all after:duration-300"
             >
-              Contact
+              {t("contact")}
             </a>
           </div>
 
           <div className="hidden lg:flex lg:flex-1 lg:justify-end gap-6.5">
             <button
+              onClick={changeLanguage}
               type="button"
               className="inline-flex items-center justify-center px-3 py-0 text-sm font-medium 
                           text-gray-900 bg-white border border-gray-300 rounded-lg 
@@ -120,9 +127,9 @@ export default function Nav({ user }) {
                           dark:text-white dark:bg-gray-800 dark:border-gray-600 
                           dark:hover:bg-gray-700 dark:hover:border-gray-500 hover:cursor-pointer"
             >
-              <p>عربي</p>
+              <p>{i18n.language === "en" ? "عربي" : "English"}</p>
 
-              <span className="sr-only">Icon description</span>
+              <span className="sr-only">Change language</span>
             </button>
             {user ? (
               <div className="relative">
@@ -139,9 +146,7 @@ export default function Nav({ user }) {
                       className="w-full h-full object-cover rounded-full"
                     />
                   ) : (
-                    <span className="font-medium text-gray-600 dark:text-gray-300">
-                      
-                    </span>
+                    <span className="font-medium text-gray-600 dark:text-gray-300"></span>
                   )}
                 </button>
 
@@ -201,7 +206,7 @@ export default function Nav({ user }) {
                   className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
      after:bg-white hover:after:w-full after:transition-all after:duration-300"
                 >
-                  Login{" "}
+                  {t("login")}{" "}
                 </span>{" "}
                 <span aria-hidden="true">&rarr;</span>
               </Link>

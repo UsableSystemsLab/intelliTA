@@ -8,12 +8,15 @@
     "enterEmail": "ادخل البريد الالكتروني",
     "enterPass": "ادخل كلمة المرور",
     "confirmPass": "تأكيد كلمة المرور",
+    "loading": "جار التحميل...",
+    "cancelled": "تم إلغاء تسجيل الدخول",
+    "alreadyHave": "لديك حساب بالفعل؟",
     "noAccount": "ليس لديك حساب؟",
     "signUp": "تسجيل",
     "create": "أنشئ حساب",
     "fName": "الاسم الأول",
     "lName": "الاسم الأخير",
-    "about": "عنا",
+    "about": "عننا",
     "courses": "الدورات",
     "contact": "تواصل",
     "welcomeMsg": "غيّر طريقة تعلمك للبرمجة.",
@@ -29,13 +32,15 @@
     "AI-Integration": "مدموج بالذكاء الاصطناعي",
     "AI-IntegrationDesc": "يساعد الذكاء الاصطناعي الأساتذة في بناء مختبرات تفاعلية، وتصحيح أعمال الطلاب تلقائيًا، وتقديم ملاحظات شخصية — مما يوفر الوقت ويحسن نتائج التعلّم.",
     "readMore": "اقرأ المزيد",
-    "subCourses": "الدورات التي تدعمها IntelliTA!",
+    "subCourses": "الدورات التي يدعمها IntelliTA !",
     "203Desc": "تعلّم مفاهيم البرمجة كائنية التوجّه الأساسية — التغليف، الوراثة، تعدد الأشكال، والتجريد — لكتابة أكواد أوضح، قابلة لإعادة الاستخدام وأكثر كفاءة من خلال مشاريع عملية واقعية.",
     "204Desc": "تعلّم هياكل البيانات الأساسية مثل المصفوفات، المكدسات، الطوابير، القوائم المرتبطة، والأشجار. فهم كيفية تنظيم البيانات وإدارتها بكفاءة لتحسين مهاراتك في حل المشكلات والأداء البرمجي.",
     "405Desc": "تعلّم تطوير الويب الحديث باستخدام HTML، CSS، JavaScript، React، وPHP. قم ببناء مواقع ويب تفاعلية ومتجاوبة من الصفر — بدءًا من هيكلة الصفحات وتصميم الواجهات وصولًا إلى إنشاء عناصر تفاعلية وربطها بالسيرفرات.",
     "seeAll": "عرض الكل",
     "progLangs": "اللغات البرمجية المدعومة!",
-    "righrs": "جميع الحقوق محفوظة."
+    "gitHub": "قيت هب",
+    "licensing": "الترخيص",
+    "rights": " جميع الحقوق محفوظة."
   },
 
   
@@ -48,12 +53,15 @@
     "enterEmail": "Enter your email",
     "enterPass": "Enter your password",
     "confirmPass": "Confirm password",
+    "loading": "Loading...",
+    "cancelled": "Sign-in cancelled",
+    "alreadyHave": "Already have an account?",
     "noAccount": "Don't have an account?",
     "signUp": "Sign Up",
     "create": "Create Account",
     "fName": "First Name",
     "lName": "Last Name",
-    "about": "About",
+    "about": "About us",
     "courses": "Courses",
     "contact": "Contact",
     "welcomeMsg": "Transform how you learn to code.",
@@ -75,6 +83,8 @@
     "405Desc": "Learn modern Web Development using HTML, CSS, JavaScript, React, and PHP. Build dynamic, responsive websites from scratch — from structuring pages and styling layouts to creating interactive features and connecting to backend servers.",
     "seeAll": "See all",
     "progLangs": "Supported Programming Languages!",
-    "righrs": "All Rights Reserved."
+    "gitHub": "GitHub",
+    "licensing": "Licensing",
+    "rights": "All Rights Reserved."
   }
 }
