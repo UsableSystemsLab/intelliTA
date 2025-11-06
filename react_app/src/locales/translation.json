@@ -40,7 +40,11 @@
     "progLangs": "اللغات البرمجية المدعومة!",
     "gitHub": "قيت هب",
     "licensing": "الترخيص",
-    "rights": " جميع الحقوق محفوظة."
+    "rights": " جميع الحقوق محفوظة.",
+    "dashboard": "لوحة التحكم",
+    "settings": "الإعدادات",
+    "earnings": "الجوائز",
+    "logout": "تسجيل خروج"
   },
 
   
@@ -85,6 +89,10 @@
     "progLangs": "Supported Programming Languages!",
     "gitHub": "GitHub",
     "licensing": "Licensing",
-    "rights": "All Rights Reserved."
+    "rights": "All Rights Reserved.",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "earnings": "Earnings",
+    "logout": "Logout"
   }
 }

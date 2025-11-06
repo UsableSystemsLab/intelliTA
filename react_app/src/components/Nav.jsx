@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 
 export default function Nav({ user }) {
   const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === "ar";
 
   function changeLanguage() {
     i18n.changeLanguage(i18n.language === "en" ? "ar" : "en");
@@ -157,14 +158,17 @@ export default function Nav({ user }) {
                       <div>{getUserInitials() || "User"}</div>
                       
                     </div>
-                    <ul className="py-2 text-sm text-gray-100 dark:text-gray-200">
+                    <ul
+                      className="py-2 text-sm text-gray-100 dark:text-gray-200"
+                      dir={isArabic ? "rtl" : "ltr"}
+                    >
                       <li>
                         <Link
                           to="/dashboard"
                           className="block px-4 py-2 hover:bg-gray-700 dark:hover:bg-gray-600 dark:hover:text-white"
                           onClick={() => setShowDropdown(false)}
                         >
-                          Dashboard
+                          {t("dashboard")}
                         </Link>
                       </li>
                       <li>
@@ -173,7 +177,7 @@ export default function Nav({ user }) {
                           className="block px-4 py-2 hover:bg-gray-700 dark:hover:bg-gray-600 dark:hover:text-white"
                           onClick={() => setShowDropdown(false)}
                         >
-                          Settings
+                          {t("settings")}
                         </Link>
                       </li>
                       <li>
@@ -182,16 +186,16 @@ export default function Nav({ user }) {
                           className="block px-4 py-2 hover:bg-gray-700 dark:hover:bg-gray-600 dark:hover:text-white"
                           onClick={() => setShowDropdown(false)}
                         >
-                          Earnings
+                          {t("earnings")}
                         </Link>
                       </li>
                     </ul>
                     <div className="py-1">
                       <button
                         onClick={handleLogout}
-                        className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-gray-100 hover:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+                        className="cursor-pointer block w-full  px-4 py-2 text-sm text-gray-100 hover:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
                       >
-                        Sign out
+                        {t("logout")}
                       </button>
                     </div>
                   </div>
