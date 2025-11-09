@@ -12,7 +12,6 @@ export default function Nav({ user }) {
   function changeLanguage() {
     i18n.changeLanguage(i18n.language === "en" ? "ar" : "en");
   }
-
   const [showDropdown, setShowDropdown] = useState(false);
 
   const getUserInitials = () => {
