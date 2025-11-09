@@ -1,14 +1,12 @@
-import InstantFeedback from "@/assets/InstantFeedback.jpg";
-import leaderboard from "@/assets/Leaderboard.jpg";
-import CourseLabMaker from "@/assets/CourseLabMaker.jpg";
-import CPCS_203 from "@/assets/CPCS-203.jpeg";
-import CPCS_204 from "@/assets/CPCS-204.jpg";
-import React_Php from "@/assets/React-Php.png";
 import LogoLoop from "@/components/lib/LogoLoop";
 import { imageLogos } from "@/utils/imageLogos";
 import CodeFrame from "@/components/CodeFrame";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function HomeMain() {
+  const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === "ar";
   return (
     <>
       {/* HERO SECTION */}
@@ -31,12 +29,17 @@ export default function HomeMain() {
         </div>
         <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-34">
           <div className="text-center">
-            <h1 className="text-balance text-5xl font-semibold tracking-tight text-white sm:text-7xl">
-              Transform how you learn to code
+            <h1
+              dir={isArabic ? "rtl" : "ltr"}
+              className="text-balance text-5xl font-semibold tracking-tight text-white sm:text-7xl"
+            >
+              {t("welcomeMsg")}
             </h1>
-            <p className="mt-8 text-pretty text-lg font-medium text-gray-400 sm:text-xl/8">
-              A platform that transforms traditional programming labs into
-              AI-powered interactive learning experiences !
+            <p
+              dir={isArabic ? "rtl" : "ltr"}
+              className="mt-8 text-pretty text-lg font-medium text-gray-400 sm:text-xl/8"
+            >
+              {t("subWelcome")}
             </p>
             <br />
 
@@ -45,15 +48,15 @@ export default function HomeMain() {
             </div>
 
             <div className="mt-10 flex items-center justify-center gap-x-6">
-              <a
-                href="#"
+              <Link
+                to="/login"
                 className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-2xl font-semibold
                          text-white shadow-sm hover:bg-indigo-400 focus-visible:outline
                          focus-visible:outline-2 focus-visible:outline-offset-2
                          focus-visible:outline-indigo-500"
               >
-                Get started
-              </a>
+                {t("getStarted")}
+              </Link>
               <a
                 href="#"
                 className="relative text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300"
@@ -61,8 +64,9 @@ export default function HomeMain() {
                 <span
                   className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
                after:bg-white hover:after:w-full after:transition-all after:duration-300"
+                  dir={isArabic ? "rtl" : "ltr"}
                 >
-                  Learn more{" "}
+                  {t("learnMore")}{" "}
                 </span>{" "}
                 <span aria-hidden="true">→</span>
               </a>
@@ -88,14 +92,17 @@ export default function HomeMain() {
       </div>
       {/* CARD SECTION */}
       {/* Ask if we maybe need to change Background color */}
-      <section className="py-20 bg-gray-900 text-white">
+      <section
+        className="py-20 bg-gray-900 text-white"
+        dir={isArabic ? "rtl" : "ltr"}
+      >
         {" "}
         <div className="text-center mb-12">
           <h2 className="text-5xl font-semibold tracking-tight">
-            Core features
+            {t("coreFeatures")}
           </h2>
           <p className="mt-8 text-pretty text-lg text-gray-400">
-            IntelliTA core features that makes it unique !
+            {t("subFeatures")}
           </p>
         </div>
         <div className="flex flex-wrap justify-center gap-8 px-6">
@@ -104,25 +111,23 @@ export default function HomeMain() {
             <a href="#">
               <img
                 className="rounded-t-lg w-full h-66 object-cover"
-                src={InstantFeedback}
+                src="https://intellita-media-storage.s3.us-east-1.amazonaws.com/images/InstantFeedback.jpg"
                 alt="Instant feedback image"
               />
             </a>
             <div className="p-5">
               <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                Instant feedback
+                {t("InsFeedback")}
               </h5>
 
               <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
-                Get immediate evaluation of your code upon submission — the
-                system automatically checks your work, highlights errors, and
-                gives real-time feedback to help you improve quickly.{" "}
+                {t("feedbackDesc")}{" "}
               </p>
               <a
                 href="#"
                 className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
               >
-                Read more
+                {t("readMore")}
                 <svg
                   className="rtl:rotate-180 w-3.5 h-3.5 ms-2"
                   aria-hidden="true"
@@ -147,25 +152,23 @@ export default function HomeMain() {
             <a href="#">
               <img
                 className="rounded-t-lg w-full h-66 object-cover"
-                src={leaderboard}
+                src="https://intellita-media-storage.s3.us-east-1.amazonaws.com/images/Leaderboard.jpg"
                 alt="Leaderboard image"
               />
             </a>
             <div className="p-5">
               <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                Gamification
+                {t("gamification")}
               </h5>
 
               <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
-                Learn through fun lab activities. Compete on the leaderboard,
-                earn points for progress, and stay motivated as you climb your
-                way to the top.
+                {t("gamificationDesc")}
               </p>
               <a
                 href="#"
                 className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
               >
-                Read more
+                {t("readMore")}
                 <svg
                   className="rtl:rotate-180 w-3.5 h-3.5 ms-2"
                   aria-hidden="true"
@@ -190,25 +193,23 @@ export default function HomeMain() {
             <a href="#">
               <img
                 className="rounded-t-lg w-full h-66 object-cover"
-                src={CourseLabMaker}
+                src="https://intellita-media-storage.s3.us-east-1.amazonaws.com/images/CourseLabMaker.jpg"
                 alt="Course lab maker image"
               />
             </a>
             <div className="p-5">
               <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-                AI integration
+                {t("AI-Integration")}
               </h5>
 
               <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
-                AI helps instructors build interactive labs, grade student work
-                automatically, and deliver personalized feedback — saving time
-                and improving learning outcomes
+                {t("AI-IntegrationDesc")}
               </p>
               <a
                 href="#"
                 className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
               >
-                Read more
+                {t("readMore")}
                 <svg
                   className="rtl:rotate-180 w-3.5 h-3.5 ms-2"
                   aria-hidden="true"
@@ -231,20 +232,25 @@ export default function HomeMain() {
       </section>
 
       <section className="py-20 bg-gray-900 text-white">
-        <div className="text-center mb-12">
-          <h2 className="text-5xl font-semibold tracking-tight">Courses</h2>
+        <div className="text-center mb-12" dir={isArabic ? "rtl" : "ltr"}>
+          <h2 className="text-5xl font-semibold tracking-tight">
+            {t("courses")}
+          </h2>
           <p className="mt-8 text-pretty text-lg text-gray-400">
-            Courses that IntelliTA supports !
+            {t("subCourses")}
           </p>
         </div>
 
         <div className="flex flex-wrap justify-center gap-8 px-6">
           {/* CARD 1 */}
-          <div className="max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <div
+            dir={isArabic ? "rtl" : "ltr"}
+            className="max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700"
+          >
             <a href="#">
               <img
                 className="rounded-t-lg w-full h-66 object-cover"
-                src={CPCS_203}
+                src="https://intellita-media-storage.s3.us-east-1.amazonaws.com/images/CPCS-203.jpeg"
                 alt="CPCS-203 image"
               />
             </a>
@@ -254,16 +260,13 @@ export default function HomeMain() {
               </h5>
 
               <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
-                Learn the key concepts of Object-Oriented Programming —
-                encapsulation, inheritance, polymorphism, and abstraction — to
-                write cleaner, reusable, and efficient code through practical,
-                real-world projects.{" "}
+                {t("203Desc")}{" "}
               </p>
               <a
                 href="#"
                 className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
               >
-                Read more
+                {t("readMore")}
                 <svg
                   className="rtl:rotate-180 w-3.5 h-3.5 ms-2"
                   aria-hidden="true"
@@ -284,11 +287,14 @@ export default function HomeMain() {
           </div>
 
           {/* CARD 2 */}
-          <div className="max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <div
+            dir={isArabic ? "rtl" : "ltr"}
+            className="max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700"
+          >
             <a href="#">
               <img
                 className="rounded-t-lg w-full h-66 object-cover"
-                src={CPCS_204}
+                src="https://intellita-media-storage.s3.us-east-1.amazonaws.com/images/CPCS-204.jpg"
                 alt="CPCS 204 image"
               />
             </a>
@@ -298,16 +304,13 @@ export default function HomeMain() {
               </h5>
 
               <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
-                Learn essential Data Structures like arrays, stacks, queues,
-                linked lists, and trees. Understand how to organize and manage
-                data efficiently to improve your problem-solving and coding
-                performance.
+                {t("204Desc")}
               </p>
               <a
                 href="#"
                 className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
               >
-                Read more
+                {t("readMore")}
                 <svg
                   className="rtl:rotate-180 w-3.5 h-3.5 ms-2"
                   aria-hidden="true"
@@ -328,11 +331,14 @@ export default function HomeMain() {
           </div>
 
           {/* CARD 3 */}
-          <div className="max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <div
+            dir={isArabic ? "rtl" : "ltr"}
+            className="max-w-sm bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700"
+          >
             <a href="#">
               <img
                 className="rounded-t-lg w-full h-66 object-cover"
-                src={React_Php}
+                src="https://intellita-media-storage.s3.us-east-1.amazonaws.com/images/React-Php.png"
                 alt="React and Php image"
               />
             </a>
@@ -342,16 +348,13 @@ export default function HomeMain() {
               </h5>
 
               <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
-                Learn modern Web Development using HTML, CSS, JavaScript, React,
-                and PHP. Build dynamic, responsive websites from scratch — from
-                structuring pages and styling layouts to creating interactive
-                features and connecting to backend servers.
+                {t("405Desc")}
               </p>
               <a
                 href="#"
                 className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
               >
-                Read more
+                {t("readMore")}
                 <svg
                   className="rtl:rotate-180 w-3.5 h-3.5 ms-2"
                   aria-hidden="true"
@@ -380,7 +383,7 @@ export default function HomeMain() {
               className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
          after:bg-white hover:after:w-full after:transition-all after:duration-300"
             >
-              See all
+              {t("seeAll")}
             </span>
             <span aria-hidden="true" className="ml-2">
               →
@@ -404,8 +407,11 @@ export default function HomeMain() {
 
         {/* Main content */}
         <div className="text-center">
-          <h2 className="text-4xl font-semibold tracking-tight text-white mb-12 animate-bounce">
-            Supported Programming Languages !
+          <h2
+            dir={isArabic ? "rtl" : "ltr"}
+            className="text-4xl font-semibold tracking-tight text-white mb-12 animate-bounce"
+          >
+            {t("progLangs")}
           </h2>
 
           <LogoLoop

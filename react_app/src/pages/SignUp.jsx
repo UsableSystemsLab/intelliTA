@@ -6,9 +6,13 @@ import {
   GoogleAuthProvider
 } from 'firebase/auth';
 import { auth } from '@/utils/firebase';
-import logo from "@/assets/IntelliTA.svg";
+import { updateProfile } from 'firebase/auth';
+import { useTranslation } from "react-i18next";
 
 const SignUp = () => {
+  const { t, i18n } = useTranslation();
+  const isArabic = i18n.language === "ar";
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -47,7 +51,13 @@ const SignUp = () => {
     setLoading(true);
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+      // Save the user's full name
+      await updateProfile(userCredential.user, {
+        displayName: `${firstName} ${lastName}`
+      });
+
       navigate('/');
     } catch (err) {
       console.error('Sign up error:', err);
@@ -81,37 +91,37 @@ const SignUp = () => {
     <div className="fixed inset-0 w-screen h-screen bg-gradient-to-br from-gray-900 to-gray-900 flex items-center justify-center p-4 sm:p-8 overflow-hidden">
       {/* Animated gradient blob 1 */}
       <div className="absolute left-[calc(50%-11rem)] top-[10%] w-[36.125rem] aspect-[1155/678] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 rounded-full blur-[80px] animate-blob1" />
-      
+
       {/* Animated gradient blob 2 */}
       <div className="absolute right-[calc(50%-11rem)] bottom-[10%] w-[36.125rem] aspect-[1155/678] translate-x-1/2 -rotate-[30deg] bg-gradient-to-bl from-[#9089fc] to-[#ff80b5] opacity-30 rounded-full blur-[80px] animate-blob2" />
 
       {/* Back button to home */}
-      <Link 
-        to="/" 
+      <Link
+        to="/"
         className="fixed top-8 left-8 flex items-center justify-center w-10 h-10 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white cursor-pointer transition-all duration-200 hover:bg-gray-700 hover:-translate-x-0.5 z-10"
       >
-        <svg 
-          width="20" 
-          height="20" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
           strokeWidth="2"
-          strokeLinecap="round" 
+          strokeLinecap="round"
           strokeLinejoin="round"
         >
-          <path d="M19 12H5M12 19l-7-7 7-7"/>
+          <path d="M19 12H5M12 19l-7-7 7-7" />
         </svg>
       </Link>
 
       {/* Logo on the right */}
-      <Link 
-        to="/" 
+      <Link
+        to="/"
         className="fixed top-8 right-8 flex items-center gap-2 h-10 no-underline z-10"
       >
-        <img 
-          src={logo} 
-          alt="IntelliTA Logo" 
+        <img
+          src="https://intellita-media-storage.s3.us-east-1.amazonaws.com/logos/IntelliTA.svg"
+          alt="IntelliTA Logo"
           className="w-20 h-20 object-contain"
         />
         <h1 className="text-2xl font-bold text-white tracking-tight italic leading-none">
@@ -123,7 +133,7 @@ const SignUp = () => {
       <div className="w-full max-w-2xl relative z-[1]">
         <div className="bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-gray-700/50 p-8 shadow-2xl">
           <h2 className="text-2xl font-semibold text-white mb-6 text-center">
-            Create Account
+            {t("create")}
           </h2>
 
           {/* Google Button */}
@@ -145,38 +155,49 @@ const SignUp = () => {
           {/* Divider */}
           <div className="flex items-center gap-3 my-6 text-center">
             <div className="flex-1 h-px bg-gray-600/50"></div>
-            <span className="text-gray-400 text-sm flex-shrink-0">OR</span>
+            <span className="text-gray-400 text-sm flex-shrink-0">
+              {t("or")}
+            </span>
             <div className="flex-1 h-px bg-gray-600/50"></div>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {/* First Name and Last Name Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+              dir={isArabic ? "rtl" : "ltr"}
+            >
               <div className="flex flex-col gap-2 text-left">
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-300 text-left">
-                  First Name
+                <label
+                  htmlFor="firstName"
+                  className="block text-sm font-medium text-gray-300 text-left"
+                >
+                  {t("fName")}
                 </label>
                 <input
                   type="text"
                   id="firstName"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="First Name"
+                  placeholder={t("fName")}
                   required
                   className="w-full bg-gray-700/30 border border-gray-600/50 text-white rounded-lg py-3 px-4 transition-all duration-200 text-left placeholder:text-gray-500 placeholder:text-left focus:outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                 />
               </div>
               <div className="flex flex-col gap-2 text-left">
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-300 text-left">
-                  Last Name
+                <label
+                  htmlFor="lastName"
+                  className="block text-sm font-medium text-gray-300 text-left"
+                >
+                  {t("lName")}
                 </label>
                 <input
                   type="text"
                   id="lastName"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Last Name"
+                  placeholder={t("lName")}
                   required
                   className="w-full bg-gray-700/30 border border-gray-600/50 text-white rounded-lg py-3 px-4 transition-all duration-200 text-left placeholder:text-gray-500 placeholder:text-left focus:outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
                 />
@@ -185,15 +206,18 @@ const SignUp = () => {
 
             {/* Email Field */}
             <div className="flex flex-col gap-2 text-left">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 text-left">
-                Email
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-300 text-left"
+              >
+                {t("email")}
               </label>
               <input
                 type="email"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter Your Email"
+                placeholder={t("enterEmail")}
                 required
                 className="w-full bg-gray-700/30 border border-gray-600/50 text-white rounded-lg py-3 px-4 transition-all duration-200 text-left placeholder:text-gray-500 placeholder:text-left focus:outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
               />
@@ -201,8 +225,11 @@ const SignUp = () => {
 
             {/* Password Field */}
             <div className="flex flex-col gap-2 text-left">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 text-left">
-                Password
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-300 text-left"
+              >
+                {t("password")}
               </label>
               <div className="relative">
                 <input
@@ -210,7 +237,7 @@ const SignUp = () => {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
+                  placeholder={t("enterPass")}
                   required
                   minLength="6"
                   className="w-full bg-gray-700/30 border border-gray-600/50 text-white rounded-lg py-3 px-4 pr-12 transition-all duration-200 text-left placeholder:text-gray-500 placeholder:text-left focus:outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
@@ -238,8 +265,11 @@ const SignUp = () => {
 
             {/* Confirm Password Field */}
             <div className="flex flex-col gap-2 text-left">
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 text-left">
-                Confirm Password
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-300 text-left"
+              >
+                {t("confirmPass")}
               </label>
               <div className="relative">
                 <input
@@ -247,7 +277,7 @@ const SignUp = () => {
                   id="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your password"
+                  placeholder={t("enterPass")}
                   required
                   minLength="6"
                   className="w-full bg-gray-700/30 border border-gray-600/50 text-white rounded-lg py-3 px-4 pr-12 transition-all duration-200 text-left placeholder:text-gray-500 placeholder:text-left focus:outline-none focus:border-transparent focus:ring-2 focus:ring-blue-600"
@@ -281,23 +311,29 @@ const SignUp = () => {
             )}
 
             {/* SignUp Button */}
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="w-full bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 mt-6 border-none cursor-pointer hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={loading}
             >
-              {loading ? 'Loading...' : 'Create Account'}
+              {loading ? t("loading") : t("create")}
             </button>
           </form>
 
           {/* Login Prompt */}
           <div className="mt-6 text-center text-sm text-gray-400">
-            Already Have An Account ? <Link to="/login" className="text-blue-400 font-medium transition-colors duration-200 no-underline hover:text-blue-300">Login</Link>
+            {t("alreadyHave")}{" "}
+            <Link
+              to="/login"
+              className="text-blue-400 font-medium transition-colors duration-200 no-underline hover:text-blue-300"
+            >
+              {t("login")}
+            </Link>
           </div>
         </div>
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes blob1 {
           0%, 100% {
             transform: translateX(-50%) rotate(30deg) scale(1);

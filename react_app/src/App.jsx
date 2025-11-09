@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { onAuthStateChanged } from 'firebase/auth'
-import { auth } from './utils/firebase.js'
-import Login from './pages/Login.jsx'
-import SignUp from './pages/SignUp.jsx'
-import Home from './pages/Home.jsx'
-import './styles/App.css'
+import { auth } from '@/utils/firebase.js'
+import Login from '@/pages/Login.jsx'
+import SignUp from '@/pages/SignUp.jsx'
+import Home from '@/pages/Home.jsx'
+import '@/styles/App.css'
 
-function App() {
+ function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -38,3 +38,5 @@ function App() {
     </Router>
   )
 }
+
+export default App
