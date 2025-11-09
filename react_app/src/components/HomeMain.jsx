@@ -5,9 +5,9 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 export default function HomeMain() {
- const { t, i18n } = useTranslation();
- //It is okay that isArabic variable to remain unused
- const isArabic = i18n.language === "ar";
+  const { t, i18n } = useTranslation();
+  //It is okay that isArabic variable to remain unused
+  const isArabic = i18n.language === "ar";
   return (
     <>
       {/* HERO SECTION */}
@@ -63,7 +63,7 @@ export default function HomeMain() {
                   >
                     {t("learnMore")}{" "}
                   </span>{" "}
-                  <span aria-hidden="true">&rarr;</span>
+                  <span aria-hidden="true">{isArabic ? "←" : "→"}</span>
                 </a>
               </div>
             </div>
@@ -368,9 +368,7 @@ export default function HomeMain() {
               >
                 {t("seeAll")}
               </span>
-              <span aria-hidden="true" className="ml-2">
-                →
-              </span>
+             <span aria-hidden="true">{isArabic ? "←" : "→"}</span>
             </a>
           </div>
         </section>
