@@ -6,10 +6,13 @@ import Login from '@/pages/Login.jsx'
 import SignUp from '@/pages/SignUp.jsx'
 import Home from '@/pages/Home.jsx'
 import '@/styles/App.css'
+import { useTranslation } from 'react-i18next';
 
  function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { i18n } = useTranslation() 
+  const isArabic = i18n.language === 'ar'
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -19,6 +22,10 @@ import '@/styles/App.css'
 
     return () => unsubscribe()
   }, [])
+   useEffect(() => {
+    document.documentElement.lang = i18n.language
+    document.documentElement.dir = isArabic ? 'rtl' : 'ltr'
+  }, [i18n.language, isArabic])
 
   if (loading) {
     return (

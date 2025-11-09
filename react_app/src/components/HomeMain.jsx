@@ -5,12 +5,13 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 export default function HomeMain() {
-  const { t, i18n } = useTranslation();
-  const isArabic = i18n.language === "ar";
+ const { t, i18n } = useTranslation();
+ //It is okay that isArabic variable to remain unused
+ const isArabic = i18n.language === "ar";
   return (
     <>
       {/* HERO SECTION */}
-      <section dir={isArabic ? "rtl" : "ltr"}>
+      <section>
         <div className="isolate px-6 pt-0 lg:px-8 overflow-hidden">
           {" "}
           <div

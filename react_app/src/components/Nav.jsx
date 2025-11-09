@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 export default function Nav({ user }) {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
-
+  //This function change the language when u click on the change langauage button
   function changeLanguage() {
     i18n.changeLanguage(i18n.language === "en" ? "ar" : "en");
   }
@@ -37,13 +37,15 @@ export default function Nav({ user }) {
   };
   return (
     <>
+      {/* This needs to be modifeid for internatialization, profile photo must go left and logo go right */}
       <header className="sticky top-0 z-50 bg-black/50 backdrop-blur-lg">
         <nav
           aria-label="Global"
           className="flex items-center justify-between p-6 lg:px-8"
         >
-          <div className="flex lg:flex-1">
-            <a href="#" className="-m-1.5 p-1.5">
+          <div className="flex lg:flex-1" >
+            {/* Make this anchor ltr to correct the logo bug */}
+            <a href="#" className="-m-1.5 p-1.5" dir="ltr">
               <span className="sr-only">IntelliTA</span>
               <a href="">
                 <Shuffle
@@ -129,14 +131,14 @@ export default function Nav({ user }) {
 
                 {/* Dropdown menu */}
                 {showDropdown && (
-                  <div className="absolute right-0 mt-2 z-10 bg-gray-900 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600">
+                  // this has been modified due to an error that made the dropdown menu shows out of the screen
+                  <div className={`absolute ${isArabic ? "left-0" : "right-0"} mt-2 z-10 bg-gray-900 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600`}>
                     <div className="px-4 py-3 text-sm text-gray-100 dark:text-white">
                       <div>{getUserInitials() || "User"}</div>
                       
                     </div>
                     <ul
                       className="py-2 text-sm text-gray-100 dark:text-gray-200"
-                      dir={isArabic ? "rtl" : "ltr"}
                     >
                       <li>
                         <Link
