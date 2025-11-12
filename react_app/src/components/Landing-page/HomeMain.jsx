@@ -1,6 +1,6 @@
 import LogoLoop from "@/components/lib/LogoLoop";
 import { imageLogos } from "@/utils/imageLogos";
-import CodeFrame from "@/components/CodeFrame";
+import CodeFrame from "@/components/Landing-page/CodeFrame";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
