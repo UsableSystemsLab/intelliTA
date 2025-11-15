@@ -37,7 +37,7 @@ export default function Nav({ user }) {
   return (
     <>
       {/* This needs to be modifeid for internatialization, profile photo must go left and logo go right */}
-      <header className="sticky top-0 z-50 bg-black/50 backdrop-blur-lg">
+      <header className="top-0 z-50 bg-black/40 backdrop-blur-lg">
         <nav
           aria-label="Global"
           className="flex items-center justify-between p-6 lg:px-8"
@@ -65,34 +65,6 @@ export default function Nav({ user }) {
               </a>
             </a>
           </div>
-          <div className="hidden lg:flex lg:gap-x-12">
-            <a
-              href="#"
-              className="relative text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300
-             after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
-             after:bg-white hover:after:w-full after:transition-all after:duration-300"
-            >
-              {t("about")}
-            </a>
-
-            <a
-              href="#"
-              className="relative text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300
-             after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
-             after:bg-white hover:after:w-full after:transition-all after:duration-300"
-            >
-              {t("courses")}
-            </a>
-            <a
-              href="#"
-              className="relative text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300
-             after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
-             after:bg-white hover:after:w-full after:transition-all after:duration-300"
-            >
-              {t("contact")}
-            </a>
-          </div>
-
           <div className="hidden lg:flex lg:flex-1 lg:justify-end gap-6.5">
             <button
               onClick={changeLanguage}
@@ -127,7 +99,7 @@ export default function Nav({ user }) {
                     <span className="font-medium text-gray-600 dark:text-gray-300"></span>
                   )}
                 </button>
-
+                {/* Later we should fix the bug where we cant press if drop down menu dropped */}
                 {/* Dropdown menu */}
                 {showDropdown && (
                   // this has been modified due to an error that made the dropdown menu shows out of the screen
@@ -192,7 +164,7 @@ export default function Nav({ user }) {
                 <span aria-hidden="true">&rarr;</span>
               </Link>
             )}
-          </div>
+          </div>       
         </nav>
       </header>
     </>
