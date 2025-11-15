@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
+import Card from "./Card";
 export default function Maincontent() {
   const { t, i18n } = useTranslation();
   //It is okay that isArabic variable to remain unused
   const isArabic = i18n.language === "ar";
   return (
     <>
-      <main className="flex relative overflow-hidden bg-transparent min-h-screen w-full ">
+      <main className="relative overflow-hidden bg-transparent min-h-screen w-full ">
         <div
           aria-hidden="true"
           className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
@@ -36,59 +37,26 @@ export default function Maincontent() {
                  bg-gradient-to-tr from-pink-300 to-indigo-300 opacity-30
                  sm:left-[calc(50%+30rem)] sm:w-[72.1875rem]"
           ></div>
-        </div>      
-        <div className="flex flex-wrap justify-center gap-8 px-6 mt-10 w-full">
-          <div className="bg-slate-800 text-white max-w-sm p-6 border border-slate-700 rounded-xl shadow-md max-h-65">
-            <h5 className="mb-3 text-2xl font-semibold tracking-tight">
-              CPIT-252 Singleton lab
-            </h5>
-            <p className="mb-6 text-gray-300">
-              The goal of this lab is to teach students how to implement and
+        </div>
+        <div className="w-full flex flex-wrap gap-10 justify-center px-6 mt-10">
+          <Card
+            title="CPIT-252 Singleton lab"
+            description="The goal of this lab is to teach students how to implement and
               apply the Singleton Design Pattern, one of the most commonly used
-              creational patterns in software engineering.
-            </p>
-
-            <a
-              href="#"
-              className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium"
-            >
-              Start lab now !
-            </a>
-          </div>
-          <div className="bg-slate-800 text-white max-w-sm p-6 border border-slate-700 rounded-xl shadow-md max-h-65">
-            <h5 className="mb-3 text-2xl font-semibold tracking-tight">
-              CPIT-252 Singleton lab
-            </h5>
-            <p className="mb-6 text-gray-300">
-              The goal of this lab is to teach students how to implement and
+              creational patterns in software engineering."
+          />
+          <Card
+            title="CPIT-252 Singleton lab"
+            description="The goal of this lab is to teach students how to implement and
               apply the Singleton Design Pattern, one of the most commonly used
-              creational patterns in software engineering.
-            </p>
-
-            <a
-              href="#"
-              className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium"
-            >
-              Start lab now !
-            </a>
-          </div>
-          <div className="bg-slate-800 text-white max-w-sm p-6 border border-slate-700 rounded-xl shadow-md max-h-65">
-            <h5 className="mb-3 text-2xl font-semibold tracking-tight">
-              CPIT-252 Singleton lab
-            </h5>
-            <p className="mb-6 text-gray-300">
-              The goal of this lab is to teach students how to implement and
+              creational patterns in software engineering."
+          />
+          <Card
+            title="CPIT-252 Singleton lab"
+            description="The goal of this lab is to teach students how to implement and
               apply the Singleton Design Pattern, one of the most commonly used
-              creational patterns in software engineering.
-            </p>
-
-            <a
-              href="#"
-              className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium"
-            >
-              Start lab now !
-            </a>
-          </div>
+              creational patterns in software engineering."
+          />
         </div>
       </main>
     </>
