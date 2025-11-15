@@ -37,11 +37,11 @@ export default function Maincontent() {
                  sm:left-[calc(50%+30rem)] sm:w-[72.1875rem]"
           ></div>
         </div>
-        <aside className="w-64 h-screen bg-[#0F172A] text-gray-300 p-4 flex flex-col border-r border-gray-700">
+        <aside className=" opacity-95 w-64 h-screen bg-black/62 text-gray-300 p-4 flex flex-col border-r border-gray-700">
           <nav className="flex flex-col gap-1 mt-4">
             <a
               href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#1E293B] text-blue-400"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#1E293B] text-white"
             >
               <span className="font-medium">Lab activities</span>
             </a>
@@ -77,7 +77,7 @@ export default function Maincontent() {
               href="#"
               className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1E293B] transition"
             >
-              <span>Leave</span>
+              <span>Back</span>
             </a>
           </nav>
         </aside>
