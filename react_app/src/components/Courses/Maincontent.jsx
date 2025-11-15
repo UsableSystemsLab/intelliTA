@@ -40,22 +40,16 @@ export default function Maincontent() {
         </div>
         <div className="w-full flex flex-wrap gap-10 justify-center px-6 mt-10">
           <Card
-            title="CPIT-252 Singleton lab"
-            description="The goal of this lab is to teach students how to implement and
-              apply the Singleton Design Pattern, one of the most commonly used
-              creational patterns in software engineering."
+            title="CPIT-252 Singleton Lab"
+            description={t("singletonDesc")}
           />
           <Card
-            title="CPIT-252 Singleton lab"
-            description="The goal of this lab is to teach students how to implement and
-              apply the Singleton Design Pattern, one of the most commonly used
-              creational patterns in software engineering."
+            title="CPIT-252 Singleton Lab"
+            description={t("singletonDesc")}
           />
           <Card
-            title="CPIT-252 Singleton lab"
-            description="The goal of this lab is to teach students how to implement and
-              apply the Singleton Design Pattern, one of the most commonly used
-              creational patterns in software engineering."
+            title="CPIT-252 Singleton Lab"
+            description={t("singletonDesc")}
           />
         </div>
       </main>

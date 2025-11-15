@@ -44,7 +44,14 @@
     "dashboard": "لوحة التحكم",
     "settings": "الإعدادات",
     "earnings": "الجوائز",
-    "logout": "تسجيل خروج"
+    "logout": "تسجيل خروج",
+    "activities":"أنشطة المعامل",
+    "leaderboard":"لوحة المتصدرين",
+    "calendar": "التقويم",
+    "support":"الدعم الفني",
+    "back":"عودة",
+    "startNow":"إبدأ الان !",
+    "singletonDesc":"يهدف هذا المختبر إلى تعليم الطلاب كيفية تنفيذ وتطبيق نمط التصميم Singleton، وهو أحد أنماط الإبداع الأكثر استخدامًا في هندسة البرمجيات."
   },
 
   
@@ -93,6 +100,13 @@
     "dashboard": "Dashboard",
     "settings": "Settings",
     "earnings": "Earnings",
-    "logout": "Logout"
+    "logout": "Logout",
+    "activities": "Lab activities",
+    "leaderboard": "Leaderboard",
+    "calendar": "Calendar",
+    "support": "Support",
+    "back": "Back",
+    "startNow": "Start lab now !",
+    "singletonDesc":"The goal of this lab is to teach students how to implement and apply the Singleton Design Pattern, one of the most commonly used creational patterns in software engineering."
   }
 }
