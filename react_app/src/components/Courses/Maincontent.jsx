@@ -5,7 +5,7 @@ export default function Maincontent() {
   const isArabic = i18n.language === "ar";
   return (
     <>
-      <main className="flex relative overflow-hidden bg-transparent min-h-screen ">
+      <main className="flex relative overflow-hidden bg-transparent min-h-screen w-full ">
         <div
           aria-hidden="true"
           className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
@@ -36,52 +36,7 @@ export default function Maincontent() {
                  bg-gradient-to-tr from-pink-300 to-indigo-300 opacity-30
                  sm:left-[calc(50%+30rem)] sm:w-[72.1875rem]"
           ></div>
-        </div>
-        <aside className=" opacity-95 w-64 h-screen bg-black/62 text-gray-300 p-4 flex flex-col border-r border-gray-700">
-          <nav className="flex flex-col gap-1 mt-4">
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#1E293B] text-white"
-            >
-              <span className="font-medium">Lab activities</span>
-            </a>
-
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1E293B] transition"
-            >
-              <span>Leaderboard</span>
-            </a>
-
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1E293B] transition"
-            >
-              <span>Calendar</span>
-            </a>
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1E293B] transition"
-            >
-              <span>Settings</span>
-            </a>
-
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1E293B] transition"
-            >
-              <span>Support</span>
-            </a>
-
-            <a
-              href="#"
-              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-[#1E293B] transition"
-            >
-              <span>Back</span>
-            </a>
-          </nav>
-        </aside>
-
+        </div>      
         <div className="flex flex-wrap justify-center gap-8 px-6 mt-10 w-full">
           <div className="bg-slate-800 text-white max-w-sm p-6 border border-slate-700 rounded-xl shadow-md max-h-65">
             <h5 className="mb-3 text-2xl font-semibold tracking-tight">
