@@ -5,8 +5,8 @@ CREATE TABLE users (
   fName VARCHAR(15) NOT NULL,
   lName VARCHAR(15) NOT NULL,
   email VARCHAR(50) UNIQUE NOT NULL,
-  password_hash TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT NOW()
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- STUDENTS Table (Sub)
