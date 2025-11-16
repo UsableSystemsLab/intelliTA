@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-
 export default function HomeFooter() {
     const { t, i18n } = useTranslation();
     const isArabic = i18n.language === "ar";
@@ -41,7 +40,7 @@ export default function HomeFooter() {
             </ul>
           </div>
           <hr className="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
-          <span className="block text-sm text-shadow-amber-50 sm:text-center dark:text-gray-400" dir={isArabic ? "rtl" : "ltr"}>
+          <span className="block text-sm text-shadow-amber-50 sm:text-center dark:text-gray-400" >
             © 2025{" "}
             <a href="#" className="hover:underline">
               IntelliTA
