@@ -6,10 +6,10 @@ export default function Maincontent() {
   const isArabic = i18n.language === "ar";
   return (
     <>
-      <main className="relative overflow-hidden bg-transparent min-h-screen w-full ">
+      <main className="relative bg-transparent min-h-screen w-full ">
         <div
           aria-hidden="true"
-          className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
+          className="absolute inset-x-0 -top-40 -z-10 transform-gpu blur-3xl sm:-top-80"
         >
           <div
             style={{
@@ -18,7 +18,7 @@ export default function Maincontent() {
             }}
             className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem]
                  -translate-x-1/2 rotate-[30deg]
-                 bg-gradient-to-tr from-pink-300 to-indigo-300 opacity-30
+                 bg-gradient-to-tr from-blue-100 to-indigo-300 opacity-30
                  sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
           ></div>
         </div>
@@ -34,23 +34,41 @@ export default function Maincontent() {
             }}
             className="relative left-[calc(50%+11rem)] aspect-[1155/678] w-[36.125rem]
                  -translate-x-1/2 -rotate-[30deg]
-                 bg-gradient-to-tr from-pink-300 to-indigo-300 opacity-30
+                 bg-gradient-to-tr from-blue-100 to-indigo-300 opacity-30
                  sm:left-[calc(50%+30rem)] sm:w-[72.1875rem]"
           ></div>
         </div>
-        <div className="w-full flex flex-wrap gap-10 justify-center px-6 mt-10">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center px-6 mt-10">
           <Card
-            title="CPIT-252 Singleton Lab"
+            code="CPCS-202"
+            title="Basic Java Programming"
             description={t("singletonDesc")}
             status={true}
           />
           <Card
-            title="CPIT-252 Singleton Lab"
+            code="CPCS-203"
+            title="OOP Programming"
             description={t("singletonDesc")}
             status={false}
           />
           <Card
-            title="CPIT-252 Singleton Lab"
+            code="CPCS-204"
+            title="Data Structures"
+            description={t("singletonDesc")}
+          />
+          <Card
+            code="CPIT-252"
+            title="Software Design Patterns"
+            description={t("singletonDesc")}
+          />
+          <Card
+            code="CPIT-305"
+            title="Advanced Programming"
+            description={t("singletonDesc")}
+          />
+          <Card
+            code="CPIT-405"
+            title="Web Application Development"
             description={t("singletonDesc")}
             status={false}
           />

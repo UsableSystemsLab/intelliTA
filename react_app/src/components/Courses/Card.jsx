@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
-import StatusBadge from "@/components/Courses/StatusBadge";
-export default function Card({ title, description, status }) {
+export default function Card({ title, description }) {
   const { t } = useTranslation();
   return (
     <>
