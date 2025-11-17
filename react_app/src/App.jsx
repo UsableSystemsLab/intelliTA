@@ -9,6 +9,7 @@ import Courses from "@/pages/Courses.jsx";
 import '@/styles/App.css'
 import ProtectedRoutes from '@/utils/ProtectedRoutes'
 import { useTranslation } from 'react-i18next';
+import Activity from './pages/Activity'
 
  function App() {
   const [user, setUser] = useState(null)
@@ -49,6 +50,7 @@ import { useTranslation } from 'react-i18next';
     {/* Here is protected pages, which means user can not see it unless he is logged in */}
     <Route element={<ProtectedRoutes user={user} />}>
       <Route path="/courses" element={<Courses user={user} />} />
+      <Route path="/activity" element={<Activity user={user} />} />
     </Route>
 
   </Routes>

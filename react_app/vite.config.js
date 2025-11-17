@@ -9,7 +9,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(),tailwindcss()],
+  plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
@@ -18,5 +18,20 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: process.env.REACT_APP_PORT || 3000,
+    watch: {
+      usePolling: true, // Important for Docker
+    },
+  },
+  optimizeDeps: {
+    include: ['@monaco-editor/react', 'monaco-editor'],
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'monaco-editor': ['monaco-editor', '@monaco-editor/react'],
+        },
+      },
+    },
   },
 })
