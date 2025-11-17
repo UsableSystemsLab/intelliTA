@@ -6,6 +6,7 @@ import Login from '@/pages/Login.jsx'
 import SignUp from '@/pages/SignUp.jsx'
 import Home from '@/pages/Home.jsx'
 import Courses from "@/pages/Courses.jsx";
+import CourseLabs from "@/pages/CourseLabs.jsx";
 import '@/styles/App.css'
 import ProtectedRoutes from '@/utils/ProtectedRoutes'
 import { useTranslation } from 'react-i18next';
@@ -49,6 +50,7 @@ import { useTranslation } from 'react-i18next';
     {/* Here is protected pages, which means user can not see it unless he is logged in */}
     <Route element={<ProtectedRoutes user={user} />}>
       <Route path="/courses" element={<Courses user={user} />} />
+      <Route path="/courses/:courseId" element={<CourseLabs user={user} />} />
     </Route>
 
   </Routes>

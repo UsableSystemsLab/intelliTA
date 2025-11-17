@@ -106,7 +106,7 @@
     "calendar": "Calendar",
     "support": "Support",
     "back": "Back",
-    "startNow": "Start lab now !",
+    "goToActivities": "Go to activities",
     "singletonDesc":"The goal of this lab is to teach students how to implement and apply the Singleton Design Pattern, one of the most commonly used creational patterns in software engineering."
   }
 }

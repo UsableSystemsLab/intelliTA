@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import Card from "./Card";
+import Card from "./CoursesCard";
 export default function Maincontent() {
   const { t, i18n } = useTranslation();
   //It is okay that isArabic variable to remain unused
