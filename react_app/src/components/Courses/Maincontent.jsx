@@ -42,14 +42,17 @@ export default function Maincontent() {
           <Card
             title="CPIT-252 Singleton Lab"
             description={t("singletonDesc")}
+            status={true}
           />
           <Card
             title="CPIT-252 Singleton Lab"
             description={t("singletonDesc")}
+            status={false}
           />
           <Card
             title="CPIT-252 Singleton Lab"
             description={t("singletonDesc")}
+            status={false}
           />
         </div>
       </main>
