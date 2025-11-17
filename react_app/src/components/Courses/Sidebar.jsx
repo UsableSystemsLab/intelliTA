@@ -9,7 +9,7 @@ export default function Sidebar (){
               href="#"
               className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#1E293B] text-white"
             >
-              <span className="font-medium">{t("activities")}</span>
+              <span className="font-medium">{t("courses")}</span>
             </a>
 
             <a

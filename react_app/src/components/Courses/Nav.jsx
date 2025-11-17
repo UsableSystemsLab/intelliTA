@@ -37,27 +37,16 @@ export default function Nav({ user }) {
   return (
     <>
       {/* This needs to be modifeid for internatialization, profile photo must go left and logo go right */}
-      <header className="top-0 z-50 bg-black/100 backdrop-blur-lg">
-       <div
+      <header className="top-0 z-50 bg-black/50 backdrop-blur-lg relative ">
+        <div
           aria-hidden="true"
-          className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
-        >
-          <div
-            style={{
-              clipPath:
-                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-            }}
-            className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem]
-                 -translate-x-1/2 rotate-[30deg]
-                 bg-gradient-to-tr from-pink-300 to-indigo-300 opacity-30
-                 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
-          ></div>
-        </div>
+          className="absolute inset-x-0 -top-40 -z-10 transform-gpu blur-3xl sm:-top-80"
+        ></div>
         <nav
           aria-label="Global"
           className="flex items-center justify-between p-6 lg:px-8"
         >
-          <div className="flex lg:flex-1" >
+          <div className="flex lg:flex-1">
             {/* Make this anchor ltr to correct the logo bug */}
             <a href="#" className="-m-1.5 p-1.5" dir="ltr">
               <span className="sr-only">IntelliTA</span>
@@ -118,14 +107,15 @@ export default function Nav({ user }) {
                 {/* Dropdown menu */}
                 {showDropdown && (
                   // this has been modified due to an error that made the dropdown menu shows out of the screen
-                  <div className={`absolute ${isArabic ? "left-0" : "right-0"} mt-2 z-10 bg-gray-900 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600`}>
+                  <div
+                    className={`absolute ${
+                      isArabic ? "left-0" : "right-0"
+                    } mt-2 z-10 bg-gray-900 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600`}
+                  >
                     <div className="px-4 py-3 text-sm text-gray-100 dark:text-white">
                       <div>{getUserInitials() || "User"}</div>
-                      
                     </div>
-                    <ul
-                      className="py-2 text-sm text-gray-100 dark:text-gray-200"
-                    >
+                    <ul className="py-2 text-sm text-gray-100 dark:text-gray-200">
                       <li>
                         <Link
                           to="/dashboard"
