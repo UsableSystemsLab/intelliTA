@@ -28,9 +28,9 @@ const UserController = {
    */
   async createUser(req, res) {
     try {
-      const { id, first_name, last_name, email } = req.body;
+      const { firebaseId, first_name, last_name, email } = req.body;
       const newUser = await User.create({
-        id,
+        firebaseId,
         first_name,
         last_name,
         email,

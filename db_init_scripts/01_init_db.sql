@@ -2,6 +2,7 @@
 -- USERS Table (Super)
 CREATE TABLE users (
   user_id SERIAL PRIMARY KEY,
+  firebase_uid VARCHAR(128) UNIQUE NOT NULL,
   fName VARCHAR(15) NOT NULL,
   lName VARCHAR(15) NOT NULL,
   email VARCHAR(50) UNIQUE NOT NULL,
