@@ -61,5 +61,11 @@ const Course = sequelize.define(
     updatedAt: false, 
   }
 );
+Course.associate = (models) => {
+  Course.hasMany(models.Lab, {
+    foreignKey: "course_id",
+    as: "labs",
+  });
+};
 
 export default Course;

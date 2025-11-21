@@ -62,3 +62,14 @@ CREATE TABLE manages (
   permission_level VARCHAR(20),
   UNIQUE(admin_id, course_id)
 );
+-- LABS Table
+CREATE TABLE labs (
+  lab_id SERIAL PRIMARY KEY,
+  course_id INT NOT NULL REFERENCES courses(course_id) ON DELETE CASCADE,
+  title VARCHAR(150) NOT NULL,
+  type VARCHAR(20) NOT NULL CHECK (type IN ('video', 'markdown')),
+  video_url TEXT,
+  markdown_text TEXT,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);

@@ -1,5 +1,6 @@
 import UserRoutes from "./UserRoutes.js";
-
+import LabRoutes from "./lab.routes.js"; 
+import CourseRoutes from "./course.routes.js";
 const apiRoutes = (router) => {
   /**
    * @swagger
@@ -25,10 +26,16 @@ const apiRoutes = (router) => {
   router.get("/health", (req, res) => {
     res.status(200).json({ status: "Healthy" });
   });
+
   router.use("/users", UserRoutes);
-  // Middleware to catch 404 errors
-  router.use((req, res, next) => {
-    console.log(`404 Not Found: ${req.url}`);
+
+  // Course routes
+  router.use("/courses", CourseRoutes);
+
+  // Lab routes 
+  router.use("/courses/:courseId/labs", LabRoutes);
+
+  router.use((req, res) => {
     res.status(404).json({ error: "Not Found" });
   });
 };

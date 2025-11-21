@@ -5,6 +5,7 @@ import Admin from "./Admin.js";
 import Course from "./Course.js";
 import Enrollment from "./Enrollment.js";
 import Manage from "./Manage.js";
+import Lab from "./Lab.js";  
 
 // USER -> STUDENT / INSTRUCTOR / ADMIN
 User.hasOne(Student, { foreignKey: "user_id" });
@@ -16,7 +17,7 @@ Instructor.belongsTo(User, { foreignKey: "user_id" });
 User.hasOne(Admin, { foreignKey: "user_id" });
 Admin.belongsTo(User, { foreignKey: "user_id" });
 
-// COURSE -> INSTRUCTOR
+// INSTRUCTOR -> COURSE
 Instructor.hasMany(Course, { foreignKey: "instructor_id" });
 Course.belongsTo(Instructor, { foreignKey: "instructor_id" });
 
@@ -31,15 +32,36 @@ Course.belongsToMany(Student, {
   foreignKey: "course_id",
 });
 
-// ADMIN <-> COURSE (MANAGES)
+// ADMIN <-> COURSE (MANAGE)
 Admin.belongsToMany(Course, {
   through: Manage,
   foreignKey: "admin_id",
 });
+
 Course.belongsToMany(Admin, {
   through: Manage,
   foreignKey: "course_id",
 });
 
 
-export { User, Student, Instructor, Admin, Course, Enrollment, Manage };
+Course.hasMany(Lab, {
+  foreignKey: "course_id",
+  as: "labs",
+});
+
+Lab.belongsTo(Course, {
+  foreignKey: "course_id",
+  as: "course",
+});
+
+
+export {
+  User,
+  Student,
+  Instructor,
+  Admin,
+  Course,
+  Enrollment,
+  Manage,
+  Lab,
+};
