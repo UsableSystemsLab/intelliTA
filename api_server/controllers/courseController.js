@@ -1,4 +1,4 @@
-import { Course, Lab } from "../models/index.js";
+import { Course, Lab, Instructor } from "../models/index.js";
 
 const CourseController = {
   /**
@@ -19,20 +19,37 @@ const CourseController = {
    *       201:
    *         description: Course created successfully
    *       400:
-   *         description: Invalid input
+   *         description: Failed to create course
    */
   async createCourse(req, res) {
     try {
-      const { title, course_code, description, instructor_id } = req.body;
+      const { title, course_code, description, instructor_ids } = req.body;
 
-      const newCourse = await Course.create({
+      // Create course
+      const course = await Course.create({
         title,
         course_code,
         description,
-        instructor_id, 
       });
 
-      return res.status(201).json(newCourse);
+      // Assign instructors (many-to-many)
+      if (Array.isArray(instructor_ids) && instructor_ids.length > 0) {
+        await course.setInstructors(instructor_ids);
+      }
+
+      // Fetch full course with instructors included
+      const createdCourse = await Course.findByPk(course.course_id, {
+        include: [
+          {
+            model: Instructor,
+            as: "instructors",
+            attributes: ["instructor_id", "user_id", "department"],
+            through: { attributes: [] } // hide pivot table
+          },
+        ],
+      });
+
+      return res.status(201).json(createdCourse);
     } catch (error) {
       return res.status(400).json({
         message: "Error creating course",
@@ -47,7 +64,7 @@ const CourseController = {
    *   get:
    *     security:
    *       - bearerAuth: []
-   *     summary: Get all courses
+   *     summary: Retrieve all courses
    *     tags: [Courses]
    *     responses:
    *       200:
@@ -59,9 +76,12 @@ const CourseController = {
     try {
       const courses = await Course.findAll({
         include: [
+          { model: Lab, as: "labs" },
           {
-            model: Lab,
-            as: "labs",
+            model: Instructor,
+            as: "instructors",
+            attributes: ["instructor_id", "user_id", "department"],
+            through: { attributes: [] },
           },
         ],
         order: [["created_at", "DESC"]],
@@ -103,9 +123,12 @@ const CourseController = {
 
       const course = await Course.findByPk(id, {
         include: [
+          { model: Lab, as: "labs" },
           {
-            model: Lab,
-            as: "labs",
+            model: Instructor,
+            as: "instructors",
+            attributes: ["instructor_id", "user_id", "department"],
+            through: { attributes: [] },
           },
         ],
       });
@@ -137,7 +160,6 @@ const CourseController = {
    *         required: true
    *         schema:
    *           type: integer
-   *         description: Course ID
    *     requestBody:
    *       required: true
    *       content:
@@ -146,7 +168,7 @@ const CourseController = {
    *             $ref: '#/components/schemas/Course'
    *     responses:
    *       200:
-   *         description: Course updated
+   *         description: Course updated successfully
    *       404:
    *         description: Course not found
    */

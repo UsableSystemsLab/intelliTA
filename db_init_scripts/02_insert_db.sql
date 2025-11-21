@@ -23,10 +23,16 @@ INSERT INTO admins (user_id, access_level)
 VALUES
   (1, 'superadmin');   
 
-INSERT INTO courses (title, course_code, description, instructor_id)
+INSERT INTO courses (title, course_code, description)
 VALUES
-  ('Introduction to Programming', 'CPCS202', 'Learn basic programming.', 1),
-  ('Data Structures', 'CPCS204', 'Learn about data structures.', 2);
+  ('Introduction to Programming', 'CPCS202', 'Learn basic programming.'),
+  ('Data Structures', 'CPCS204', 'Learn about data structures.');
+
+INSERT INTO course_instructors (course_id, instructor_id)
+VALUES
+  (1, 1),  
+  (2, 2);   
+
 
 
 

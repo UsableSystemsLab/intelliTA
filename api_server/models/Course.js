@@ -1,6 +1,5 @@
 import { DataTypes } from "sequelize";
-import { sequelize } from "../configs/postgresDB.js";
-
+import { sequelize } from "../configs/postgresDB.js"; 
 /**
  * @swagger
  * components:
@@ -10,25 +9,20 @@ import { sequelize } from "../configs/postgresDB.js";
  *       properties:
  *         course_id:
  *           type: integer
- *           example: 3
  *         title:
  *           type: string
- *           example: 'Introduction to Programming'
  *         course_code:
  *           type: string
- *           example: 'CPCS202'
  *         description:
  *           type: string
- *           example: 'Fundamentals of programming using Java.'
- *         instructor_id:
- *           type: integer
- *           example: 5
+ *         instructor_ids:
+ *           type: array
+ *           items:
+ *             type: integer
  *         created_at:
  *           type: string
  *           format: date-time
- *           example: '2025-01-20T12:00:00Z'
  */
-
 
 const Course = sequelize.define(
   "Course",
@@ -49,23 +43,13 @@ const Course = sequelize.define(
     description: {
       type: DataTypes.TEXT,
     },
-    instructor_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
   },
   {
     tableName: "courses",
     timestamps: true,
     createdAt: "created_at",
-    updatedAt: false, 
+    updatedAt: false,
   }
 );
-Course.associate = (models) => {
-  Course.hasMany(models.Lab, {
-    foreignKey: "course_id",
-    as: "labs",
-  });
-};
 
 export default Course;

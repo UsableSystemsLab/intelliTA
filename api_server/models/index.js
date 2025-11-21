@@ -6,6 +6,7 @@ import Course from "./Course.js";
 import Enrollment from "./Enrollment.js";
 import Manage from "./Manage.js";
 import Lab from "./Lab.js";  
+import CourseInstructor from "./CourseInstructor.js";
 
 // USER -> STUDENT / INSTRUCTOR / ADMIN
 User.hasOne(Student, { foreignKey: "user_id" });
@@ -17,9 +18,19 @@ Instructor.belongsTo(User, { foreignKey: "user_id" });
 User.hasOne(Admin, { foreignKey: "user_id" });
 Admin.belongsTo(User, { foreignKey: "user_id" });
 
-// INSTRUCTOR -> COURSE
-Instructor.hasMany(Course, { foreignKey: "instructor_id" });
-Course.belongsTo(Instructor, { foreignKey: "instructor_id" });
+// updated relations so now it becomes many to many
+Course.belongsToMany(Instructor, {
+  through: CourseInstructor,
+  foreignKey: "course_id",
+  as: "instructors",
+});
+
+Instructor.belongsToMany(Course, {
+  through: CourseInstructor,
+  foreignKey: "instructor_id",
+  as: "courses",
+});
+
 
 // STUDENT <-> COURSE (ENROLLMENT)
 Student.belongsToMany(Course, {

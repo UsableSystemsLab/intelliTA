@@ -39,15 +39,14 @@ CREATE TABLE courses (
   title VARCHAR(100) NOT NULL,
   course_code VARCHAR(8) NOT NULL,
   description TEXT,
-  instructor_id INT NOT NULL REFERENCES instructors(instructor_id),
   created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- ENROLLMENT Table (Junction between Students and Courses)
 CREATE TABLE enrollments (
   enrollment_id SERIAL PRIMARY KEY,
-  student_id INT NOT NULL REFERENCES students(student_id),
-  course_id INT NOT NULL REFERENCES courses(course_id),
+  student_id INT NOT NULL REFERENCES students(student_id) ON DELETE CASCADE,
+  course_id INT NOT NULL REFERENCES courses(course_id) ON DELETE CASCADE,
   enrollment_date DATE DEFAULT CURRENT_DATE,
   grade VARCHAR(2),
   status VARCHAR(20) CHECK (status IN ('active', 'completed', 'dropped')) DEFAULT 'active',
@@ -57,8 +56,8 @@ CREATE TABLE enrollments (
 -- MANAGES Table (Junction between Admins and Courses)
 CREATE TABLE manages (
   edit_id SERIAL PRIMARY KEY,
-  admin_id INT NOT NULL REFERENCES admins(admin_id),
-  course_id INT NOT NULL REFERENCES courses(course_id),
+  admin_id INT NOT NULL REFERENCES admins(admin_id) ON DELETE CASCADE,
+  course_id INT NOT NULL REFERENCES courses(course_id) ON DELETE CASCADE,
   permission_level VARCHAR(20),
   UNIQUE(admin_id, course_id)
 );
@@ -72,4 +71,13 @@ CREATE TABLE labs (
   markdown_text TEXT,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Course instructor Table, so more than one instructor can teach one course
+
+CREATE TABLE course_instructors (
+    id SERIAL PRIMARY KEY,
+    course_id INT NOT NULL REFERENCES courses(course_id) ON DELETE CASCADE,
+    instructor_id INT NOT NULL REFERENCES instructors(instructor_id) ON DELETE CASCADE,
+    UNIQUE(course_id, instructor_id)
 );
