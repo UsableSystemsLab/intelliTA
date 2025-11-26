@@ -5,9 +5,11 @@ import {
   signInWithPopup,
   GoogleAuthProvider
 } from 'firebase/auth';
-import { auth } from '@/utils/firebase';
+import { auth,db } from '@/utils/firebase';
 import { updateProfile } from 'firebase/auth';
 import { useTranslation } from "react-i18next";
+import { doc, setDoc,getDoc  } from "firebase/firestore";
+import getRoleFromEmail from '@/utils/roleUtils';
 
 const SignUp = () => {
   const { t, i18n } = useTranslation();
@@ -53,9 +55,19 @@ const SignUp = () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
-      // Save the user's full name
       await updateProfile(userCredential.user, {
         displayName: `${firstName} ${lastName}`
+      });
+      // get the role based on email
+      const role = getRoleFromEmail(email);
+
+      // Save user data + role in Firestore
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        role: role,
+        createdAt: new Date()
       });
 
       navigate('/');
@@ -68,24 +80,49 @@ const SignUp = () => {
   };
 
   const handleGoogleSignUp = async () => {
-    setError('');
-    setLoading(true);
-    const provider = new GoogleAuthProvider();
+  setError('');
+  setLoading(true);
 
-    try {
-      await signInWithPopup(auth, provider);
-      navigate('/');
-    } catch (err) {
-      console.error('Google sign up error:', err);
-      if (err.code === 'auth/popup-closed-by-user') {
-        setError('Sign up cancelled.');
-      } else {
-        setError(getErrorMessage(err.code));
-      }
-    } finally {
-      setLoading(false);
+  const provider = new GoogleAuthProvider();
+
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+
+    // Determine role based on email
+    const role = getRoleFromEmail(user.email);
+
+    // Firestore reference
+    const userRef = doc(db, "users", user.uid);
+    const existingDoc = await getDoc(userRef);
+
+    // Only create user document if it doesn't exist
+    if (!existingDoc.exists()) {
+      await setDoc(userRef, {
+        email: user.email,
+        displayName: user.displayName || "",
+        role: role,
+        provider: "google",
+        createdAt: new Date(),
+      });
     }
-  };
+
+    navigate('/');
+
+  } catch (err) {
+    console.error('Google sign up error:', err);
+
+    if (err.code === 'auth/popup-closed-by-user') {
+      setError('Sign up cancelled.');
+    } else {
+      setError(getErrorMessage(err.code));
+    }
+
+  } finally {
+    setLoading(false);
+  }
+};
+ 
 
   return (
     <div className="fixed inset-0 w-screen h-screen bg-gradient-to-br from-gray-900 to-gray-900 flex items-center justify-center p-4 sm:p-8 overflow-hidden">
