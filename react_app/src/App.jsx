@@ -11,6 +11,9 @@ import CreateCourse from "@/pages/CreateCourse.jsx";
 import '@/styles/App.css'
 import ProtectedRoutes from '@/utils/ProtectedRoutes'
 import { useTranslation } from 'react-i18next';
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/utils/firebase";
+import InstructorRoute from "@/utils/InstructorRoute"; 
 
  function App() {
   const [user, setUser] = useState(null)
@@ -19,13 +22,29 @@ import { useTranslation } from 'react-i18next';
   const isArabic = i18n.language === 'ar'
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser)
-      setLoading(false)
-    })
+    // modify the useEffect so now when user logs into the system it takes his role from firestore
+  const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    if (currentUser) {
+      const docRef = doc(db, "users", currentUser.uid);
+      const docSnap = await getDoc(docRef);
 
-    return () => unsubscribe()
-  }, [])
+      if (docSnap.exists()) {
+        setUser({
+          ...currentUser,
+          role: docSnap.data().role, 
+        });
+      } else {
+        setUser(currentUser);
+      }
+    } else {
+      setUser(null);
+    }
+
+    setLoading(false);
+  });
+
+  return () => unsubscribe();
+}, []);
    useEffect(() => {
     document.documentElement.lang = i18n.language
     document.documentElement.dir = isArabic ? 'rtl' : 'ltr'
@@ -52,7 +71,15 @@ import { useTranslation } from 'react-i18next';
     <Route element={<ProtectedRoutes user={user} />}>
       <Route path="/courses" element={<Courses user={user} />} />
       <Route path="/courses/:courseId" element={<CourseLabs user={user} />} />
-      <Route path="/courses/create" element={<CreateCourse user={user} />} />
+      {/* This route can be accessed only by instructor */}
+      <Route
+        path="/courses/create"
+        element={
+       <InstructorRoute user={user}>
+        <CreateCourse user={user} />
+       </InstructorRoute>
+        }
+      />
     </Route>
 
   </Routes>

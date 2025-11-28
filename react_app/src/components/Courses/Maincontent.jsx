@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Card from "./CoursesCard";
-export default function Maincontent() {
+export default function Maincontent({ user }) {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
   const [courses, setCourses] = useState([]);
@@ -92,15 +92,18 @@ export default function Maincontent() {
             ))}
         </div>
 
-        {/* Create course button */}
-        <div className="w-full flex justify-center mt-20 mb-15">
-          <Link
-            to="/courses/create"
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-semibold shadow-lg"
-          >
-            + Create Course
-          </Link>
-        </div>
+        {/* Create course button, and now only instructor can see the button */}
+        {user?.role === "instructor" && (
+    <div className="w-full flex justify-center mt-20 mb-15">
+     <Link
+      to="/courses/create"
+      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-semibold shadow-lg"
+    >
+      + Create Course
+    </Link>
+    </div>
+)}
+
       </main>
     </>
   );

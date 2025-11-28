@@ -6,6 +6,7 @@ export default function getRoleFromEmail(email) {
  else if (email.endsWith("@kau.edu.sa")) {
     return "instructor";
   }
-
-  else return "unknown"; 
+  // this has been chnaged to instructor because I wanted to test with instructor account 
+  // later we should ask doctor about what this should be
+  else return "instructor"; 
 }

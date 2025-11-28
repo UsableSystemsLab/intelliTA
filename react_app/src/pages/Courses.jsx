@@ -8,7 +8,7 @@ export default function Courses({ user }) {
             <Nav user={ user } />
             <div className='flex relative overflow-hidden bg-transparent min-h-screen'>
              <Sidebar />
-            <Maincontent /> 
+            <Maincontent user={user} />
             </div>
             <Footer />
         </>
