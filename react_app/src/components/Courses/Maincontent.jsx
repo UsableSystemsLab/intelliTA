@@ -1,12 +1,41 @@
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";   
+import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 import Card from "./CoursesCard";
 export default function Maincontent() {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch courses from backend API GET courses
+  useEffect(() => {
+    async function loadCourses() {
+      try {
+        const response = await fetch("http://localhost:4000/api/courses", {
+          headers: {
+            // also this should not be hard codded. 
+            "Content-Type": "application/json",
+            "Authorization": "Bearer 1111",
+          },
+        });
+
+        const data = await response.json();
+        setCourses(data);
+      } catch (err) {
+        console.error("Error loading courses:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadCourses();
+  }, []);
+
   return (
     <>
       <main className="relative bg-transparent min-h-screen w-full ">
+        {/* Background effects */}
         <div
           aria-hidden="true"
           className="absolute inset-x-0 -top-40 -z-10 transform-gpu blur-3xl sm:-top-80"
@@ -22,6 +51,7 @@ export default function Maincontent() {
                  sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
           ></div>
         </div>
+        {/* Bottom background effect */}
         <div
           aria-hidden="true"
           className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu
@@ -38,43 +68,31 @@ export default function Maincontent() {
                  sm:left-[calc(50%+30rem)] sm:w-[72.1875rem]"
           ></div>
         </div>
-        {/* cards */}
+        {/* Courses grid */}
         <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center px-6 mt-10">
-          <Card
-            code="CPCS-202"
-            title="Basic Java Programming"
-            description={t("singletonDesc")}
-            status={true}
-          />
-          <Card
-            code="CPCS-203"
-            title="OOP Programming"
-            description={t("singletonDesc")}
-            status={false}
-          />
-          <Card
-            code="CPCS-204"
-            title="Data Structures"
-            description={t("singletonDesc")}
-          />
-          <Card
-            code="CPIT-252"
-            title="Software Design Patterns"
-            description={t("singletonDesc")}
-          />
-          <Card
-            code="CPIT-305"
-            title="Advanced Programming"
-            description={t("singletonDesc")}
-          />
-          <Card
-            code="CPIT-405"
-            title="Web Application Development"
-            description={t("singletonDesc")}
-            status={false}
-          />
-        </div>  
-        {/* create course button */}
+
+          {/* Loading */}
+          {loading && <p className="text-white text-xl">Loading courses...</p>}
+
+          {/* if there is no courses, this line will execute */}
+          {!loading && courses.length === 0 && (
+            <p className="text-white text-xl">No courses available.</p>
+          )}
+
+          {/* Render courses dynamically instead of hard coding it */}
+          {!loading &&
+            courses.map((course) => (
+              <Card
+                key={course.course_id}
+                code={course.course_code}
+                title={course.title}
+                description={course.description}
+                status={false} // we should figure out what we should do with this
+              />
+            ))}
+        </div>
+
+        {/* Create course button */}
         <div className="w-full flex justify-center mt-20 mb-15">
           <Link
             to="/courses/create"

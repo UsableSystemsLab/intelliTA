@@ -5,7 +5,10 @@ export default function Card({ code, title, description, status }) {
   const { t } = useTranslation();
   return (
     <>
-      <div className="relative bg-slate-800 text-white max-w-sm p-6 border border-slate-700 rounded-xl shadow-md h-full flex flex-col">
+      <div
+        className="relative bg-slate-800 text-white max-w-sm w-full p-6 border border-slate-700 rounded-xl shadow-md 
+     min-h-[260px] flex flex-col justify-between"
+      >
         <h5 dir="ltr" className="mb-3 text-2xl font-semibold tracking-tight">
           {code}&nbsp;{title}
         </h5>
