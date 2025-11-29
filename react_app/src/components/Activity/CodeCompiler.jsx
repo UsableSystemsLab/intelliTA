@@ -6,12 +6,13 @@ export const compileCode = async (code, language, setOutput, setIsRunning) => {
     await new Promise(resolve => setTimeout(resolve, 100));
 
     try {
+        // --------------------------------------------------------------------
         // just simulate output
         // This is temporary until connect to a real compiler API
 
         if (code.includes('System.out.println')) {
             const printMatches = code.match(/System\.out\.println\([^)]+\)/g);
-
+        
             if (printMatches) {
                 const outputs = printMatches.map(match => {
                     const stringMatch = match.match(/"([^"]+)"/);
@@ -20,7 +21,7 @@ export const compileCode = async (code, language, setOutput, setIsRunning) => {
                     }
                     return '';
                 });
-
+        // -----------------------------------------------------------------------
                 const outputText = outputs.filter(o => o).join('\n');
                 setOutput(`Compilation successful!\n\nOutput:\n${outputText}\n\n(not real compiler just simulation)`);
             } else {

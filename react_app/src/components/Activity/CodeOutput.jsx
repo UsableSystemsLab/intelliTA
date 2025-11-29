@@ -16,7 +16,6 @@ export default function CodeOutput({
   }, [value]);
 
   const handleEditorDidMount = (editor, monaco) => {
-    console.log('✅ Code Output Editor mounted successfully!');
     setIsReady(true);
 
     // Configure custom theme

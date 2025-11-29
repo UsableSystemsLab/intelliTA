@@ -24,7 +24,6 @@ export default function CodeInput({
   };
 
   const handleEditorDidMount = (editor, monaco) => {
-    console.log('✅ Code Input Editor mounted successfully!');
     setIsReady(true);
 
     monaco.editor.defineTheme('custom-dark', {

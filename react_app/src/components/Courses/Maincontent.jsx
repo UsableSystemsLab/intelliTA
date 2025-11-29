@@ -2,7 +2,6 @@ import { useTranslation } from "react-i18next";
 import Background from "@/components/Background";
 export default function Maincontent() {
   const { t, i18n } = useTranslation();
-  //It is okay that isArabic variable to remain unused
   const isArabic = i18n.language === "ar";
   return (
     <>

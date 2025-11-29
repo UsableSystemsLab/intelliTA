@@ -1,9 +1,7 @@
 export default function VideoPlayer({ videoUrl, title }) {
-    // Convert YouTube URL to embed URL
     const getEmbedUrl = (url) => {
         if (!url) return "";
 
-        // Check if it's a YouTube URL
         const youtubeRegex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/;
         const match = url.match(youtubeRegex);
 

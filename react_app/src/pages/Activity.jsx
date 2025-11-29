@@ -24,6 +24,7 @@ export default function Activity({ user }) {
                                 <Instructions
                                     title="Lab Instructions"
                                     problemStatement="In this lab, you will learn the basics of Java programming. Write a simple program that prints 'Hello, World!' to the console. Click the Run button to execute your code and see the output below."
+                                    // this should be button to popup the file like text in futrure or maybe it will be embedded in the files compiler
                                     fileName="HelloWorld.java"
                                 />
                             </div>
@@ -45,7 +46,7 @@ export default function Activity({ user }) {
                                     </div>
                                     <div className="w-80 flex-shrink-0">
                                         <VideoPlayer
-                                            title="Tutorial Video"
+                                            title="Lab Tutorial Video"
                                             videoUrl="https://www.youtube.com/watch?v=M88sDrY66r8"
                                         />
                                     </div>
