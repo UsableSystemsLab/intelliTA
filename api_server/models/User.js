@@ -11,6 +11,9 @@ import { sequelize } from "../configs/postgresDB.js";
  *         id:
  *           type: string
  *           example: '123e4567-e89b-12d3-a456-426614174000'
+ *         firebaseId:
+ *            type: string
+ *            example: 'LkIlohuoMVXJDxED0wm9SFrPhpO2'
  *         first_name:
  *           type: string
  *           example: 'khalid '
@@ -30,6 +33,12 @@ const User = sequelize.define(
       field: "user_id",
       primaryKey: true,
       autoIncrement: true,
+    },
+    firebaseId: {
+      type: DataTypes.STRING(128),
+      field: "firebase_uid",
+      allowNull: false,
+      unique: true,
     },
     first_name: {
       type: DataTypes.STRING(15),

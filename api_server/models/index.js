@@ -1,3 +1,45 @@
 import User from "./User.js";
+import Student from "./Student.js";
+import Instructor from "./Instructor.js";
+import Admin from "./Admin.js";
+import Course from "./Course.js";
+import Enrollment from "./Enrollment.js";
+import Manage from "./Manage.js";
 
-export { User };
+// USER -> STUDENT / INSTRUCTOR / ADMIN
+User.hasOne(Student, { foreignKey: "user_id" });
+Student.belongsTo(User, { foreignKey: "user_id" });
+
+User.hasOne(Instructor, { foreignKey: "user_id" });
+Instructor.belongsTo(User, { foreignKey: "user_id" });
+
+User.hasOne(Admin, { foreignKey: "user_id" });
+Admin.belongsTo(User, { foreignKey: "user_id" });
+
+// COURSE -> INSTRUCTOR
+Instructor.hasMany(Course, { foreignKey: "instructor_id" });
+Course.belongsTo(Instructor, { foreignKey: "instructor_id" });
+
+// STUDENT <-> COURSE (ENROLLMENT)
+Student.belongsToMany(Course, {
+  through: Enrollment,
+  foreignKey: "student_id",
+});
+
+Course.belongsToMany(Student, {
+  through: Enrollment,
+  foreignKey: "course_id",
+});
+
+// ADMIN <-> COURSE (MANAGES)
+Admin.belongsToMany(Course, {
+  through: Manage,
+  foreignKey: "admin_id",
+});
+Course.belongsToMany(Admin, {
+  through: Manage,
+  foreignKey: "course_id",
+});
+
+
+export { User, Student, Instructor, Admin, Course, Enrollment, Manage };
