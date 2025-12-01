@@ -5,8 +5,10 @@ import {
   signInWithPopup,
   GoogleAuthProvider
 } from 'firebase/auth';
-import { auth } from '@/utils/firebase';
+import { auth, db } from '@/utils/firebase';
 import { useTranslation } from "react-i18next";
+import { doc, setDoc, getDoc } from "firebase/firestore";
+import getRoleFromEmail from '@/utils/roleUtils';
 
 const Login = () => {
   const { t, i18n } = useTranslation();
@@ -57,7 +59,27 @@ const Login = () => {
     const provider = new GoogleAuthProvider();
 
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Determine role based on email
+      const role = getRoleFromEmail(user.email);
+
+      // Firestore reference
+      const userRef = doc(db, "users", user.uid);
+      const existingDoc = await getDoc(userRef);
+
+      // Only create user document if it doesn't exist
+      if (!existingDoc.exists()) {
+        await setDoc(userRef, {
+          email: user.email,
+          displayName: user.displayName || "",
+          role: role,
+          provider: "google",
+          createdAt: new Date(),
+        });
+      }
+
       navigate("/");
     } catch (err) {
       console.error("Google sign in error:", err);
