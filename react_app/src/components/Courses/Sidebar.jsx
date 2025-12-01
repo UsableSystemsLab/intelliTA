@@ -3,7 +3,7 @@ export default function Sidebar (){
   const { t } = useTranslation();
     return(
         <>
-         <aside className=" opacity-95 w-64 h-screen bg-black/62 text-gray-300 p-4 flex flex-col">
+         <aside className=" opacity-95 w-64 min-h-screen bg-black/62 text-gray-300 p-4 flex flex-col">
           <nav className="flex flex-col gap-1 mt-4">
             <a
               href="#"
