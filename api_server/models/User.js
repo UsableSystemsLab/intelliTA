@@ -8,9 +8,6 @@ import { sequelize } from "../configs/postgresDB.js";
  *     User:
  *       type: object
  *       properties:
- *         id:
- *           type: string
- *           example: '123e4567-e89b-12d3-a456-426614174000'
  *         firebaseId:
  *            type: string
  *            example: 'LkIlohuoMVXJDxED0wm9SFrPhpO2'
@@ -42,12 +39,12 @@ const User = sequelize.define(
     },
     first_name: {
       type: DataTypes.STRING(15),
-      field: "fName",
+      field: "fname",
       allowNull: false,
     },
     last_name: {
       type: DataTypes.STRING(15),
-      field: "lName",
+      field: "lname",
       allowNull: false,
     },
     email: {
