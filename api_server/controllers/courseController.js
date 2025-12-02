@@ -1,4 +1,4 @@
-import { Course, Lab, Instructor } from "../models/index.js";
+import { Course, Lab, Instructor, User } from "../models/index.js";
 
 const CourseController = {
   /**
@@ -14,7 +14,16 @@ const CourseController = {
    *       content:
    *         application/json:
    *           schema:
-   *             $ref: '#/components/schemas/Course'
+   *             properties:
+   *               title:
+   *                 type: string
+   *               course_code:
+   *                 type: string
+   *               description:
+   *                 type: string
+   *               firebaseId:
+   *                 type: string
+   *                 description: The Firebase UID of the creator
    *     responses:
    *       201:
    *         description: Course created successfully
@@ -23,7 +32,26 @@ const CourseController = {
    */
   async createCourse(req, res) {
     try {
-      const { title, course_code, description, instructor_ids } = req.body;
+      const { title, course_code, description, firebaseId } = req.body;
+
+      if (!firebaseId) {
+        return res.status(400).json({ message: "firebaseId is required" });
+      }
+
+      // Find the user
+      const user = await User.findOne({ where: { firebaseId } });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Find or create Instructor profile for this user
+      let instructor = await Instructor.findOne({ where: { user_id: user.id } });
+      if (!instructor) {
+        instructor = await Instructor.create({
+          user_id: user.id,
+          department: "General", // Default department
+        });
+      }
 
       // Create course
       const course = await Course.create({
@@ -32,10 +60,8 @@ const CourseController = {
         description,
       });
 
-      // Assign instructors (many-to-many)
-      if (Array.isArray(instructor_ids) && instructor_ids.length > 0) {
-        await course.setInstructors(instructor_ids);
-      }
+      // Assign this instructor to the course
+      await course.addInstructor(instructor);
 
       // Fetch full course with instructors included
       const createdCourse = await Course.findByPk(course.course_id, {
@@ -44,7 +70,7 @@ const CourseController = {
             model: Instructor,
             as: "instructors",
             attributes: ["instructor_id", "user_id", "department"],
-            through: { attributes: [] } // hide pivot table
+            through: { attributes: [] }, // hide pivot table
           },
         ],
       });
@@ -65,7 +91,19 @@ const CourseController = {
    *     security:
    *       - bearerAuth: []
    *     summary: Retrieve all courses
+   *     description: Retrieve all courses. Optionally filter by userId or firebaseId to get courses created/taught by a specific user.
    *     tags: [Courses]
+   *     parameters:
+   *       - in: query
+   *         name: userId
+   *         schema:
+   *           type: integer
+   *         description: Filter by User ID (internal ID)
+   *       - in: query
+   *         name: firebaseId
+   *         schema:
+   *           type: string
+   *         description: Filter by Firebase User ID
    *     responses:
    *       200:
    *         description: List of all courses
@@ -74,16 +112,38 @@ const CourseController = {
    */
   async getAllCourses(req, res) {
     try {
+      const { userId, firebaseId } = req.query;
+      
+      let filterUserId = userId;
+
+      if (firebaseId) {
+        const user = await User.findOne({ where: { firebaseId } });
+        if (user) {
+          filterUserId = user.id;
+        } else {
+          // User not found with that firebaseId
+          return res.status(200).json([]);
+        }
+      }
+
+      const includeOptions = [
+        { model: Lab, as: "labs" },
+        {
+          model: Instructor,
+          as: "instructors",
+          attributes: ["instructor_id", "user_id", "department"],
+          through: { attributes: [] },
+        },
+      ];
+
+      if (filterUserId) {
+        // Filter instructors to only include the one matching the user
+        // This implicitly filters the courses to those taught by this user
+        includeOptions[1].where = { user_id: filterUserId };
+      }
+
       const courses = await Course.findAll({
-        include: [
-          { model: Lab, as: "labs" },
-          {
-            model: Instructor,
-            as: "instructors",
-            attributes: ["instructor_id", "user_id", "department"],
-            through: { attributes: [] },
-          },
-        ],
+        include: includeOptions,
         order: [["created_at", "DESC"]],
       });
 

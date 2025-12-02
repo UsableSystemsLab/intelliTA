@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function CreateCourseMain() {
+export default function CreateCourseMain({ user }) {
   const [title, setTitle] = useState("");
   const [courseCode, setCourseCode] = useState("");
   const [description, setDescription] = useState("");
@@ -27,7 +27,7 @@ export default function CreateCourseMain() {
           title,
           course_code: courseCode,
           description,
-          instructor_ids: [],
+          firebaseId: user?.uid,
         }),
       });
 

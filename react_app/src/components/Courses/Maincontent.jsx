@@ -12,7 +12,13 @@ export default function Maincontent({ user }) {
   useEffect(() => {
     async function loadCourses() {
       try {
-        const response = await fetch("http://localhost:4000/api/courses", {
+        let url = "http://localhost:4000/api/courses";
+        // If user is admin, fetch all courses. Otherwise, filter by user.
+        if (user && user.uid && user.role !== "admin") {
+          url += `?firebaseId=${user.uid}`;
+        }
+
+        const response = await fetch(url, {
           headers: {
             // also this should not be hard codded. 
             "Content-Type": "application/json",

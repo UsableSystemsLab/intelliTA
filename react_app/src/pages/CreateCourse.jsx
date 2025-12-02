@@ -10,7 +10,7 @@ export default function CreateCourse({ user }) {
 
       <div className="flex relative overflow-hidden bg-transparent min-h-screen">
         <Sidebar />
-        <CreateCourseMain />
+        <CreateCourseMain user={user} />
       </div>
       <Footer />
     </>
