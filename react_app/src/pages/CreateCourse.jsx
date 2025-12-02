@@ -8,7 +8,7 @@ export default function CreateCourse({ user }) {
     <>
       <Nav user={user} />
 
-      <div className="flex relative overflow-hidden bg-transparent min-h-screen">
+      <div className="flex relative overflow-hidden bg-gray-900 min-h-screen">
         <Sidebar />
         <CreateCourseMain />
       </div>

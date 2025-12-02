@@ -2,11 +2,16 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Card from "./CoursesCard";
+
 export default function Maincontent({ user }) {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // State for making only 6 courses per page appears 
+  const [currentPage, setCurrentPage] = useState(1);
+  const coursesPerPage = 6;
 
   // Fetch courses from backend API GET courses
   useEffect(() => {
@@ -32,44 +37,29 @@ export default function Maincontent({ user }) {
     loadCourses();
   }, []);
 
+  // Pagination Logic
+  const indexOfLastCourse = currentPage * coursesPerPage;
+  const indexOfFirstCourse = indexOfLastCourse - coursesPerPage;
+  const currentCourses = courses.slice(indexOfFirstCourse, indexOfLastCourse);
+  const totalPages = Math.ceil(courses.length / coursesPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+
   return (
     <>
-      <main className="relative bg-transparent min-h-screen w-full ">
-        {/* Background effects */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 -top-40 -z-10 transform-gpu blur-3xl sm:-top-80"
-        >
-          <div
-            style={{
-              clipPath:
-                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-            }}
-            className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem]
-                 -translate-x-1/2 rotate-[30deg]
-                 bg-gradient-to-tr from-blue-100 to-indigo-300 opacity-30
-                 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
-          ></div>
-        </div>
-        {/* Bottom background effect */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu
-               overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
-        >
-          <div
-            style={{
-              clipPath:
-                "polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)",
-            }}
-            className="relative left-[calc(50%+11rem)] aspect-[1155/678] w-[36.125rem]
-                 -translate-x-1/2 -rotate-[30deg]
-                 bg-gradient-to-tr from-blue-100 to-indigo-300 opacity-30
-                 sm:left-[calc(50%+30rem)] sm:w-[72.1875rem]"
-          ></div>
-        </div>
+      <main className="relative bg-gray-900 min-h-screen w-full p-8 overflow-y-auto">
         {/* Courses grid */}
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 justify-items-center px-6 mt-10">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 px-6 mt-10">
 
           {/* Loading */}
           {loading && <p className="text-white text-xl">Loading courses...</p>}
@@ -81,7 +71,7 @@ export default function Maincontent({ user }) {
 
           {/* Render courses dynamically instead of hard coding it */}
           {!loading &&
-            courses.map((course) => (
+            currentCourses.map((course) => (
               <Card
                 key={course.course_id}
                 code={course.course_code}
@@ -92,17 +82,48 @@ export default function Maincontent({ user }) {
             ))}
         </div>
 
+        {/* Pagination Controls */}
+        {!loading && courses.length > coursesPerPage && (
+            <div className="flex justify-center items-center gap-6 mt-12 mb-8">
+                <button 
+                    onClick={handlePrevPage} 
+                    disabled={currentPage === 1}
+                    className={`p-3 rounded-full transition-all duration-200 ${currentPage === 1 ? 'text-gray-600 cursor-not-allowed' : 'text-white bg-gray-800 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/30'}`}
+                    aria-label="Previous Page"
+                >
+                    <svg className={`w-6 h-6 ${isArabic ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                
+                <span className="text-gray-400 font-medium">
+                    Page <span className="text-white">{currentPage}</span> of <span className="text-white">{totalPages}</span>
+                </span>
+
+                <button 
+                    onClick={handleNextPage} 
+                    disabled={currentPage === totalPages}
+                    className={`p-3 rounded-full transition-all duration-200 ${currentPage === totalPages ? 'text-gray-600 cursor-not-allowed' : 'text-white bg-gray-800 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/30'}`}
+                    aria-label="Next Page"
+                >
+                    <svg className={`w-6 h-6 ${isArabic ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </div>
+        )}
+
         {/* Create course button, and now only instructor can see the button */}
         {user?.role === "instructor" && (
-    <div className="w-full flex justify-center mt-20 mb-15">
-     <Link
-      to="/courses/create"
-      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-semibold shadow-lg"
-    >
-      + Create Course
-    </Link>
-    </div>
-)}
+            <div className="w-full flex justify-center mt-10 mb-15">
+            <Link
+            to="/courses/create"
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-semibold shadow-lg transition-all hover:shadow-blue-600/30"
+            >
+            + Create Course
+            </Link>
+            </div>
+        )}
 
       </main>
     </>
