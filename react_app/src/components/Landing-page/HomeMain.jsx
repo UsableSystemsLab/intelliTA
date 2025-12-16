@@ -3,7 +3,7 @@ import { imageLogos } from "@/utils/imageLogos";
 import CodeFrame from "@/components/Landing-page/CodeFrame";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-
+// This file need to be updated, we should change the icons from SVG to Lucide icons
 export default function HomeMain() {
   const { t, i18n } = useTranslation();
   //It is okay that isArabic variable to remain unused

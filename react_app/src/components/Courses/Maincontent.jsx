@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import Card from "./CoursesCard";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Maincontent({ user }) {
   const { t, i18n } = useTranslation();
@@ -91,9 +92,7 @@ export default function Maincontent({ user }) {
                     className={`p-3 rounded-full transition-all duration-200 ${currentPage === 1 ? 'text-gray-600 cursor-not-allowed' : 'text-white bg-gray-800 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/30'}`}
                     aria-label="Previous Page"
                 >
-                    <svg className={`w-6 h-6 ${isArabic ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                    </svg>
+                    <ChevronLeft className={`w-6 h-6 ${isArabic ? 'rotate-180' : ''}`} />
                 </button>
                 
                 <span className="text-gray-400 font-medium">
@@ -106,9 +105,7 @@ export default function Maincontent({ user }) {
                     className={`p-3 rounded-full transition-all duration-200 ${currentPage === totalPages ? 'text-gray-600 cursor-not-allowed' : 'text-white bg-gray-800 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/30'}`}
                     aria-label="Next Page"
                 >
-                    <svg className={`w-6 h-6 ${isArabic ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
+                    <ChevronRight className={`w-6 h-6 ${isArabic ? 'rotate-180' : ''}`} />
                 </button>
             </div>
         )}
