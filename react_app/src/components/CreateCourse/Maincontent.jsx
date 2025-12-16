@@ -5,6 +5,7 @@ export default function CreateCourseMain({ user }) {
   const [title, setTitle] = useState("");
   const [courseCode, setCourseCode] = useState("");
   const [description, setDescription] = useState("");
+  const [studentList, setStudentList] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -15,25 +16,68 @@ export default function CreateCourseMain({ user }) {
     setLoading(true);
     setErrorMsg("");
 
+    // Parse student list
+    const allowedStudents = studentList
+        .split('\n')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+
+    const createCourseRequest = () => fetch("http://localhost:4000/api/courses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer 1111",
+      },
+      body: JSON.stringify({
+        title,
+        course_code: courseCode,
+        description,
+        firebaseId: user?.uid,
+        allowed_students: allowedStudents.length > 0 ? allowedStudents : null
+      }),
+    });
+
     try {
-      const response = await fetch("http://localhost:4000/api/courses", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // we should make this take from env file instead hard coding it
-          "Authorization": "Bearer 1111",
-        },
-        body: JSON.stringify({
-          title,
-          course_code: courseCode,
-          description,
-          firebaseId: user?.uid,
-        }),
-      });
+      let response = await createCourseRequest();
+
+      if (response.status === 404) {
+        const data = await response.json();
+        if (data.message === "User not found") {
+           // Attempt to sync user to Postgres
+           /* 
+              We need to map Firestore keys (firstName, lastName) 
+              to Postgres keys (first_name, last_name).
+           */
+           const syncResponse = await fetch("http://localhost:4000/api/users", {
+             method: "POST",
+             headers: { "Content-Type": "application/json",
+                        "Authorization": "Bearer 1111",
+             },
+             body: JSON.stringify({
+               firebaseId: user?.uid,
+               first_name: user?.firstName || user?.displayName?.split(' ')[0] || "Unknown",
+               last_name: user?.lastName || user?.displayName?.split(' ').slice(1).join(' ') || "User",
+               email: user?.email
+             })
+           });
+
+           if (syncResponse.ok) {
+             // Retry course creation
+             response = await createCourseRequest();
+           } else {
+             // If sync fails, throw the original error or sync error
+             const syncData = await syncResponse.json();
+             throw new Error("Account sync failed: " + (syncData.message || syncData.error));
+           }
+        } else {
+           // 404 but not "User not found" (e.g. route not found?)
+           throw new Error(data.message || data.error || "Resource not found");
+        }
+      }
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Failed to create course");
+        throw new Error(data.message || data.error || "Failed to create course");
       }
 
       // if creation success, instructor will be navigted to courses page
@@ -84,6 +128,18 @@ export default function CreateCourseMain({ user }) {
             placeholder="Write course description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+          ></textarea>
+        </div>
+
+        <div className="mb-6">
+          <label className="block mb-2 font-semibold">Allowed Student Names (Optional)</label>
+          <p className="text-sm text-gray-400 mb-2">Enter names separated by new lines. If provided, students must pick a name from this list to join.</p>
+          <textarea
+            rows="4"
+            className="w-full p-3 rounded bg-slate-700 border border-slate-600 outline-none"
+            placeholder="Ahmed Ali&#10;Sarah Smith&#10;..."
+            value={studentList}
+            onChange={(e) => setStudentList(e.target.value)}
           ></textarea>
         </div>
         <div className="flex justify-center">

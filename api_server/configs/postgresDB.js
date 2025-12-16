@@ -14,6 +14,8 @@ const sequelize = new Sequelize(
 const postgresDB = async () => {
   try {
     await sequelize.authenticate();
+    // Alter the tables to match the models
+    await sequelize.sync({ alter: true });
     logger.info("Postgres db connection has been established successfully.");
   } catch (error) {
     logger.error("Unable to connect to postgres", error);

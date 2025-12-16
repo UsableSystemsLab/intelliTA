@@ -12,8 +12,7 @@ import '@/styles/App.css'
 import ProtectedRoutes from '@/utils/ProtectedRoutes'
 import { useTranslation } from 'react-i18next';
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/utils/firebase";
-import InstructorRoute from "@/utils/InstructorRoute"; 
+import { db } from "@/utils/firebase"; 
 
  function App() {
   const [user, setUser] = useState(null)
@@ -31,7 +30,7 @@ import InstructorRoute from "@/utils/InstructorRoute";
       if (docSnap.exists()) {
         setUser({
           ...currentUser,
-          role: docSnap.data().role, 
+          ...docSnap.data(),
         });
       } else {
         setUser(currentUser);
@@ -71,15 +70,7 @@ import InstructorRoute from "@/utils/InstructorRoute";
     <Route element={<ProtectedRoutes user={user} />}>
       <Route path="/courses" element={<Courses user={user} />} />
       <Route path="/courses/:courseId" element={<CourseLabs user={user} />} />
-      {/* This route can be accessed only by instructor */}
-      <Route
-        path="/courses/create"
-        element={
-       <InstructorRoute user={user}>
-        <CreateCourse user={user} />
-       </InstructorRoute>
-        }
-      />
+      <Route path="/courses/create" element={<CreateCourse user={user} />} />
     </Route>
 
   </Routes>

@@ -37,11 +37,24 @@ const Course = sequelize.define(
       allowNull: false,
     },
     course_code: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(20),
       allowNull: false,
+    },
+    token: {
+      type: DataTypes.STRING(6),
+      allowNull: false,
+      unique: true,
+    },
+    allowed_students: {
+      type: DataTypes.JSON,
+      defaultValue: null,
     },
     description: {
       type: DataTypes.TEXT,
+    },
+    instructor_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
     },
   },
   {

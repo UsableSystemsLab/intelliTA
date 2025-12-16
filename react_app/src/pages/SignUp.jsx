@@ -9,7 +9,6 @@ import { auth,db } from '@/utils/firebase';
 import { updateProfile } from 'firebase/auth';
 import { useTranslation } from "react-i18next";
 import { doc, setDoc,getDoc  } from "firebase/firestore";
-import getRoleFromEmail from '@/utils/roleUtils';
 
 const SignUp = () => {
   const { t, i18n } = useTranslation();
@@ -58,15 +57,12 @@ const SignUp = () => {
       await updateProfile(userCredential.user, {
         displayName: `${firstName} ${lastName}`
       });
-      // get the role based on email
-      const role = getRoleFromEmail(email);
 
-      // Save user data + role in Firestore
+      // Save user data in Firestore
       await setDoc(doc(db, "users", userCredential.user.uid), {
         firstName: firstName,
         lastName: lastName,
         email: email,
-        role: role,
         createdAt: new Date()
       });
 
@@ -89,9 +85,6 @@ const SignUp = () => {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
 
-    // Determine role based on email
-    const role = getRoleFromEmail(user.email);
-
     // Firestore reference
     const userRef = doc(db, "users", user.uid);
     const existingDoc = await getDoc(userRef);
@@ -101,7 +94,6 @@ const SignUp = () => {
       await setDoc(userRef, {
         email: user.email,
         displayName: user.displayName || "",
-        role: role,
         provider: "google",
         createdAt: new Date(),
       });

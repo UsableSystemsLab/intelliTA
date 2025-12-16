@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import StatusBadge from "@/components/Courses/StatusBadge";
-export default function Card({ code, title, description, status }) {
+export default function Card({ id, code, title, description, status }) {
   const { t } = useTranslation();
   return (
     <>
@@ -16,7 +16,7 @@ export default function Card({ code, title, description, status }) {
 
         <div className="flex justify-between items-center mt-auto">
           <Link
-            to={`/courses/${code}`}
+            to={`/courses/${id}`}
             className="inline-flex items-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium"
           >
             {t("goToActivities")}

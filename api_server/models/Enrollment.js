@@ -39,7 +39,7 @@ const Enrollment = sequelize.define(
       primaryKey: true,
       autoIncrement: true,
     },
-    student_id: {
+    user_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
@@ -53,6 +53,14 @@ const Enrollment = sequelize.define(
     },
     grade: {
       type: DataTypes.STRING(2),
+    },
+    points: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    enrolled_name: {
+      type: DataTypes.STRING(100),
+      allowNull: true,
     },
     status: {
       type: DataTypes.ENUM("active", "completed", "dropped"),

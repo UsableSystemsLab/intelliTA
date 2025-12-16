@@ -1,5 +1,5 @@
 
--- USERS Table (Super)
+-- USERS Table
 CREATE TABLE users (
   user_id SERIAL PRIMARY KEY,
   firebase_uid VARCHAR(128) UNIQUE NOT NULL,
@@ -10,57 +10,31 @@ CREATE TABLE users (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- STUDENTS Table (Sub)
-CREATE TABLE students (
-  user_id INT UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
-  student_id SERIAL PRIMARY KEY,
-  enrollment_date DATE DEFAULT CURRENT_DATE,
-  level VARCHAR(50),
-  points INT DEFAULT 0
-);
-
--- INSTRUCTORS Table (Sub)
-CREATE TABLE instructors (
-  user_id INT UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
-  instructor_id SERIAL PRIMARY KEY,
-  department VARCHAR(50)
-);
-
--- ADMINS Table (Sub)
-CREATE TABLE admins (
-  user_id INT UNIQUE REFERENCES users(user_id),
-  admin_id SERIAL PRIMARY KEY,
-  access_level VARCHAR(20)
-);
-
 -- COURSES Table
 CREATE TABLE courses (
   course_id SERIAL PRIMARY KEY,
+  instructor_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
   title VARCHAR(100) NOT NULL,
   course_code VARCHAR(8) NOT NULL,
+  token VARCHAR(6) UNIQUE,
+  allowed_students JSON DEFAULT NULL,
   description TEXT,
   created_at TIMESTAMP DEFAULT NOW()
 );
 
--- ENROLLMENT Table (Junction between Students and Courses)
+-- ENROLLMENT Table (Junction between Users and Courses for "Student" role)
 CREATE TABLE enrollments (
   enrollment_id SERIAL PRIMARY KEY,
-  student_id INT NOT NULL REFERENCES students(student_id) ON DELETE CASCADE,
+  user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
   course_id INT NOT NULL REFERENCES courses(course_id) ON DELETE CASCADE,
   enrollment_date DATE DEFAULT CURRENT_DATE,
   grade VARCHAR(2),
+  points INT DEFAULT 0,
+  enrolled_name VARCHAR(100) DEFAULT NULL,
   status VARCHAR(20) CHECK (status IN ('active', 'completed', 'dropped')) DEFAULT 'active',
-  UNIQUE(student_id, course_id)
+  UNIQUE(user_id, course_id)
 );
 
--- MANAGES Table (Junction between Admins and Courses)
-CREATE TABLE manages (
-  edit_id SERIAL PRIMARY KEY,
-  admin_id INT NOT NULL REFERENCES admins(admin_id) ON DELETE CASCADE,
-  course_id INT NOT NULL REFERENCES courses(course_id) ON DELETE CASCADE,
-  permission_level VARCHAR(20),
-  UNIQUE(admin_id, course_id)
-);
 -- LABS Table
 CREATE TABLE labs (
   lab_id SERIAL PRIMARY KEY,
@@ -71,13 +45,4 @@ CREATE TABLE labs (
   markdown_text TEXT,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- Course instructor Table, so more than one instructor can teach one course
-
-CREATE TABLE course_instructors (
-    id SERIAL PRIMARY KEY,
-    course_id INT NOT NULL REFERENCES courses(course_id) ON DELETE CASCADE,
-    instructor_id INT NOT NULL REFERENCES instructors(instructor_id) ON DELETE CASCADE,
-    UNIQUE(course_id, instructor_id)
 );

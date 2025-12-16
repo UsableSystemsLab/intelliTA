@@ -1,4 +1,5 @@
-import { Course, Lab, Instructor, User } from "../models/index.js";
+import { Op } from "sequelize";
+import { Course, Lab, User, Enrollment } from "../models/index.js";
 
 const CourseController = {
   /**
@@ -17,8 +18,6 @@ const CourseController = {
    *             properties:
    *               title:
    *                 type: string
-   *               course_code:
-   *                 type: string
    *               description:
    *                 type: string
    *               firebaseId:
@@ -32,7 +31,7 @@ const CourseController = {
    */
   async createCourse(req, res) {
     try {
-      const { title, course_code, description, firebaseId } = req.body;
+      let { title, description, firebaseId, course_code, allowed_students } = req.body;
 
       if (!firebaseId) {
         return res.status(400).json({ message: "firebaseId is required" });
@@ -44,33 +43,40 @@ const CourseController = {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // Find or create Instructor profile for this user
-      let instructor = await Instructor.findOne({ where: { user_id: user.id } });
-      if (!instructor) {
-        instructor = await Instructor.create({
-          user_id: user.id,
-          department: "General", // Default department
-        });
+      // Generate a unique token
+      const generateToken = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < 6; i++) {
+          result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+      };
+
+      let token = generateToken();
+      let existingCourse = await Course.findOne({ where: { token } });
+      while (existingCourse) {
+        token = generateToken();
+        existingCourse = await Course.findOne({ where: { token } });
       }
 
       // Create course
       const course = await Course.create({
         title,
         course_code,
+        token,
         description,
+        allowed_students: allowed_students || null,
+        instructor_id: user.id
       });
 
-      // Assign this instructor to the course
-      await course.addInstructor(instructor);
-
-      // Fetch full course with instructors included
+      // Fetch full course including instructor details
       const createdCourse = await Course.findByPk(course.course_id, {
         include: [
           {
-            model: Instructor,
-            as: "instructors",
-            attributes: ["instructor_id", "user_id", "department"],
-            through: { attributes: [] }, // hide pivot table
+            model: User,
+            as: "instructor",
+            attributes: ["id", "first_name", "last_name", "email", "firebaseId"]
           },
         ],
       });
@@ -79,6 +85,119 @@ const CourseController = {
     } catch (error) {
       return res.status(400).json({
         message: "Error creating course",
+        error: error.message,
+      });
+    }
+  },
+
+  /**
+   * @swagger
+   * /courses/join:
+   *   post:
+   *     summary: Join a course via token
+   *     tags: [Courses]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             properties:
+   *               token:
+   *                 type: string
+   *               firebaseId:
+   *                 type: string
+   *               selected_name:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Successfully joined
+   *       400:
+   *         description: Already enrolled or invalid input
+   *       403:
+   *         description: Name selection required (returns available names)
+   *       404:
+   *         description: Course or User not found
+   */
+  async joinCourse(req, res) {
+    try {
+      const { token, firebaseId, selected_name } = req.body;
+
+      if (!token || !firebaseId) {
+        return res.status(400).json({ message: "Token and firebaseId are required" });
+      }
+
+      // Find user
+      const user = await User.findOne({ where: { firebaseId } });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Find course by token
+      const course = await Course.findOne({ where: { token } });
+      if (!course) {
+        return res.status(404).json({ message: "Invalid course token" });
+      }
+
+      // Check if user is the instructor
+      if (course.instructor_id === user.id) {
+        return res.status(400).json({ message: "You cannot join a course you created." });
+      }
+
+      // Check if already enrolled
+      const existingEnrollment = await Enrollment.findOne({
+        where: {
+          user_id: user.id,
+          course_id: course.course_id,
+        },
+      });
+
+      if (existingEnrollment) {
+        return res.status(400).json({ message: "You are already enrolled in this course" });
+      }
+
+      // Name Selection
+      if (course.allowed_students && Array.isArray(course.allowed_students) && course.allowed_students.length > 0) {
+          // Get all current enrollments for this course that have a name taken
+          const takenEnrollments = await Enrollment.findAll({
+              where: { 
+                  course_id: course.course_id,
+                  enrolled_name: { [Op.ne]: null }
+              }
+          });
+          
+          const takenNames = takenEnrollments.map(e => e.enrolled_name);
+          const availableNames = course.allowed_students.filter(name => !takenNames.includes(name));
+
+          if (!selected_name) {
+              // User hasn't picked a name yet, return list
+              return res.status(403).json({ 
+                  message: "Please select a name from the list", 
+                  requires_name_selection: true,
+                  available_names: availableNames 
+              });
+          }
+
+          if (!availableNames.includes(selected_name)) {
+               return res.status(400).json({ 
+                  message: "Selected name is invalid or already joined",
+                  available_names: availableNames 
+               });
+          }
+      }
+
+      // Create Enrollment
+      await Enrollment.create({
+        user_id: user.id,
+        course_id: course.course_id,
+        status: "active",
+        enrolled_name: selected_name || user.email
+      });
+
+      return res.status(200).json({ message: "Successfully joined the course", course });
+    } catch (error) {
+      console.error("Join Course Error:", error);
+      return res.status(500).json({
+        message: "Error joining course: " + error.message,
         error: error.message,
       });
     }
@@ -126,24 +245,54 @@ const CourseController = {
         }
       }
 
-      const includeOptions = [
-        { model: Lab, as: "labs" },
-        {
-          model: Instructor,
-          as: "instructors",
-          attributes: ["instructor_id", "user_id", "department"],
-          through: { attributes: [] },
-        },
-      ];
+
 
       if (filterUserId) {
-        // Filter instructors to only include the one matching the user
-        // This implicitly filters the courses to those taught by this user
-        includeOptions[1].where = { user_id: filterUserId };
-      }
+        // Fetch courses taught by user 
+        const taughtCourses = await Course.findAll({
+          where: { instructor_id: filterUserId },
+          include: [{ model: Lab, as: "labs" }],
+          order: [["created_at", "DESC"]],
+        });
 
+        // Fetch courses user is enrolled in
+        const enrolledCourses = await Course.findAll({
+             include: [
+                 { model: Lab, as: "labs" },
+                 {
+                    model: User,
+                    as: "students",
+                    where: { id: filterUserId },
+                    attributes: [], 
+                    through: { attributes: [] }
+                 },
+                 {
+                   model: User,
+                   as: "instructor",
+                   attributes: ["id", "first_name", "last_name"]
+                 }
+             ],
+             order: [["created_at", "DESC"]]
+        });
+
+        // Combine and deduplicate if necessary
+        const allCourses = [...taughtCourses, ...enrolledCourses];
+        
+        // Remove duplicates just in case (e.g. if instructor also enrolls? unlikely but safe)
+        const uniqueCourses = Array.from(new Map(allCourses.map(c => [c.course_id, c])).values());
+
+        return res.status(200).json(uniqueCourses);
+      }
+      // Fetch all courses (public/admin view)
       const courses = await Course.findAll({
-        include: includeOptions,
+        include: [
+            { model: Lab, as: "labs" },
+            {
+                model: User,
+                as: "instructor",
+                attributes: ["id", "first_name", "last_name", "email", "firebaseId"]
+            }
+        ],
         order: [["created_at", "DESC"]],
       });
 
@@ -185,10 +334,9 @@ const CourseController = {
         include: [
           { model: Lab, as: "labs" },
           {
-            model: Instructor,
-            as: "instructors",
-            attributes: ["instructor_id", "user_id", "department"],
-            through: { attributes: [] },
+            model: User,
+            as: "instructor",
+            attributes: ["id", "firebaseId", "first_name", "last_name", "email"]
           },
         ],
       });
@@ -291,6 +439,42 @@ const CourseController = {
     } catch (error) {
       return res.status(500).json({
         message: "Error deleting course",
+        error: error.message,
+      });
+    }
+  },
+  async regenerateToken(req, res) {
+    try {
+      const { id } = req.params;
+      
+      const generateToken = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < 6; i++) {
+          result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+      };
+
+      let token = generateToken();
+      let existingCourse = await Course.findOne({ where: { token } });
+      while (existingCourse) {
+        token = generateToken();
+        existingCourse = await Course.findOne({ where: { token } });
+      }
+
+      const [updated] = await Course.update({ token }, {
+        where: { course_id: id },
+      });
+
+      if (!updated) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      return res.status(200).json({ token });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error regenerating token",
         error: error.message,
       });
     }
