@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { onAuthStateChanged } from 'firebase/auth'
+import { Loader } from 'lucide-react'
 import { auth } from '@/utils/firebase.js'
 import Login from '@/pages/Login.jsx'
 import SignUp from '@/pages/SignUp.jsx'
@@ -52,8 +53,9 @@ import InstructorRoute from "@/utils/InstructorRoute";
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
-        <h2>Loading...</h2>
+      // change this to a loader from lucide
+      <div className="flex justify-center items-center min-h-screen bg-gray-900">
+        <Loader className="w-10 h-10 text-blue-500 animate-spin" />
       </div>
     )
   }
