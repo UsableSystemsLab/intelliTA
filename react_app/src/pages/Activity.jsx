@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Nav from '@/components/Courses/Nav';
 import Footer from '@/components/Courses/Footer';
 import Sidebar from '@/components/Courses/Sidebar';
@@ -5,10 +6,12 @@ import EditorSection from '@/components/Activity/EditorSection';
 import OutputSection from '@/components/Activity/OutputSection';
 import Instructions from '@/components/Activity/Instructions';
 import VideoPlayer from '@/components/Activity/VideoPlayer';
+import HintModal from '@/components/Activity/HintModal';
 import useCodeExecution from '@/utils/useCodeExecution';
 
 export default function Activity({ user }) {
     const { code, setCode, output, isRunning, handleRunCode } = useCodeExecution();
+    const [showHint, setShowHint] = useState(false);
 
     return (
         <div>
@@ -26,6 +29,7 @@ export default function Activity({ user }) {
                                     problemStatement="In this lab, you will learn the basics of Java programming. Write a simple program that prints 'Hello, World!' to the console. Click the Run button to execute your code and see the output below."
                                     // this should be button to popup the file like text in futrure or maybe it will be embedded in the files compiler
                                     fileName="HelloWorld.java"
+                                    onHint={() => setShowHint(true)}
                                 />
                             </div>
 
@@ -57,6 +61,7 @@ export default function Activity({ user }) {
                 </main>
             </div>
             <Footer />
+            <HintModal isOpen={showHint} onClose={() => setShowHint(false)} />
         </div>
     );
 }
