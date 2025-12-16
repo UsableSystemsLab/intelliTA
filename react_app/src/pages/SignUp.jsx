@@ -57,6 +57,17 @@ const SignUp = () => {
       await updateProfile(userCredential.user, {
         displayName: `${firstName} ${lastName}`
       });
+      // get the role based on email
+      const role = getRoleFromEmail(email);
+
+      // Save user data + role in Firestore
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        role: role,
+        createdAt: new Date()
+      });
 
       // Save user data in Firestore
       await setDoc(doc(db, "users", userCredential.user.uid), {
