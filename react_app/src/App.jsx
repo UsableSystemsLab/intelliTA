@@ -9,6 +9,7 @@ import Home from '@/pages/Home.jsx'
 import Courses from "@/pages/Courses.jsx";
 import CourseLabs from "@/pages/CourseLabs.jsx";
 import CreateCourse from "@/pages/CreateCourse.jsx";
+import Settings from "@/pages/Settings.jsx";
 import '@/styles/App.css'
 import ProtectedRoutes from '@/utils/ProtectedRoutes'
 import { useTranslation } from 'react-i18next';
@@ -73,6 +74,7 @@ import InstructorRoute from "@/utils/InstructorRoute";
     <Route element={<ProtectedRoutes user={user} />}>
       <Route path="/courses" element={<Courses user={user} />} />
       <Route path="/courses/:courseId" element={<CourseLabs user={user} />} />
+      <Route path="/settings" element={<Settings user={user} />} />
       {/* This route can be accessed only by instructor */}
       <Route
         path="/courses/create"
