@@ -16,7 +16,7 @@ const logger = winston.createLogger({
     }),
     new winston.transports.File({
       level: "error",
-      filename: "error-" + new Date().toISOString() + ".log",
+      filename: "Logs/error-" + new Date().toISOString() + ".log",
     }),
   ],
 });

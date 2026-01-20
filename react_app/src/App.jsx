@@ -14,8 +14,7 @@ import '@/styles/App.css'
 import ProtectedRoutes from '@/utils/ProtectedRoutes'
 import { useTranslation } from 'react-i18next';
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/utils/firebase";
-import InstructorRoute from "@/utils/InstructorRoute"; 
+import { db } from "@/utils/firebase"; 
 
  function App() {
   const [user, setUser] = useState(null)
@@ -33,7 +32,7 @@ import InstructorRoute from "@/utils/InstructorRoute";
       if (docSnap.exists()) {
         setUser({
           ...currentUser,
-          role: docSnap.data().role, 
+          ...docSnap.data(),
         });
       } else {
         setUser(currentUser);
@@ -54,7 +53,7 @@ import InstructorRoute from "@/utils/InstructorRoute";
 
   if (loading) {
     return (
-      // change this to a loader from lucide
+
       <div className="flex justify-center items-center min-h-screen bg-gray-900">
         <Loader className="w-10 h-10 text-blue-500 animate-spin" />
       </div>
@@ -74,16 +73,7 @@ import InstructorRoute from "@/utils/InstructorRoute";
     <Route element={<ProtectedRoutes user={user} />}>
       <Route path="/courses" element={<Courses user={user} />} />
       <Route path="/courses/:courseId" element={<CourseLabs user={user} />} />
-      <Route path="/settings" element={<Settings user={user} />} />
-      {/* This route can be accessed only by instructor */}
-      <Route
-        path="/courses/create"
-        element={
-       <InstructorRoute user={user}>
-        <CreateCourse user={user} />
-       </InstructorRoute>
-        }
-      />
+      <Route path="/courses/create" element={<CreateCourse user={user} />} />
     </Route>
 
   </Routes>
