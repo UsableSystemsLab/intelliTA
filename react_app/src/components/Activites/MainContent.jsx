@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 export default function Maincontent({ user }) {
     const { courseId } = useParams();
+    const navigate = useNavigate();
     const { t } = useTranslation();
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -69,6 +70,29 @@ export default function Maincontent({ user }) {
         setTimeout(() => setCopySuccess(false), 2000);
     };
 
+    const handleDeleteCourse = async () => {
+        if (!window.confirm("Are you sure you want to delete this course? This action cannot be undone.")) return;
+        
+        try {
+            const res = await fetch(`http://localhost:4000/api/courses/${courseId}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer 1111"
+                }
+            });
+
+            if (res.ok) {
+                 navigate("/courses");
+            } else {
+                 const data = await res.json();
+                 alert(data.message || "Failed to delete course");
+            }
+        } catch (err) {
+            console.error("Error deleting course:", err);
+            alert("An error occurred while deleting the course.");
+        }
+    };
+
     if (loading) return <div className="text-white p-10">Loading...</div>;
     if (!course) return <div className="text-white p-10">Course not found.</div>;
 
@@ -81,12 +105,20 @@ export default function Maincontent({ user }) {
                 </div>
                 
                 {isInstructor() && (
+                    <div className="flex gap-3">
                      <button 
                         onClick={() => setShowCodeModal(true)}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                      >
                         Generate Token
                      </button>
+                     <button 
+                        onClick={handleDeleteCourse}
+                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                     >
+                        Delete Course
+                     </button>
+                    </div>
                 )}
             </div>
 
