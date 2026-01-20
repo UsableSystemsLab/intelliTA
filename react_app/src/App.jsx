@@ -74,6 +74,7 @@ import { db } from "@/utils/firebase";
       <Route path="/courses" element={<Courses user={user} />} />
       <Route path="/courses/:courseId" element={<CourseLabs user={user} />} />
       <Route path="/courses/create" element={<CreateCourse user={user} />} />
+      <Route path="/settings" element={<Settings user={user} />} />
     </Route>
 
   </Routes>
