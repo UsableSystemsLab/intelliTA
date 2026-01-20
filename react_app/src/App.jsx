@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { onAuthStateChanged } from 'firebase/auth'
 import { Loader } from 'lucide-react'
-import { auth } from '@/utils/firebase.js'
+import { auth, db } from '@/utils/firebase.js' // Ensure db is exported from your firebase config
+import { doc, getDoc } from "firebase/firestore";
+import { useTranslation } from 'react-i18next';
+
 import Login from '@/pages/Login.jsx'
 import SignUp from '@/pages/SignUp.jsx'
 import Home from '@/pages/Home.jsx'
@@ -10,50 +13,52 @@ import Courses from "@/pages/Courses.jsx";
 import CourseLabs from "@/pages/CourseLabs.jsx";
 import CreateCourse from "@/pages/CreateCourse.jsx";
 import Settings from "@/pages/Settings.jsx";
+import Activity from './pages/Activity' // Added from incoming branch
 import '@/styles/App.css'
 import ProtectedRoutes from '@/utils/ProtectedRoutes'
-import { useTranslation } from 'react-i18next';
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/utils/firebase"; 
 
- function App() {
+function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const { i18n } = useTranslation() 
   const isArabic = i18n.language === 'ar'
 
   useEffect(() => {
-    // modify the useEffect so now when user logs into the system it takes his role from firestore
-  const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-    if (currentUser) {
-      const docRef = doc(db, "users", currentUser.uid);
-      const docSnap = await getDoc(docRef);
+    // Fetches user role from firestore upon auth state change
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        try {
+          const docRef = doc(db, "users", currentUser.uid);
+          const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
-        setUser({
-          ...currentUser,
-          ...docSnap.data(),
-        });
+          if (docSnap.exists()) {
+            setUser({
+              ...currentUser,
+              ...docSnap.data(),
+            });
+          } else {
+            setUser(currentUser);
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          setUser(currentUser);
+        }
       } else {
-        setUser(currentUser);
+        setUser(null);
       }
-    } else {
-      setUser(null);
-    }
+      setLoading(false);
+    });
 
-    setLoading(false);
-  });
+    return () => unsubscribe();
+  }, []);
 
-  return () => unsubscribe();
-}, []);
-   useEffect(() => {
+  useEffect(() => {
     document.documentElement.lang = i18n.language
     document.documentElement.dir = isArabic ? 'rtl' : 'ltr'
   }, [i18n.language, isArabic])
 
   if (loading) {
     return (
-
       <div className="flex justify-center items-center min-h-screen bg-gray-900">
         <Loader className="w-10 h-10 text-blue-500 animate-spin" />
       </div>
@@ -62,24 +67,23 @@ import { db } from "@/utils/firebase";
 
   return (
     <Router>
-  <Routes>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Home user={user} />} />
+        <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
+        <Route path="/signup" element={!user ? <SignUp /> : <Navigate to="/" />} />
 
-    {/* Here are public pages, which means any user can access it without login  */}
-    <Route path="/" element={<Home user={user} />} />
-    <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-    <Route path="/signup" element={!user ? <SignUp /> : <Navigate to="/" />} />
-
-    {/* Here is protected pages, which means user can not see it unless he is logged in */}
-    <Route element={<ProtectedRoutes user={user} />}>
-      <Route path="/courses" element={<Courses user={user} />} />
-      <Route path="/courses/:courseId" element={<CourseLabs user={user} />} />
-      <Route path="/courses/create" element={<CreateCourse user={user} />} />
-      <Route path="/settings" element={<Settings user={user} />} />
-    </Route>
-
-  </Routes>
-</Router>
-
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoutes user={user} />}>
+          <Route path="/courses" element={<Courses user={user} />} />
+          <Route path="/courses/:courseId" element={<CourseLabs user={user} />} />
+          <Route path="/courses/create" element={<CreateCourse user={user} />} />
+          <Route path="/settings" element={<Settings user={user} />} />
+          {/* Resolved: Added Activity route from incoming branch */}
+          <Route path="/activity" element={<Activity user={user} />} />
+        </Route>
+      </Routes>
+    </Router>
   )
 }
 

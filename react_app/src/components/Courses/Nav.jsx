@@ -8,11 +8,12 @@ import { useTranslation } from "react-i18next";
 export default function Nav({ user }) {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
-  //This function change the language when u click on the change langauage button
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Changes the language between English and Arabic
   function changeLanguage() {
     i18n.changeLanguage(i18n.language === "en" ? "ar" : "en");
   }
-  const [showDropdown, setShowDropdown] = useState(false);
 
   const getUserInitials = () => {
     if (user?.displayName) {
@@ -22,8 +23,7 @@ export default function Nav({ user }) {
       }
       return names[0].charAt(0).toUpperCase() + names[0].slice(1).toLowerCase();
     }
-    
-    return "No user name found";
+    return "User";
   };
 
   const handleLogout = async () => {
@@ -34,23 +34,19 @@ export default function Nav({ user }) {
       console.error("Error signing out:", error);
     }
   };
+
   return (
     <>
-      {/* This needs to be modifeid for internatialization, profile photo must go left and logo go right */}
-      <header className="top-0 z-50 bg-black/50 backdrop-blur-lg relative ">
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 -top-40 -z-10 transform-gpu blur-3xl sm:-top-80"
-        ></div>
+      <header className="top-0 z-50 bg-black/50 backdrop-blur-lg relative">
+
         <nav
           aria-label="Global"
           className="flex items-center justify-between p-6 lg:px-8"
         >
           <div className="flex lg:flex-1">
-            {/* Make this anchor ltr to correct the logo bug */}
-            <a href="#" className="-m-1.5 p-1.5" dir="ltr">
+            <div className="-m-1.5 p-1.5" dir="ltr">
               <span className="sr-only">IntelliTA</span>
-              <a href="">
+              <Link to="/">
                 <Shuffle
                   className="shuffle-text"
                   text="IntelliTA"
@@ -66,25 +62,25 @@ export default function Nav({ user }) {
                   respectReducedMotion={true}
                   style={{ fontSize: "1.5rem", fontWeight: "bold" }}
                 />
-              </a>
-            </a>
+              </Link>
+            </div>
           </div>
-          <div className="hidden lg:flex lg:flex-1 lg:justify-end gap-6.5">
+
+          <div className="hidden lg:flex lg:flex-1 lg:justify-end gap-x-6">
+            {/* Language Toggle */}
             <button
               onClick={changeLanguage}
               type="button"
-              className="inline-flex items-center justify-center px-3 py-0 text-sm font-medium 
-                          text-gray-900 bg-white border border-gray-300 rounded-lg 
-                          transition-all duration-300 ease-in-out 
-                          hover:bg-gray-200 hover:border-gray-400 
-                          focus:outline-none focus:ring-2 focus:ring-gray-300 
-                          dark:text-white dark:bg-gray-800 dark:border-gray-600 
-                          dark:hover:bg-gray-700 dark:hover:border-gray-500 hover:cursor-pointer"
+              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium 
+                         text-gray-900 bg-white border border-gray-300 rounded-lg 
+                         transition-all duration-300 ease-in-out 
+                         hover:bg-gray-200 hover:border-gray-400 
+                         dark:text-white dark:bg-gray-800 dark:border-gray-600 
+                         dark:hover:bg-gray-700 hover:cursor-pointer"
             >
-              <p>{i18n.language === "en" ? "عربي" : "English"}</p>
-
-              <span className="sr-only">Change language</span>
+              {i18n.language === "en" ? "عربي" : "English"}
             </button>
+
             {user ? (
               <div className="relative">
                 {/* Avatar Button */}
@@ -100,26 +96,27 @@ export default function Nav({ user }) {
                       className="w-full h-full object-cover rounded-full"
                     />
                   ) : (
-                    <span className="font-medium text-gray-600 dark:text-gray-300"></span>
+                    <span className="font-medium text-gray-600 dark:text-gray-300 text-xs">
+                      {getUserInitials().split(' ').map(n => n[0]).join('')}
+                    </span>
                   )}
                 </button>
-                {/* Later we should fix the bug where we cant press if drop down menu dropped */}
+
                 {/* Dropdown menu */}
                 {showDropdown && (
-                  // this has been modified due to an error that made the dropdown menu shows out of the screen
                   <div
                     className={`absolute ${
                       isArabic ? "left-0" : "right-0"
-                    } mt-2 z-10 bg-gray-900 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600`}
+                    } mt-2 z-50 bg-gray-900 divide-y divide-gray-100 rounded-lg shadow-xl w-44 border border-gray-800`}
                   >
-                    <div className="px-4 py-3 text-sm text-gray-100 dark:text-white">
-                      <div>{getUserInitials() || "User"}</div>
+                    <div className="px-4 py-3 text-sm text-gray-100">
+                      <div className="font-bold truncate">{getUserInitials()}</div>
                     </div>
-                    <ul className="py-2 text-sm text-gray-100 dark:text-gray-200">
+                    <ul className="py-2 text-sm text-gray-200">
                       <li>
                         <Link
                           to="/dashboard"
-                          className="block px-4 py-2 hover:bg-gray-700 dark:hover:bg-gray-600 dark:hover:text-white"
+                          className="block px-4 py-2 hover:bg-gray-800 transition-colors"
                           onClick={() => setShowDropdown(false)}
                         >
                           {t("dashboard")}
@@ -128,7 +125,7 @@ export default function Nav({ user }) {
                       <li>
                         <Link
                           to="/settings"
-                          className="block px-4 py-2 hover:bg-gray-700 dark:hover:bg-gray-600 dark:hover:text-white"
+                          className="block px-4 py-2 hover:bg-gray-800 transition-colors"
                           onClick={() => setShowDropdown(false)}
                         >
                           {t("settings")}
@@ -137,7 +134,7 @@ export default function Nav({ user }) {
                       <li>
                         <Link
                           to="/earnings"
-                          className="block px-4 py-2 hover:bg-gray-700 dark:hover:bg-gray-600 dark:hover:text-white"
+                          className="block px-4 py-2 hover:bg-gray-800 transition-colors"
                           onClick={() => setShowDropdown(false)}
                         >
                           {t("earnings")}
@@ -147,7 +144,7 @@ export default function Nav({ user }) {
                     <div className="py-1">
                       <button
                         onClick={handleLogout}
-                        className="cursor-pointer block w-full  px-4 py-2 text-sm text-gray-100 hover:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
+                        className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-800 transition-colors"
                       >
                         {t("logout")}
                       </button>
@@ -158,18 +155,15 @@ export default function Nav({ user }) {
             ) : (
               <Link
                 to="/login"
-                className="relative text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300"
+                className="relative text-xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300 flex items-center"
               >
-                <span
-                  className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
-     after:bg-white hover:after:w-full after:transition-all after:duration-300"
-                >
-                  {t("login")}{" "}
-                </span>{" "}
-                <span aria-hidden="true">&rarr;</span>
+                <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-white hover:after:w-full after:transition-all after:duration-300">
+                  {t("login")}
+                </span>
+                <span className={`ml-2 ${isArabic ? 'rotate-180' : ''}`} aria-hidden="true">&rarr;</span>
               </Link>
             )}
-          </div>       
+          </div>
         </nav>
       </header>
     </>

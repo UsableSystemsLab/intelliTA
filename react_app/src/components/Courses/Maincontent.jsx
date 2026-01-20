@@ -10,10 +10,11 @@ export default function Maincontent({ user }) {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
 
-
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const coursesPerPage = 6;
 
+  // Join course state
   const [joinCode, setJoinCode] = useState("");
   const [joinLoading, setJoinLoading] = useState(false);
   const [joinMessage, setJoinMessage] = useState(null);
@@ -21,7 +22,7 @@ export default function Maincontent({ user }) {
   const [availableNames, setAvailableNames] = useState([]);
   const [selectedName, setSelectedName] = useState("");
 
-  // Fetch courses
+  // Fetch courses from API
   useEffect(() => {
     async function loadCourses() {
       try {
@@ -61,7 +62,7 @@ export default function Maincontent({ user }) {
   const handleNextPage = () => { if (currentPage < totalPages) setCurrentPage(prev => prev + 1); };
   const handlePrevPage = () => { if (currentPage > 1) setCurrentPage(prev => prev - 1); };
 
-  
+  // Join logic
   const handleJoinCourse = async (nameToUse = null) => {
     if (!joinCode.trim()) return;
     setJoinLoading(true);
@@ -131,6 +132,8 @@ export default function Maincontent({ user }) {
   return (
     <>
       <main className="relative bg-gray-900 min-h-screen w-full p-8 overflow-y-auto">
+        
+        {/* Current UI: Name Selection Modal */}
         {showNameModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-slate-800 p-8 rounded-xl border border-slate-700 max-w-md w-full shadow-2xl relative text-white">
@@ -152,9 +155,8 @@ export default function Maincontent({ user }) {
           </div>
         )}
 
-       
-        <div className="w-full max-w-7xl mx-auto px-6 mt-10 flex flex-col sm:flex-row justify-between items-center gap-4">
-          
+        {/* Action Bar: Join logic */}
+        <div className="w-full max-w-7xl mx-auto px-6 mt-10 flex flex-col sm:flex-row justify-between items-center gap-4 relative z-10">
           <div className="flex items-center gap-2 bg-slate-800/50 p-2 rounded-xl backdrop-blur-sm border border-slate-700">
             <input 
               type="text" 
@@ -170,13 +172,13 @@ export default function Maincontent({ user }) {
         </div>
 
         {joinMessage && (
-          <div className={`mt-4 mx-auto w-fit px-4 py-2 rounded-lg text-white ${joinMessage.type === 'error' ? 'bg-red-500' : 'bg-green-500'}`}>
+          <div className={`mt-4 mx-auto w-fit px-4 py-2 rounded-lg text-white relative z-10 ${joinMessage.type === 'error' ? 'bg-red-500' : 'bg-green-500'}`}>
             {joinMessage.text}
           </div>
         )}
 
         {/* Courses Grid */}
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 px-6 mt-10">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 px-6 mt-10 relative z-10">
           {loading && <p className="text-white text-xl">Loading courses...</p>}
           {!loading && courses.length === 0 && <p className="text-white text-xl">No courses available.</p>}
           {!loading && currentCourses.map((course) => (
@@ -191,8 +193,9 @@ export default function Maincontent({ user }) {
           ))}
         </div>
 
+        {/* Pagination Controls */}
         {!loading && courses.length > coursesPerPage && (
-          <div className="flex justify-center items-center gap-6 mt-12 mb-8">
+          <div className="flex justify-center items-center gap-6 mt-12 mb-8 relative z-10">
             <button 
               onClick={handlePrevPage} 
               disabled={currentPage === 1}
@@ -213,8 +216,8 @@ export default function Maincontent({ user }) {
           </div>
         )}
 
-        {/* Create Course Button now available to everyone */}
-        <div className="w-full flex justify-center mt-10 mb-15">
+        {/* Create Course Button */}
+        <div className="w-full flex justify-center mt-10 mb-15 relative z-10">
           <Link to="/courses/create" className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-semibold shadow-lg">
             + Create Course
           </Link>
