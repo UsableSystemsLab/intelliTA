@@ -213,13 +213,12 @@ export default function Maincontent({ user }) {
           </div>
         )}
 
-        {user?.role === "instructor" && (
-          <div className="w-full flex justify-center mt-10 mb-15">
-            <Link to="/courses/create" className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-semibold shadow-lg">
-              + Create Course
-            </Link>
-          </div>
-        )}
+        {/* Create Course Button now available to everyone */}
+        <div className="w-full flex justify-center mt-10 mb-15">
+          <Link to="/courses/create" className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-semibold shadow-lg">
+            + Create Course
+          </Link>
+        </div>
       </main>
     </>
   );
