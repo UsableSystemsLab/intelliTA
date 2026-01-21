@@ -1,7 +1,8 @@
 import User from "./User.js";
 import Course from "./Course.js";
 import Enrollment from "./Enrollment.js";
-import Lab from "./Lab.js";  
+import Lab from "./Lab.js";
+import Activity from "./Activity.js";
 
 // USER -> COURSE (Creator/Instructor)
 User.hasMany(Course, { foreignKey: "instructor_id", as: "taughtCourses" });
@@ -30,9 +31,21 @@ Lab.belongsTo(Course, {
   as: "course",
 });
 
+// COURSE -> ACTIVITY
+Course.hasMany(Activity, {
+  foreignKey: "course_id",
+  as: "activities",
+});
+
+Activity.belongsTo(Course, {
+  foreignKey: "course_id",
+  as: "course",
+});
+
 export {
   User,
   Course,
   Enrollment,
   Lab,
+  Activity,
 };

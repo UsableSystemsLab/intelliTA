@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import CreateActivityModal from "./CreateActivityModal";
+import { Plus, PlayCircle, FileText, Trash2 } from "lucide-react";
 
 export default function Maincontent({ user }) {
     const { courseId } = useParams();
@@ -8,31 +10,44 @@ export default function Maincontent({ user }) {
     const { t } = useTranslation();
     const [course, setCourse] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [activities, setActivities] = useState([]);
     const [showCodeModal, setShowCodeModal] = useState(false);
+    const [showActivityModal, setShowActivityModal] = useState(false);
     const [codeVisible, setCodeVisible] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
     const [generating, setGenerating] = useState(false);
 
-    // Fetch Course Details
+    // Fetch Course Details and Activities
     useEffect(() => {
-        async function fetchCourse() {
+        async function fetchData() {
             try {
-                const res = await fetch(`http://localhost:4000/api/courses/${courseId}`, {
-                    headers: {
-                      "Authorization": "Bearer 1111", // TODO: proper auth
-                    }
+                // Fetch Course
+                const courseRes = await fetch(`http://localhost:4000/api/courses/${courseId}`, {
+                    headers: { "Authorization": "Bearer 1111" }
                 });
-                if (res.ok) {
-                    const data = await res.json();
-                    setCourse(data);
+                
+                if (courseRes.ok) {
+                    const courseData = await courseRes.json();
+                    setCourse(courseData);
                 }
+
+                // Fetch Activities
+                const activitiesRes = await fetch(`http://localhost:4000/api/courses/${courseId}/activities`, {
+                     headers: { "Authorization": "Bearer 1111" }
+                });
+
+                if (activitiesRes.ok) {
+                    const activitiesData = await activitiesRes.json();
+                    setActivities(activitiesData);
+                }
+
             } catch (err) {
-                console.error("Failed to fetch course:", err);
+                console.error("Failed to fetch data:", err);
             } finally {
                 setLoading(false);
             }
         }
-        if (courseId) fetchCourse();
+        if (courseId) fetchData();
     }, [courseId]);
 
     const isInstructor = () => {
@@ -93,6 +108,29 @@ export default function Maincontent({ user }) {
         }
     };
 
+    const handleDeleteActivity = async (activityId) => {
+        if (!window.confirm("Are you sure you want to delete this activity?")) return;
+        
+        try {
+            const res = await fetch(`http://localhost:4000/api/courses/${courseId}/activities/${activityId}`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": "Bearer 1111"
+                }
+            });
+
+            if (res.ok) {
+                 setActivities(prev => prev.filter(a => a.activity_id !== activityId));
+            } else {
+                 const data = await res.json();
+                 alert(data.message || "Failed to delete activity");
+            }
+        } catch (err) {
+            console.error("Error deleting activity:", err);
+            alert("An error occurred while deleting the activity.");
+        }
+    };
+
     if (loading) return <div className="text-white p-10">Loading...</div>;
     if (!course) return <div className="text-white p-10">Course not found.</div>;
 
@@ -123,10 +161,80 @@ export default function Maincontent({ user }) {
             </div>
 
             {/* Content Placeholder */}
-            <div>
-                 <h2 className="text-xl font-semibold mb-4">Activities</h2>
-                 <p className="text-gray-400">No activities yet.</p>
+            <div className="mb-8 flex justify-between items-center">
+                 <h2 className="text-xl font-semibold">Activities</h2>
+                 {isInstructor() && (
+                     <button 
+                        onClick={() => setShowActivityModal(true)}
+                        className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                     >
+                        <Plus size={20} />
+                        Create Activity
+                     </button>
+                 )}
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                 {activities.length === 0 ? (
+                     <p className="text-gray-400 col-span-full">No activities yet.</p>
+                 ) : (
+                     activities.map(activity => (
+                         <div key={activity.activity_id} className="bg-slate-800 p-6 rounded-xl border border-slate-700 hover:border-blue-500 transition-all group">
+                            <div className="flex justify-between items-start mb-2">
+                                <h3 className="text-xl font-bold group-hover:text-blue-400">{activity.title}</h3>
+                                {isInstructor() && (
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteActivity(activity.activity_id);
+                                        }}
+                                        className="text-gray-500 hover:text-red-500 transition-colors p-1"
+                                        title="Delete Activity"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                )}
+                            </div>
+                             <div className="text-sm text-gray-400 mb-4 space-y-1">
+                                 <p>Start: {new Date(activity.start_date).toLocaleString()}</p>
+                                 <p>End: {new Date(activity.end_date).toLocaleString()}</p>
+                             </div>
+                             
+                             <div className="flex gap-3 mt-4 flex-wrap">
+                                 {activity.video_url && (
+                                     <a 
+                                         href={activity.video_url} 
+                                         target="_blank" 
+                                         rel="noopener noreferrer"
+                                         className="flex items-center gap-2 text-blue-400 hover:text-blue-300 bg-blue-400/10 px-3 py-1.5 rounded-lg text-sm transition-colors"
+                                     >
+                                         <PlayCircle size={16} />
+                                         Watch Video
+                                     </a>
+                                 )}
+                                 {activity.md_file_url && (
+                                     <a 
+                                         href={activity.md_file_url} 
+                                         target="_blank" 
+                                         rel="noopener noreferrer"
+                                         className="flex items-center gap-2 text-green-400 hover:text-green-300 bg-green-400/10 px-3 py-1.5 rounded-lg text-sm transition-colors"
+                                     >
+                                         <FileText size={16} />
+                                         View Docs
+                                     </a>
+                                 )}
+                             </div>
+                         </div>
+                     ))
+                 )}
+            </div>
+            
+            <CreateActivityModal 
+                isOpen={showActivityModal} 
+                onClose={() => setShowActivityModal(false)} 
+                courseId={courseId}
+                onActivityCreated={(newActivity) => setActivities([...activities, newActivity])}
+            />
 
             {/* Code Modal */}
             {showCodeModal && (

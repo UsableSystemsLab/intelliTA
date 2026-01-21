@@ -1,6 +1,8 @@
 import UserRoutes from "./UserRoutes.js";
 import LabRoutes from "./lab.routes.js"; 
 import CourseRoutes from "./course.routes.js";
+import ActivityRoutes from "./activityRoutes.js";
+
 const apiRoutes = (router) => {
   /**
    * @swagger
@@ -34,6 +36,9 @@ const apiRoutes = (router) => {
 
   // Lab routes 
   router.use("/courses/:courseId/labs", LabRoutes);
+
+  // Activity routes
+  router.use("/courses/:courseId/activities", ActivityRoutes);
 
   router.use((req, res) => {
     res.status(404).json({ error: "Not Found" });

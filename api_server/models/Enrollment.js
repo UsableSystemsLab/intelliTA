@@ -63,8 +63,11 @@ const Enrollment = sequelize.define(
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("active", "completed", "dropped"),
+      type: DataTypes.STRING,
       defaultValue: "active",
+      validate: {
+        isIn: [["active", "completed", "dropped"]],
+      },
     },
   },
   {
