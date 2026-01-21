@@ -4,6 +4,11 @@ import { uploadActivityMulter, uploadActivityFilesToS3 } from "../middlewares/up
 
 const router = express.Router({ mergeParams: true });
 
+router.use((req, res, next) => {
+    console.log(`[ActivityRoutes] ${req.method} ${req.originalUrl} -> Path: ${req.path}`);
+    next();
+});
+
 router.post(
     "/",
     uploadActivityMulter,
@@ -12,6 +17,8 @@ router.post(
 );
 
 router.get("/", ActivityController.getActivitiesByCourse);
+
+router.get("/:activityId", ActivityController.getActivityById);
 
 router.delete("/:activityId", ActivityController.deleteActivity);
 

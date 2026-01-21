@@ -20,7 +20,7 @@ import ProtectedRoutes from '@/utils/ProtectedRoutes'
 function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const { i18n } = useTranslation() 
+  const { i18n } = useTranslation()
   const isArabic = i18n.language === 'ar'
 
   useEffect(() => {
@@ -80,7 +80,7 @@ function App() {
           <Route path="/courses/create" element={<CreateCourse user={user} />} />
           <Route path="/settings" element={<Settings user={user} />} />
           {/* Resolved: Added Activity route from incoming branch */}
-          <Route path="/activity" element={<Activity user={user} />} />
+          <Route path="/courses/:courseId/activities/:activityId" element={<Activity user={user} />} />
         </Route>
       </Routes>
     </Router>

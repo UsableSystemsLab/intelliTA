@@ -1,157 +1,538 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import Editor from "@monaco-editor/react";
 import Nav from '@/components/Courses/Nav';
-import Footer from '@/components/Courses/Footer';
 import Sidebar from '@/components/Courses/Sidebar';
-import EditorSection from '@/components/Activity/EditorSection';
-import OutputSection from '@/components/Activity/OutputSection';
-import InstructionsModal from '@/components/Activity/InstructionsModal';
-import FloatingVideo from '@/components/Activity/FloatingVideo';
-import HintModal from '@/components/Activity/HintModal';
-import CompletionModal from '@/components/Activity/CompletionModal';
-import useCodeExecution from '@/utils/useCodeExecution';
+import FileExplorer from '@/components/Activity/FileExplorer';
+import { Play, Pause, RotateCcw, CheckCircle, HelpCircle, ChevronRight, Terminal, ChevronsLeft, Loader } from 'lucide-react';
+
+const LAB_CHECKPOINTS = [
+    {
+        id: 1,
+        time: 5,
+        type: 'challenge',
+        title: "HTML Structure",
+        instruction: "Add an <h1> tag to the body with the text 'Welcome Agent'.",
+        fileName: "index.html",
+        hint: "Use the standard heading tag. Ensure the text content matches the requirement exactly.",
+        completed: false,
+        check: (files) => {
+            const content = files.find(f => f.name === 'index.html')?.content || "";
+            return content.includes("<h1>Welcome Agent</h1>");
+        }
+    },
+    {
+        id: 2,
+        time: 10,
+        type: 'auto_code',
+        title: "Instructor Update: CSS",
+        fileName: "style.css",
+        newContent: `body {
+    font-family: sans-serif;
+    background: #1e1e1e;
+    color: white;
+    text-align: center;
+}
+h1 {
+    color: #4ade80;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}`,
+        completed: false
+    },
+    {
+        id: 3,
+        time: 15,
+        type: 'challenge',
+        title: "JavaScript Logic",
+        instruction: "In script.js, log 'System Ready' to the console.",
+        fileName: "script.js",
+        hint: "Use console.log() to print the exact string.",
+        completed: false,
+        check: (files) => {
+            const content = files.find(f => f.name === 'script.js')?.content || "";
+            return content.includes("System Ready");
+        }
+    }
+];
+
+// ... (INITIAL_FILES remains same) ...
+
+// ... (Inside component) ...
+
+
+const INITIAL_FILES = [
+    {
+        name: 'index.html',
+        language: 'html',
+        content: `<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app"></div>
+    <script src="script.js"></script>
+</body>
+</html>`
+    },
+    {
+        name: 'style.css',
+        language: 'css',
+        content: `body {
+    font-family: sans-serif;
+    background: #1e1e1e;
+    color: white;
+}`
+    },
+    {
+        name: 'script.js',
+        language: 'javascript',
+        content: `// Application Logic
+console.log('App starting...');`
+    }
+];
 
 export default function Activity({ user }) {
+    const { courseId, activityId } = useParams();
     const navigate = useNavigate();
-    const { code, setCode, output, isRunning, handleRunCode } = useCodeExecution();
+    const videoRef = useRef(null);
+
+    const [activity, setActivity] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [files, setFiles] = useState(INITIAL_FILES);
+    const [activeFile, setActiveFile] = useState(INITIAL_FILES[0]);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+
+    const [checkpoints, setCheckpoints] = useState(LAB_CHECKPOINTS);
+    const [activeCheckpoint, setActiveCheckpoint] = useState(null);
     const [showHint, setShowHint] = useState(false);
-    const [showInstructions, setShowInstructions] = useState(false);
-    const [isVerifying, setIsVerifying] = useState(false);
-    const [showCompletion, setShowCompletion] = useState(false);
+    const [feedback, setFeedback] = useState(null);
 
-    const [files, setFiles] = useState([
-        { name: 'HelloWorld.java', language: 'java', content: 'public class HelloWorld {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}' },
-        { name: 'Utils.java', language: 'java', content: 'public class Utils {\n    public static void printMessage(String msg) {\n        System.out.println(msg);\n    }\n}' },
-        { name: 'README.md', language: 'markdown', content: '# Lab 1 - Java Basics\n\nIn this lab you will write your first Java program.' }
-    ]);
-    const [activeFile, setActiveFile] = useState(files[0]);
-
-    const handleFileSelect = (file) => {
-
-        const updatedFiles = files.map(f =>
-            f.name === activeFile.name ? { ...f, content: code } : f
-        );
-        const newFile = updatedFiles.find(f => f.name === file.name);
-
-        setFiles(updatedFiles);
-        setActiveFile(newFile);
-        setCode(newFile.content);
-    };
-
-
-    const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
-    const tasks = [
-        {
-            title: "Setup Environment",
-            description: "Correctly define the HelloWorld class structure. Java requires the class name to match the filename.",
-            requirements: "public class HelloWorld { ... }"
-        },
-        {
-            title: "The Main Method",
-            description: "Add the main entry point for the Java application. This is where the program execution begins.",
-            requirements: "public static void main(String[] args)"
-        },
-        {
-            title: "Printing Output",
-            description: "Use System.out.println to print the required message to the console.",
-            requirements: "Hello, World!"
-        },
-        {
-            title: "Compilation & Execution",
-            description: "Click the 'Run Code' button to compile and execute your program. Ensure there are no syntax errors.",
-            requirements: "Process exited with code 0"
-        },
-        {
-            title: "Final Review",
-            description: "Review your code for any extra whitespace or formatting issues before submitting the lab.",
-            requirements: "Clean and readable code"
+    // Fetch Activity Data
+    useEffect(() => {
+        if (!activityId) {
+            setLoading(false);
+            setFeedback({ type: 'error', message: "No Activity ID provided." });
+            return;
         }
-    ];
 
-    const handleNextTask = () => {
-        setIsVerifying(true);
+        async function loadActivity() {
+            try {
+                // Ensure courseId is used if needed, or just rely on activityId if backend supports it
+                const url = `http://localhost:4000/api/courses/${courseId || '0'}/activities/${activityId}`;
+                console.log("Fetching Activity:", url);
 
-        setTimeout(() => {
-            setIsVerifying(false);
-            if (currentTaskIndex < tasks.length - 1) {
-                setCurrentTaskIndex(prev => prev + 1);
-            } else {
+                const res = await fetch(url, {
+                    headers: { "Authorization": "Bearer 1111" }
+                });
 
-                setShowInstructions(false);
-                setShowCompletion(true);
+                if (res.ok) {
+                    const data = await res.json();
+                    setActivity(data);
+
+                    // Fetch MD file content if available
+                    if (data.md_file_url) {
+                        try {
+                            const mdRes = await fetch(data.md_file_url);
+                            if (mdRes.ok) {
+                                const mdText = await mdRes.text();
+                                setFiles(prev => {
+                                    const exists = prev.some(f => f.name === 'README.md');
+                                    if (exists) return prev.map(f => f.name === 'README.md' ? { ...f, content: mdText } : f);
+                                    return [...prev, { name: 'README.md', language: 'markdown', content: mdText }];
+                                });
+                            }
+                        } catch (mdErr) {
+                            console.error("Failed to fetch MD file:", mdErr);
+                            // Don't block loading if MD fails
+                        }
+                    }
+                } else {
+                    const errorText = await res.text();
+                    console.error("Failed to load activity:", res.status, errorText);
+                    setFeedback({ type: 'error', message: `Failed to load activity (Status: ${res.status})` });
+                }
+            } catch (err) {
+                console.error("Network error:", err);
+                setFeedback({ type: 'error', message: "Network error loading activity." });
+            } finally {
+                setLoading(false);
             }
-        }, 1500);
+        }
+        loadActivity();
+    }, [courseId, activityId]);
+
+    // --- Video Logic ---
+    const isYouTube = activity?.video_url && (activity.video_url.includes('youtube.com') || activity.video_url.includes('youtu.be'));
+
+    // Timer for YouTube simulation
+    useEffect(() => {
+        let interval;
+        if (isYouTube && isPlaying && !activeCheckpoint) {
+            interval = setInterval(() => {
+                setCurrentTime(prev => {
+                    // Simulate random duration if unknown (e.g. 10 mins)
+                    const newTime = prev + 1;
+                    if (!duration) setDuration(600);
+                    return newTime;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [isYouTube, isPlaying, activeCheckpoint, duration]);
+
+    // Checkpoints Monitor (Runs whenever time updates, from Video OR Timer)
+    useEffect(() => {
+        // Find all due checkpoints that are not completed
+        const dueCheckpoints = checkpoints.filter(cp => cp.time <= currentTime && !cp.completed);
+
+        if (dueCheckpoints.length > 0) {
+            dueCheckpoints.forEach(cp => {
+                if (cp.type === 'auto_code') {
+                    // 1. Update File Content
+                    setFiles(prev => prev.map(f =>
+                        f.name === cp.fileName ? { ...f, content: cp.newContent } : f
+                    ));
+
+                    // 2. Update Active File View if needed
+                    if (activeFile.name === cp.fileName) {
+                        setActiveFile(prev => ({ ...prev, content: cp.newContent }));
+                    }
+
+                    // 3. Mark Complete
+                    setCheckpoints(prev => prev.map(c => c.id === cp.id ? { ...c, completed: true } : c));
+
+                    // 4. User Feedback
+                    setFeedback({ type: 'success', message: `Code Updated: ${cp.title}` });
+                    setTimeout(() => setFeedback(null), 3000);
+                }
+                else if (cp.type === 'challenge') {
+                    // Only activate if we aren't already blocked by this one
+                    if (!activeCheckpoint || activeCheckpoint.id !== cp.id) {
+                        setIsPlaying(false);
+                        if (videoRef.current) videoRef.current.pause();
+                        setActiveCheckpoint(cp);
+
+                        // Switch to relevant file
+                        const file = files.find(f => f.name === cp.fileName);
+                        if (file) setActiveFile(file);
+                    }
+                }
+            });
+        }
+    }, [currentTime, checkpoints, activeCheckpoint, files, activeFile]);
+
+    const handleTimeUpdate = () => {
+        if (!videoRef.current) return;
+        setCurrentTime(videoRef.current.currentTime);
     };
 
-    const handlePreviousTask = () => {
-        if (!isVerifying && currentTaskIndex > 0) {
-            setCurrentTaskIndex(prev => prev - 1);
+    const handlePlay = () => {
+        if (activeCheckpoint && !activeCheckpoint.completed) {
+            setFeedback({ type: 'error', message: 'Complete the current challenge to continue!' });
+            setTimeout(() => setFeedback(null), 3000);
+            return;
+        }
+
+        // If HTML5 video
+        videoRef.current?.play();
+        setIsPlaying(true);
+    };
+
+    const handlePause = () => {
+        videoRef.current?.pause();
+        setIsPlaying(false);
+    };
+
+    // --- File Logic ---
+    const handleFileChange = (newContent) => {
+        setFiles(prev => prev.map(f => f.name === activeFile.name ? { ...f, content: newContent } : f));
+        setActiveFile(prev => ({ ...prev, content: newContent }));
+    };
+
+    // --- Challenge Logic ---
+    const checkSolution = () => {
+        if (!activeCheckpoint) return;
+
+        const isCorrect = activeCheckpoint.check(files);
+        if (isCorrect) {
+            setFeedback({ type: 'success', message: 'Correct! Continuing lesson...' });
+
+            setCheckpoints(prev => prev.map(cp => cp.id === activeCheckpoint.id ? { ...cp, completed: true } : cp));
+            setActiveCheckpoint(null);
+            setShowHint(false);
+
+            setTimeout(() => {
+                setFeedback(null);
+                handlePlay();
+            }, 1000);
+        } else {
+            setFeedback({ type: 'error', message: 'Incorrect. Try again or use a hint.' });
+            setTimeout(() => setFeedback(null), 3000);
         }
     };
+
+    if (loading) return (
+        <div className="h-screen bg-[#0d1117] flex items-center justify-center text-white">
+            <Loader className="w-10 h-10 animate-spin text-blue-500" />
+        </div>
+    );
+
+    if (!activity) return (
+        <div className="h-screen bg-[#0d1117] flex items-center justify-center text-white">
+            <div className="text-center">
+                <h1 className="text-2xl font-bold mb-2">Activity Not Found</h1>
+                <p className="text-gray-400 mb-4">{feedback?.message || "Could not load activity data."}</p>
+                <button onClick={() => navigate(`/courses/${courseId}`)} className="text-blue-400 hover:underline">
+                    Back to Course
+                </button>
+            </div>
+        </div>
+    );
 
     return (
-        <div>
+        <div className="flex flex-col h-screen bg-[#0d1117] text-gray-100 font-sans overflow-hidden">
             <Nav user={user} />
-            <div className='flex relative overflow-hidden bg-transparent min-h-screen'>
-                <Sidebar />
-                <main className="flex-1 p-6 overflow-auto">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex flex-col gap-4">
-                            {/* Code Input */}
-                            <EditorSection
-                                code={code}
-                                onChange={setCode}
-                                onRun={handleRunCode}
-                                isRunning={isRunning}
-                                onShowInstructions={() => setShowInstructions(true)}
-                                files={files}
-                                activeFile={activeFile}
-                                onFileSelect={handleFileSelect}
-                            />
 
-                            {/* Code Output */}
-                            <div className="flex-1">
-                                <OutputSection output={output} />
+            <div className="flex flex-1 overflow-hidden relative">
+                <Sidebar />
+
+                <div className="flex-1 flex overflow-hidden flex-col">
+                    {/* Activity Header */}
+                    <div className="h-12 border-b border-gray-800 bg-[#161b22] px-4 flex items-center gap-4 shrink-0">
+                        <button
+                            onClick={() => navigate(`/courses/${courseId}`)}
+                            className="text-gray-400 hover:text-white flex items-center gap-1 text-sm font-medium"
+                        >
+                            <ChevronsLeft className="w-4 h-4" />
+                            Back
+                        </button>
+                        <h1 className="text-sm font-bold text-white tracking-wide border-l border-gray-700 pl-4">
+                            {activity.title}
+                        </h1>
+                    </div>
+
+                    <div className="flex-1 flex overflow-hidden">
+                        {/* LEFT: Video & Activity Context */}
+                        <div className="w-[45%] flex flex-col border-r border-gray-800 bg-black relative">
+                            <div className="flex-1 relative flex items-center justify-center bg-zinc-900 border-b border-gray-800">
+                                <VideoPlayer
+                                    videoUrl={activity.video_url}
+                                    videoRef={videoRef}
+                                    onTimeUpdate={handleTimeUpdate}
+                                    onDurationChange={setDuration}
+                                    onPlay={() => setIsPlaying(true)}
+                                    onPause={() => setIsPlaying(false)}
+                                    className={`w-full h-full max-h-full transition-opacity duration-300 ${activeCheckpoint ? 'opacity-30 blur-sm' : 'opacity-100'}`}
+                                />
+
+                                {!isPlaying && !activeCheckpoint && (
+                                    <button
+                                        onClick={handlePlay}
+                                        className="absolute z-10 p-4 bg-white/10 hover:bg-white/20 backdrop-blur rounded-full transition-all"
+                                    >
+                                        <Play className="w-8 h-8 text-white fill-current" />
+                                    </button>
+                                )}
+
+                                {activeCheckpoint && (
+                                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-8 animate-in fade-in zoom-in-95 duration-200">
+                                        {/* Checkpoint Overlay Content */}
+                                        <div className="bg-[#161b22] border border-gray-700 p-6 rounded-xl shadow-2xl max-w-md w-full text-center">
+                                            <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <CodeIcon />
+                                            </div>
+                                            <h2 className="text-xl font-bold text-white mb-2">
+                                                Checkpoint: {activeCheckpoint.title}
+                                            </h2>
+                                            <p className="text-gray-400 mb-6 text-sm leading-relaxed">
+                                                {activeCheckpoint.instruction}
+                                            </p>
+
+                                            <div className="flex flex-col gap-3">
+                                                <button
+                                                    onClick={checkSolution}
+                                                    className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <CheckCircle className="w-4 h-4" />
+                                                    Verify Solution
+                                                </button>
+
+                                                <button
+                                                    onClick={() => setShowHint(!showHint)}
+                                                    className="w-full py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                                                >
+                                                    <HelpCircle className="w-4 h-4" />
+                                                    {showHint ? "Hide Hint" : "Need a Hint?"}
+                                                </button>
+                                            </div>
+
+                                            {showHint && (
+                                                <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded text-yellow-200 text-xs text-left">
+                                                    💡 <strong>Hint:</strong> {activeCheckpoint.hint}
+                                                </div>
+                                            )}
+
+                                            {feedback && (
+                                                <div className={`mt-4 p-2 rounded text-sm font-medium ${feedback.type === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                    {feedback.message}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="h-16 bg-[#161b22] border-t border-gray-800 flex items-center px-4 gap-4">
+                                <button onClick={isPlaying ? handlePause : handlePlay} className="text-gray-400 hover:text-white">
+                                    {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                                </button>
+                                <div className="flex-1 h-1.5 bg-gray-700 rounded-full relative overflow-hidden group cursor-pointer"
+                                    onClick={(e) => {
+                                        if (!activeCheckpoint) {
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            const pos = (e.clientX - rect.left) / rect.width;
+                                            const newTime = pos * duration;
+                                            if (videoRef.current) videoRef.current.currentTime = newTime;
+                                        }
+                                    }}
+                                >
+                                    <div className="absolute inset-y-0 left-0 bg-blue-500 rounded-full" style={{ width: `${(currentTime / duration) * 100}%` }} />
+
+                                    {checkpoints.map(cp => (
+                                        <div
+                                            key={cp.id}
+                                            className={`absolute top-0 w-1 h-full z-10 ${cp.completed ? 'bg-green-500' : 'bg-yellow-500'}`}
+                                            style={{ left: `${(cp.time / duration) * 100}%` }}
+                                            title={cp.title}
+                                        />
+                                    ))}
+                                </div>
+                                <span className="text-xs font-mono text-gray-500">
+                                    {formatTime(currentTime)} / {formatTime(duration)}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* RIGHT: IDE Environment */}
+                        <div className="flex-1 flex flex-col bg-[#1e1e1e]">
+                            <div className="h-10 border-b border-[#30363d] bg-[#0d1117] flex items-center px-2">
+                                <span className="text-xs font-bold text-gray-500 uppercase px-3">Sandbox</span>
+                            </div>
+
+                            <div className="flex-1 flex overflow-hidden">
+                                <div className="w-48 border-r border-[#30363d] bg-[#0d1117]">
+                                    <FileExplorer
+                                        files={files}
+                                        activeFile={activeFile}
+                                        onFileSelect={setActiveFile}
+                                    />
+                                </div>
+
+                                <div className="flex-1 flex flex-col relative">
+                                    <Editor
+                                        height="100%"
+                                        path={activeFile.name}
+                                        language={activeFile.language}
+                                        value={activeFile.content}
+                                        onChange={handleFileChange}
+                                        theme="vs-dark"
+                                        options={{
+                                            minimap: { enabled: false },
+                                            fontSize: 14,
+                                            padding: { top: 10 },
+                                            scrollBeyondLastLine: false,
+                                            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+                                        }}
+                                    />
+
+                                    <div className="h-32 border-t border-[#30363d] bg-[#0d1117] p-2 font-mono text-xs overflow-auto">
+                                        <div className="flex items-center gap-2 text-gray-500 mb-2 border-b border-gray-800 pb-1">
+                                            <Terminal className="w-3 h-3" />
+                                            <span>Console / Output</span>
+                                        </div>
+                                        <div className="text-gray-300">
+                                            {feedback ? `> ${feedback.message}` : "> Ready..."}
+                                            <br />
+                                            {activeCheckpoint ? `> Waiting for solution to: ${activeCheckpoint.title}...` : ""}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </main>
+                </div>
             </div>
-            <Footer />
-
-            <HintModal isOpen={showHint} onClose={() => setShowHint(false)} />
-
-            <InstructionsModal
-                isOpen={showInstructions}
-                onClose={() => setShowInstructions(false)}
-                title="Lab 1: Java Basics"
-                tasks={tasks}
-                currentTaskIndex={currentTaskIndex}
-                totalTasks={tasks.length}
-                onNextTask={handleNextTask}
-                onPreviousTask={handlePreviousTask}
-                onHint={() => setShowHint(true)}
-                isVerifying={isVerifying}
-            />
-
-            <CompletionModal
-                isOpen={showCompletion}
-                onClose={() => setShowCompletion(false)}
-                grade={100}
-                onGoBack={() => navigate('/courses')}
-            />
-
-            <FloatingVideo
-                title="Lab Tutorial Video"
-                videoUrl="https://www.youtube.com/watch?v=M88sDrY66r8"
-                checkpoints={[
-                    { timeDisplay: '0:00', timeSeconds: 0, label: 'Introduction' },
-                    { timeDisplay: '1:04', timeSeconds: 64, label: 'Creating Java Class' },
-                    { timeDisplay: '2:15', timeSeconds: 135, label: 'The Main Method' },
-                    { timeDisplay: '3:45', timeSeconds: 225, label: 'System.out.println' },
-                    { timeDisplay: '5:20', timeSeconds: 320, label: 'Running the Program' }
-                ]}
-            />
         </div>
+    );
+}
+
+function CodeIcon() {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+    )
+}
+
+function formatTime(seconds) {
+    if (!seconds) return "0:00";
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+// --- Helper Components ---
+
+function VideoPlayer({ videoUrl, videoRef, onTimeUpdate, onDurationChange, onPlay, onPause, className }) {
+    // Basic YouTube detection
+    const isYouTube = videoUrl && (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be'));
+
+    if (isYouTube) {
+        // Convert to embed URL if needed
+        let embedUrl = videoUrl;
+        if (videoUrl.includes('watch?v=')) {
+            const videoId = videoUrl.split('watch?v=')[1].split('&')[0];
+            embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=0&modestbranding=1&rel=0`;
+        } else if (videoUrl.includes('youtu.be/')) {
+            const videoId = videoUrl.split('youtu.be/')[1];
+            embedUrl = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&controls=0&modestbranding=1&rel=0`;
+        }
+
+        // Note: Full interactive control of YouTube iframe requires the YouTube IFrame API which is complex to add in one shot.
+        // For this version, we display the iframe. The 'pause on checkpoint' logic works best with native video.
+        // We will try to simulate basic events or just show the video.
+
+        return (
+            <div className={`relative w-full h-full bg-black flex items-center justify-center ${className}`}>
+                <iframe
+                    src={embedUrl}
+                    className="w-full h-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                    title="Activity Video"
+                />
+                <div className="absolute inset-0 pointer-events-none bg-transparent">
+                    {/* Overlay to block direct interaction if needed, though we need clicks to play */}
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <video
+            ref={videoRef}
+            className={className}
+            src={videoUrl || "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"}
+            onTimeUpdate={onTimeUpdate}
+            onLoadedMetadata={(e) => onDurationChange(e.currentTarget.duration)}
+            onPlay={onPlay}
+            onPause={onPause}
+            controls={false}
+        />
     );
 }

@@ -1,5 +1,5 @@
 import UserRoutes from "./UserRoutes.js";
-import LabRoutes from "./lab.routes.js"; 
+import LabRoutes from "./lab.routes.js";
 import CourseRoutes from "./course.routes.js";
 import ActivityRoutes from "./activityRoutes.js";
 
@@ -31,14 +31,14 @@ const apiRoutes = (router) => {
 
   router.use("/users", UserRoutes);
 
-  // Course routes
-  router.use("/courses", CourseRoutes);
+  // Activity routes
+  router.use("/courses/:courseId/activities", ActivityRoutes);
 
   // Lab routes 
   router.use("/courses/:courseId/labs", LabRoutes);
 
-  // Activity routes
-  router.use("/courses/:courseId/activities", ActivityRoutes);
+  // Course routes
+  router.use("/courses", CourseRoutes);
 
   router.use((req, res) => {
     res.status(404).json({ error: "Not Found" });
