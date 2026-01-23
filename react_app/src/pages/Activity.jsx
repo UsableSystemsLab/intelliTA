@@ -2,9 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Editor from "@monaco-editor/react";
 import Nav from '@/components/Courses/Nav';
-import Sidebar from '@/components/Courses/Sidebar';
 import FileExplorer from '@/components/Activity/FileExplorer';
-import { Play, Pause, RotateCcw, CheckCircle, HelpCircle, ChevronRight, Terminal, ChevronsLeft, Loader } from 'lucide-react';
+import { Play, Pause, RotateCcw, CheckCircle, HelpCircle, ChevronRight, Terminal, ChevronsLeft, Loader, LayoutTemplate } from 'lucide-react';
 
 const LAB_CHECKPOINTS = [
     {
@@ -110,6 +109,50 @@ export default function Activity({ user }) {
     const [activeCheckpoint, setActiveCheckpoint] = useState(null);
     const [showHint, setShowHint] = useState(false);
     const [feedback, setFeedback] = useState(null);
+    const [layoutDirection, setLayoutDirection] = useState('row'); // 'row' = Video Left, 'row-reverse' = Video Right
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async () => {
+        if (!user) {
+            setFeedback({ type: 'error', message: "You must be logged in to submit." });
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            // Calculate score based on completed checkpoints
+            const totalCheckpoints = checkpoints.length;
+            const completedCount = checkpoints.filter(cp => cp.completed).length;
+            const calculatedScore = totalCheckpoints > 0 ? Math.round((completedCount / totalCheckpoints) * 100) : 100;
+
+            const url = `http://localhost:4000/api/courses/${courseId}/activities/${activityId}/submit`;
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer 1111"
+                },
+                body: JSON.stringify({
+                    firebaseId: user.uid,
+                    score: calculatedScore
+                })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                setFeedback({ type: 'success', message: `Submitted successfully! Score: ${calculatedScore}%` });
+            } else {
+                setFeedback({ type: 'error', message: "Submission failed. Please try again." });
+            }
+        } catch (error) {
+            console.error(error);
+            setFeedback({ type: 'error', message: "Network error during submission." });
+        } finally {
+            setIsSubmitting(false);
+            // Clear success message after a few seconds
+            setTimeout(() => setFeedback(null), 5000);
+        }
+    };
 
     // Fetch Activity Data
     useEffect(() => {
@@ -187,7 +230,12 @@ export default function Activity({ user }) {
     // Checkpoints Monitor (Runs whenever time updates, from Video OR Timer)
     useEffect(() => {
         // Find all due checkpoints that are not completed
-        const dueCheckpoints = checkpoints.filter(cp => cp.time <= currentTime && !cp.completed);
+        // Fix: Only trigger checkpoints that are close to current time (within 1.5s) to avoid triggering old tasks when skipping
+        const dueCheckpoints = checkpoints.filter(cp =>
+            !cp.completed &&
+            cp.time <= currentTime &&
+            cp.time >= currentTime - 2
+        );
 
         if (dueCheckpoints.length > 0) {
             dueCheckpoints.forEach(cp => {
@@ -298,26 +346,57 @@ export default function Activity({ user }) {
             <Nav user={user} />
 
             <div className="flex flex-1 overflow-hidden relative">
-                <Sidebar />
+                {/* Removed Sidebar */}
 
                 <div className="flex-1 flex overflow-hidden flex-col">
                     {/* Activity Header */}
-                    <div className="h-12 border-b border-gray-800 bg-[#161b22] px-4 flex items-center gap-4 shrink-0">
-                        <button
-                            onClick={() => navigate(`/courses/${courseId}`)}
-                            className="text-gray-400 hover:text-white flex items-center gap-1 text-sm font-medium"
-                        >
-                            <ChevronsLeft className="w-4 h-4" />
-                            Back
-                        </button>
-                        <h1 className="text-sm font-bold text-white tracking-wide border-l border-gray-700 pl-4">
-                            {activity.title}
-                        </h1>
+                    <div className="h-14 border-b border-gray-800 bg-[#161b22] px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => navigate(`/courses/${courseId}`)}
+                                className="group flex items-center gap-2 text-gray-400 hover:text-white transition-colors py-1.5 px-3 rounded-md hover:bg-gray-800"
+                            >
+                                <ChevronsLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+                                <span className="font-medium text-sm">Back</span>
+                            </button>
+                            <div className="h-6 w-px bg-gray-700 mx-2"></div>
+                            <h1 className="text-base font-bold text-gray-100 tracking-wide">
+                                {activity.title}
+                            </h1>
+                        </div>
+
+                        {/* Layout Toggle & Submit */}
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={handleSubmit}
+                                disabled={isSubmitting}
+                                className="flex items-center gap-2 text-xs font-bold text-white bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-1.5 rounded-md shadow-lg transition-all"
+                            >
+                                {isSubmitting ? (
+                                    <Loader className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <CheckCircle className="w-4 h-4" />
+                                )}
+                                <span>Submit</span>
+                            </button>
+
+                            <div className="h-6 w-px bg-gray-700"></div>
+
+                            <button
+                                onClick={() => setLayoutDirection(prev => prev === 'row' ? 'row-reverse' : 'row')}
+                                className="flex items-center gap-2 text-xs font-medium text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 px-3 py-1.5 rounded-md border border-gray-700 transition-all"
+                                title="Toggle Layout"
+                            >
+                                <LayoutTemplate className="w-4 h-4" />
+                                <span className="hidden sm:inline">Switch Layout</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <div className="flex-1 flex overflow-hidden">
-                        {/* LEFT: Video & Activity Context */}
-                        <div className="w-[45%] flex flex-col border-r border-gray-800 bg-black relative">
+                    <div className={`flex-1 flex overflow-hidden ${layoutDirection === 'row-reverse' ? 'flex-row-reverse' : 'flex-row'}`}>
+
+                        {/* Video Pane */}
+                        <div className={`w-[45%] flex flex-col bg-black relative transition-all duration-300 ${layoutDirection === 'row' ? 'border-r border-gray-800' : 'border-l border-gray-800'}`}>
                             <div className="flex-1 relative flex items-center justify-center bg-zinc-900 border-b border-gray-800">
                                 <VideoPlayer
                                     videoUrl={activity.video_url}

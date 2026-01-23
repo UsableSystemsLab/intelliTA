@@ -22,4 +22,6 @@ router.get("/:activityId", ActivityController.getActivityById);
 
 router.delete("/:activityId", ActivityController.deleteActivity);
 
+router.post("/:activityId/submit", ActivityController.submitActivity);
+
 export default router;

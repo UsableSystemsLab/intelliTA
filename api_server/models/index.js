@@ -42,10 +42,21 @@ Activity.belongsTo(Course, {
   as: "course",
 });
 
+// ACTIVITY SUBMISSIONS
+import Submission from "./Submission.js";
+
+User.hasMany(Submission, { foreignKey: "user_id", as: "submissions" });
+Submission.belongsTo(User, { foreignKey: "user_id", as: "student" });
+
+Activity.hasMany(Submission, { foreignKey: "activity_id", as: "submissions" });
+Submission.belongsTo(Activity, { foreignKey: "activity_id", as: "activity" });
+
+
 export {
   User,
   Course,
   Enrollment,
   Lab,
   Activity,
+  Submission,
 };

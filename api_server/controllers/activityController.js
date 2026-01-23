@@ -1,4 +1,6 @@
 import Activity from "../models/Activity.js";
+import Submission from "../models/Submission.js";
+import User from "../models/User.js";
 
 const ActivityController = {
   async getActivityById(req, res) {
@@ -91,6 +93,57 @@ const ActivityController = {
     } catch (error) {
       console.error("Delete Activity Error:", error);
       res.status(500).json({ message: "Failed to delete activity" });
+    }
+  },
+
+  async submitActivity(req, res) {
+    try {
+      const { activityId } = req.params;
+      const { userId, firebaseId, score } = req.body;
+
+      console.log(`[SubmitActivity] ActID: ${activityId}, User: ${userId || firebaseId}, Score: ${score}`);
+
+      if (!activityId) return res.status(400).json({ message: "Activity ID is required" });
+      if (!userId && !firebaseId) return res.status(400).json({ message: "User ID or Firebase ID is required" });
+
+      // Find the user first
+      let user;
+      if (userId) {
+        user = await User.findByPk(userId);
+      } else if (firebaseId) {
+        user = await User.findOne({ where: { firebaseId: firebaseId } });
+      }
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check if submission exists
+      let submission = await Submission.findOne({
+        where: {
+          activity_id: activityId,
+          user_id: user.id
+        }
+      });
+
+      if (submission) {
+        // Update score if better? Or just update. Let's update.
+        submission.score = score || submission.score;
+        await submission.save();
+        return res.json({ message: "Submission updated", submission });
+      } else {
+        // Create new
+        submission = await Submission.create({
+          activity_id: activityId,
+          user_id: user.id,
+          score: score || 100 // Default score if not provided
+        });
+        return res.status(201).json({ message: "Activity submitted successfully", submission });
+      }
+
+    } catch (error) {
+      console.error("Submit Activity Error:", error);
+      res.status(500).json({ message: "Failed to submit activity", error: error.message });
     }
   }
 };
