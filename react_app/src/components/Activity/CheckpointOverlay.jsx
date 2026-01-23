@@ -1,4 +1,4 @@
-import { CheckCircle, HelpCircle } from 'lucide-react';
+import { CheckCircle, HelpCircle, FastForward } from 'lucide-react';
 
 function CodeIcon() {
     return (
@@ -14,12 +14,13 @@ export default function CheckpointOverlay({
     showHint,
     feedback,
     onCheckSolution,
-    onToggleHint
+    onToggleHint,
+    onSkip
 }) {
     if (!activeCheckpoint) return null;
 
     return (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-8 animate-in fade-in zoom-in-95 duration-200">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-8 animate-in fade-in zoom-in-95 duration-200 bg-black/40 backdrop-blur-sm">
             <div className="bg-[#161b22] border border-gray-700 p-6 rounded-xl shadow-2xl max-w-md w-full text-center">
                 <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CodeIcon />
@@ -34,19 +35,29 @@ export default function CheckpointOverlay({
                 <div className="flex flex-col gap-3">
                     <button
                         onClick={onCheckSolution}
-                        className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
+                        className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg"
                     >
                         <CheckCircle className="w-4 h-4" />
                         Verify Solution
                     </button>
 
-                    <button
-                        onClick={onToggleHint}
-                        className="w-full py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-gray-300 font-medium rounded-lg transition-colors flex items-center justify-center gap-2"
-                    >
-                        <HelpCircle className="w-4 h-4" />
-                        {showHint ? "Hide Hint" : "Need a Hint?"}
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={onToggleHint}
+                            className="flex-1 py-2 px-3 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 border border-gray-700"
+                        >
+                            <HelpCircle className="w-4 h-4" />
+                            {showHint ? "Hide Hint" : "Hint"}
+                        </button>
+
+                        <button
+                            onClick={onSkip}
+                            className="flex-1 py-2 px-3 bg-red-900/40 hover:bg-red-900/60 text-red-100 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 border border-red-800/50"
+                        >
+                            <FastForward className="w-4 h-4" />
+                            Skip
+                        </button>
+                    </div>
                 </div>
 
                 {showHint && (

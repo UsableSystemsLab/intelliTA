@@ -6,6 +6,7 @@ import CodeEditorSection from './CodeEditorSection';
 import CheckpointOverlay from './CheckpointOverlay';
 import LoadingScreen from './LoadingScreen';
 import ErrorScreen from './ErrorScreen';
+import SubmissionResultOverlay from './SubmissionResultOverlay';
 
 import { useCheckpoints } from '@/components/Activity/useCheckpoints';
 
@@ -56,6 +57,12 @@ export default function Maincontent({ user }) {
 
     const [feedback, setFeedback] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showResultOverlay, setShowResultOverlay] = useState(false);
+    const [submissionScore, setSubmissionScore] = useState(0);
+
+    const handleSeek = (newTime) => {
+        if (videoRef.current) videoRef.current.currentTime = newTime;
+    };
 
     // Initialize Checkpoint Logic Engine
     const {
@@ -63,7 +70,10 @@ export default function Maincontent({ user }) {
         activeCheckpoint,
         showHint,
         setShowHint,
-        checkSolution
+        checkSolution,
+        skipCheckpoint,
+        nextCheckpoint,
+        prevCheckpoint
     } = useCheckpoints({
         currentTime,
         files,
@@ -72,7 +82,9 @@ export default function Maincontent({ user }) {
         activeFile,
         setActiveFile,
         onFeedback: setFeedback,
-        onPlay: () => setIsPlaying(true)
+        onPlay: () => setIsPlaying(true),
+        onSeek: handleSeek,
+        INITIAL_FILES: INITIAL_FILES
     });
 
     useEffect(() => {
@@ -139,8 +151,6 @@ export default function Maincontent({ user }) {
     }, [isYouTube, isPlaying, activeCheckpoint, duration]);
 
 
-    // Checkpoint effect handled by useCheckpoints hook
-
     const handleTimeUpdate = () => {
         if (!videoRef.current) return;
         setCurrentTime(videoRef.current.currentTime);
@@ -161,16 +171,10 @@ export default function Maincontent({ user }) {
         setIsPlaying(false);
     };
 
-    const handleSeek = (newTime) => {
-        if (videoRef.current) videoRef.current.currentTime = newTime;
-    };
-
     const handleFileChange = (newContent) => {
         setFiles(prev => prev.map(f => f.name === activeFile.name ? { ...f, content: newContent } : f));
         setActiveFile(prev => ({ ...prev, content: newContent }));
     };
-
-    // checkSolution logic handled by hook
 
     const handleSubmit = async () => {
         if (!user) {
@@ -179,9 +183,10 @@ export default function Maincontent({ user }) {
         }
         setIsSubmitting(true);
         try {
-            const totalCheckpoints = checkpoints.length;
-            const completedCount = checkpoints.filter(cp => cp.completed).length;
-            const calculatedScore = totalCheckpoints > 0 ? Math.round((completedCount / totalCheckpoints) * 100) : 100;
+            const challenges = checkpoints.filter(cp => cp.type === 'challenge');
+            const totalCount = challenges.length;
+            const verifiedCount = challenges.filter(cp => cp.status === 'verified').length;
+            const calculatedScore = totalCount > 0 ? Math.round((verifiedCount / totalCount) * 100) : 100;
 
             const url = `http://localhost:4000/api/courses/${courseId}/activities/${activityId}/submit`;
             const res = await fetch(url, {
@@ -194,7 +199,9 @@ export default function Maincontent({ user }) {
             });
 
             if (res.ok) {
-                setFeedback({ type: 'success', message: `Submitted successfully! Score: ${calculatedScore}%` });
+                setSubmissionScore(calculatedScore);
+                setShowResultOverlay(true);
+                setFeedback({ type: 'success', message: `Submission successful!` });
             } else {
                 setFeedback({ type: 'error', message: "Submission failed. Please try again." });
             }
@@ -221,7 +228,7 @@ export default function Maincontent({ user }) {
             <ActivityHeader
                 activityTitle={activity.title}
                 courseId={courseId}
-                onBack={() => navigate(`/courses/${courseId}`)}
+                onBack={() => navigate(`/courses`)}
                 onSubmit={handleSubmit}
                 isSubmitting={isSubmitting}
             />
@@ -249,17 +256,29 @@ export default function Maincontent({ user }) {
                     onPlay={handlePlay}
                     onPause={handlePause}
                     onSeek={handleSeek}
+                    onNext={nextCheckpoint}
+                    onPrev={prevCheckpoint}
                     CheckpointOverlay={() => (
                         <CheckpointOverlay
                             activeCheckpoint={activeCheckpoint}
                             showHint={showHint}
                             feedback={feedback}
                             onCheckSolution={checkSolution}
+                            onSkip={skipCheckpoint}
                             onToggleHint={() => setShowHint(!showHint)}
                         />
                     )}
                 />
             </div>
+
+            {showResultOverlay && (
+                <SubmissionResultOverlay
+                    checkpoints={checkpoints}
+                    score={submissionScore}
+                    courseId={courseId}
+                    onClose={() => setShowResultOverlay(false)}
+                />
+            )}
         </div>
     );
 }
