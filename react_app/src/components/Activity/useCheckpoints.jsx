@@ -54,6 +54,7 @@ export function useCheckpoints({
     setActiveFile,
     onFeedback,
     onPlay,
+    onPause,
     onSeek,
     INITIAL_FILES
 }) {
@@ -113,14 +114,14 @@ export function useCheckpoints({
             }
             else if (cp.type === 'challenge') {
                 if (!activeCheckpoint || activeCheckpoint.id !== cp.id) {
-                    if (videoRef.current) videoRef.current.pause();
+                    onPause();
                     setActiveCheckpoint(cp);
                     const file = files.find(f => f.name === cp.fileName);
                     if (file) setActiveFile(file);
                 }
             }
         }
-    }, [currentTime, checkpoints, activeCheckpoint, files, activeFile, onFeedback, setActiveFile, setFiles, videoRef, syncCodeToTime]);
+    }, [currentTime, checkpoints, activeCheckpoint, files, activeFile, onFeedback, onPause, setActiveFile, setFiles, syncCodeToTime]);
 
     const checkSolution = () => {
         if (!activeCheckpoint) return;

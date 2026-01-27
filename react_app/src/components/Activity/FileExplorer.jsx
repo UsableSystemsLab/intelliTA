@@ -1,40 +1,54 @@
+import { FileCode, FileText, FileJson, Folder } from 'lucide-react';
+
 export default function FileExplorer({ files, activeFile, onFileSelect }) {
     if (!files) return null;
 
     const getFileIcon = (fileName) => {
-        if (fileName.endsWith('.java')) {
-            return (
-                <span className="text-orange-500 font-bold text-xs w-4 flex justify-center">J</span>
-            );
+        const ext = fileName.split('.').pop()?.toLowerCase();
+        
+        switch (ext) {
+            case 'java':
+                return <span className="text-orange-400 font-bold text-xs w-4 flex justify-center">J</span>;
+            case 'js':
+            case 'jsx':
+                return <FileCode className="w-4 h-4 text-yellow-400" />;
+            case 'ts':
+            case 'tsx':
+                return <FileCode className="w-4 h-4 text-blue-400" />;
+            case 'html':
+                return <FileCode className="w-4 h-4 text-orange-400" />;
+            case 'css':
+            case 'scss':
+                return <FileCode className="w-4 h-4 text-purple-400" />;
+            case 'md':
+            case 'markdown':
+                return <FileText className="w-4 h-4 text-blue-300" />;
+            case 'json':
+                return <FileJson className="w-4 h-4 text-yellow-300" />;
+            default:
+                return <FileText className="w-4 h-4 text-gray-400" />;
         }
-        if (fileName.endsWith('.md')) {
-            return (
-                <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            );
-        }
-        return (
-            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 011.414.586l4 4a1 1 0 01.586 1.414V19a2 2 0 01-2 2z" />
-            </svg>
-        );
     };
 
     return (
-        <div className="w-48 bg-slate-900 border-r border-slate-700 flex flex-col">
-            <div className="px-3 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider border-b border-slate-700/50">
-                Explorer
+        <div className="w-52 bg-[#0d1117] border-r border-gray-800 flex flex-col shrink-0">
+            {/* Header */}
+            <div className="h-10 px-4 flex items-center gap-2 border-b border-gray-800 bg-gray-900/50">
+                <Folder className="w-4 h-4 text-gray-500" />
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Explorer</span>
             </div>
+            
+            {/* File List */}
             <div className="flex-1 overflow-y-auto py-2">
                 {files.map((file) => (
                     <button
                         key={file.name}
                         onClick={() => onFileSelect(file)}
-                        className={`w-full flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${activeFile.name === file.name
-                                ? 'bg-slate-800 text-white border-l-2 border-emerald-500'
-                                : 'text-slate-400 hover:text-white hover:bg-slate-800/50 border-l-2 border-transparent'
-                            }`}
+                        className={`w-full flex items-center gap-3 px-4 py-2 text-sm transition-all duration-150 ${
+                            activeFile.name === file.name
+                                ? 'bg-blue-500/10 text-white border-l-2 border-blue-500'
+                                : 'text-gray-400 hover:text-white hover:bg-gray-800/50 border-l-2 border-transparent'
+                        }`}
                     >
                         {getFileIcon(file.name)}
                         <span className="truncate">{file.name}</span>
