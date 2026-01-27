@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Loader, X, Upload, Link as LinkIcon, FileText } from "lucide-react";
+import { Upload, FileText, Calendar, Type } from "lucide-react";
+import FormInput from "./form/FormInput";
+import FileUploadZone from "./form/FileUploadZone";
+import ToggleButtonGroup from "./form/ToggleButtonGroup";
+import SubmitButton from "./form/SubmitButton";
+import { ModalHeader, ErrorAlert, CloseButton, UrlInput } from "./form/ModalComponents";
 
 export default function CreateActivityModal({ isOpen, onClose, courseId, onActivityCreated }) {
   const [title, setTitle] = useState("");
@@ -14,6 +19,15 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
 
   if (!isOpen) return null;
 
+  const resetForm = () => {
+    setTitle("");
+    setStartDate("");
+    setEndDate("");
+    setVideoFile(null);
+    setVideoUrl("");
+    setMdFile(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -23,171 +37,153 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     formData.append("title", title);
     formData.append("start_date", new Date(startDate).toISOString());
     formData.append("end_date", new Date(endDate).toISOString());
-    
+
     if (videoOption === "file" && videoFile) {
-        formData.append("video", videoFile);
+      formData.append("video", videoFile);
     } else if (videoOption === "url" && videoUrl) {
-        formData.append("video_url", videoUrl);
+      formData.append("video_url", videoUrl);
     }
 
     if (mdFile) {
-        formData.append("md_file", mdFile);
+      formData.append("md_file", mdFile);
     }
 
     try {
-        const response = await fetch(`http://localhost:4000/api/courses/${courseId}/activities`, {
-            method: "POST",
-            headers: {
-                 "Authorization": "Bearer 1111",
-            },
-            body: formData,
-        });
+      const response = await fetch(`http://localhost:4000/api/courses/${courseId}/activities`, {
+        method: "POST",
+        headers: { Authorization: "Bearer 1111" },
+        body: formData,
+      });
 
-        if (!response.ok) {
-            const data = await response.json();
-            console.error("Create Activity Error Details:", data);
-            throw new Error(data.error || data.message || "Failed to create activity");
-        }
+      if (!response.ok) {
+        const data = await response.json();
+        console.error("Create Activity Error Details:", data);
+        throw new Error(data.error || data.message || "Failed to create activity");
+      }
 
-        const newActivity = await response.json();
-        onActivityCreated(newActivity);
-        onClose();
-        // Reset form
-        setTitle("");
-        setStartDate("");
-        setEndDate("");
-        setVideoFile(null);
-        setVideoUrl("");
-        setMdFile(null);
+      const newActivity = await response.json();
+      onActivityCreated(newActivity);
+      onClose();
+      resetForm();
     } catch (err) {
-        setErrorMsg(err.message);
+      setErrorMsg(err.message);
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
   };
 
+  const videoToggleOptions = [
+    { value: "file", label: "Upload", icon: Upload },
+    { value: "url", label: "URL", icon: null },
+  ];
+
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-slate-800 p-8 rounded-xl border border-slate-700 max-w-lg w-full shadow-2xl relative text-white">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white">
-          <X size={24} />
-        </button>
-        
-        <h2 className="text-2xl font-bold mb-6">Create New Activity</h2>
-        
-        {errorMsg && (
-             <div className="bg-red-500/20 text-red-500 p-3 rounded mb-4 text-sm">
-                 {errorMsg}
-             </div>
-        )}
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="relative bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-lg w-full shadow-2xl text-white overflow-hidden">
+        {/* Decorative glow */}
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-green-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-24 h-24 bg-blue-500/10 rounded-full blur-3xl" />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Activity Name</label>
-                <input 
-                    type="text" 
-                    required 
-                    className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white focus:outline-none focus:border-blue-500"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                />
-            </div>
-            
+        <CloseButton onClick={onClose} />
+
+        <div className="relative z-10">
+          <ModalHeader
+            title="Create Activity"
+            subtitle="Add a new interactive lesson"
+          />
+
+          <ErrorAlert message={errorMsg} />
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Activity Name */}
+            <FormInput
+              label="Activity Name"
+              icon={Type}
+              required
+              placeholder="e.g., Introduction to React Hooks"
+              value={title}
+              onChange={setTitle}
+            />
+
+            {/* Date Range */}
             <div className="grid grid-cols-2 gap-4">
-                <div>
-                     <label className="block text-sm font-medium text-gray-300 mb-1">Start Date</label>
-                     <input 
-                        type="datetime-local" 
-                        required 
-                        className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white focus:outline-none focus:border-blue-500 [color-scheme:dark]"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                     />
-                </div>
-                <div>
-                     <label className="block text-sm font-medium text-gray-300 mb-1">End Date</label>
-                     <input 
-                        type="datetime-local" 
-                        required 
-                        className="w-full bg-slate-900 border border-slate-600 rounded p-2 text-white focus:outline-none focus:border-blue-500 [color-scheme:dark]"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                     />
-                </div>
+              <FormInput
+                label="Start Date"
+                icon={Calendar}
+                type="datetime-local"
+                required
+                value={startDate}
+                onChange={setStartDate}
+              />
+              <FormInput
+                label="End Date"
+                icon={Calendar}
+                type="datetime-local"
+                required
+                value={endDate}
+                onChange={setEndDate}
+              />
             </div>
 
+            {/* Video Source */}
             <div>
-                 <label className="block text-sm font-medium text-gray-300 mb-2">Video Source (Optional)</label>
-                 <div className="flex gap-4 mb-2">
-                     <button 
-                        type="button" 
-                        className={`flex-1 py-2 rounded border ${videoOption === 'file' ? 'bg-blue-600/20 border-blue-500 text-blue-400' : 'border-slate-600 hover:bg-slate-700'}`}
-                        onClick={() => setVideoOption("file")}
-                     >
-                        Upload Video
-                     </button>
-                     <button 
-                        type="button" 
-                        className={`flex-1 py-2 rounded border ${videoOption === 'url' ? 'bg-blue-600/20 border-blue-500 text-blue-400' : 'border-slate-600 hover:bg-slate-700'}`}
-                        onClick={() => setVideoOption("url")}
-                     >
-                        Video URL
-                     </button>
-                 </div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-3">
+                Video Source
+                <span className="text-gray-500 font-normal">(Optional)</span>
+              </label>
+              
+              <div className="mb-3">
+                <ToggleButtonGroup
+                  options={videoToggleOptions}
+                  activeValue={videoOption}
+                  onChange={setVideoOption}
+                />
+              </div>
 
-                 {videoOption === 'file' ? (
-                     <div className="border border-dashed border-slate-600 rounded p-4 text-center hover:bg-slate-700/50 transition">
-                         <input 
-                            type="file" 
-                            accept="video/*" 
-                            id="video-upload" 
-                            className="hidden" 
-                            onChange={(e) => setVideoFile(e.target.files[0])}
-                         />
-                         <label htmlFor="video-upload" className="cursor-pointer flex flex-col items-center">
-                             <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                             <span className="text-sm text-gray-400">{videoFile ? videoFile.name : "Click to upload video"}</span>
-                         </label>
-                     </div>
-                 ) : (
-                     <div className="flex items-center gap-2 bg-slate-900 border border-slate-600 rounded p-2">
-                         <LinkIcon className="text-gray-400 w-5 h-5" />
-                         <input 
-                             type="url" 
-                             className="bg-transparent w-full focus:outline-none text-white" 
-                             placeholder="https://example.com/video.mp4"
-                             value={videoUrl}
-                             onChange={(e) => setVideoUrl(e.target.value)}
-                         />
-                     </div>
-                 )}
+              {videoOption === "file" ? (
+                <FileUploadZone
+                  id="video-upload"
+                  accept="video/*"
+                  file={videoFile}
+                  onFileChange={setVideoFile}
+                  icon={Upload}
+                  label="Click to upload video"
+                />
+              ) : (
+                <UrlInput
+                  value={videoUrl}
+                  onChange={setVideoUrl}
+                  placeholder="https://youtube.com/watch?v=..."
+                />
+              )}
             </div>
 
+            {/* Markdown File */}
             <div>
-                 <label className="block text-sm font-medium text-gray-300 mb-1">Markdown File (Optional)</label>
-                 <div className="border border-dashed border-slate-600 rounded p-4 text-center hover:bg-slate-700/50 transition">
-                     <input 
-                        type="file" 
-                        accept=".md, .markdown" 
-                        id="md-upload" 
-                        className="hidden" 
-                        onChange={(e) => setMdFile(e.target.files[0])}
-                     />
-                     <label htmlFor="md-upload" className="cursor-pointer flex flex-col items-center">
-                         <FileText className="w-8 h-8 text-gray-400 mb-2" />
-                         <span className="text-sm text-gray-400">{mdFile ? mdFile.name : "Click to upload .md file"}</span>
-                     </label>
-                 </div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+                <FileText className="w-4 h-4 text-gray-500" />
+                Markdown File
+                <span className="text-gray-500 font-normal">(Optional)</span>
+              </label>
+              <FileUploadZone
+                id="md-upload"
+                accept=".md, .markdown"
+                file={mdFile}
+                onFileChange={setMdFile}
+                icon={FileText}
+                label="Click to upload .md file"
+              />
             </div>
 
-            <button 
-                type="submit" 
-                disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium disabled:opacity-50 mt-4 flex justify-center items-center gap-2"
-            >
-                {loading ? <Loader className="animate-spin w-5 h-5" /> : "Create Activity"}
-            </button>
-        </form>
+            {/* Submit Button */}
+            <SubmitButton
+              loading={loading}
+              label="Create Activity"
+              loadingLabel="Creating..."
+              className="mt-2"
+            />
+          </form>
+        </div>
       </div>
     </div>
   );
