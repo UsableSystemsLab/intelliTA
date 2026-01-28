@@ -1,19 +1,17 @@
 import { useState } from "react";
-import { Upload, FileText, Calendar, Type } from "lucide-react";
+import { Upload, Calendar, Type } from "lucide-react";
 import FormInput from "./form/FormInput";
 import FileUploadZone from "./form/FileUploadZone";
-import ToggleButtonGroup from "./form/ToggleButtonGroup";
 import SubmitButton from "./form/SubmitButton";
-import { ModalHeader, ErrorAlert, CloseButton, UrlInput } from "./form/ModalComponents";
+import MarkdownEditor from "./form/MarkdownEditor";
+import { ModalHeader, ErrorAlert, CloseButton } from "./form/ModalComponents";
 
 export default function CreateActivityModal({ isOpen, onClose, courseId, onActivityCreated }) {
   const [title, setTitle] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [videoOption, setVideoOption] = useState("file");
   const [videoFile, setVideoFile] = useState(null);
-  const [videoUrl, setVideoUrl] = useState("");
-  const [mdFile, setMdFile] = useState(null);
+  const [mdContent, setMdContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -24,8 +22,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     setStartDate("");
     setEndDate("");
     setVideoFile(null);
-    setVideoUrl("");
-    setMdFile(null);
+    setMdContent("");
   };
 
   const handleSubmit = async (e) => {
@@ -38,13 +35,13 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     formData.append("start_date", new Date(startDate).toISOString());
     formData.append("end_date", new Date(endDate).toISOString());
 
-    if (videoOption === "file" && videoFile) {
+    if (videoFile) {
       formData.append("video", videoFile);
-    } else if (videoOption === "url" && videoUrl) {
-      formData.append("video_url", videoUrl);
     }
 
-    if (mdFile) {
+    if (mdContent.trim()) {
+      const mdBlob = new Blob([mdContent], { type: "text/markdown" });
+      const mdFile = new File([mdBlob], "content.md", { type: "text/markdown" });
       formData.append("md_file", mdFile);
     }
 
@@ -71,11 +68,6 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
       setLoading(false);
     }
   };
-
-  const videoToggleOptions = [
-    { value: "file", label: "Upload", icon: Upload },
-    { value: "url", label: "URL", icon: null },
-  ];
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -125,55 +117,29 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               />
             </div>
 
-            {/* Video Source */}
+            {/* Video Upload */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-3">
-                Video Source
+                Video
                 <span className="text-gray-500 font-normal">(Optional)</span>
               </label>
-              
-              <div className="mb-3">
-                <ToggleButtonGroup
-                  options={videoToggleOptions}
-                  activeValue={videoOption}
-                  onChange={setVideoOption}
-                />
-              </div>
 
-              {videoOption === "file" ? (
-                <FileUploadZone
-                  id="video-upload"
-                  accept="video/*"
-                  file={videoFile}
-                  onFileChange={setVideoFile}
-                  icon={Upload}
-                  label="Click to upload video"
-                />
-              ) : (
-                <UrlInput
-                  value={videoUrl}
-                  onChange={setVideoUrl}
-                  placeholder="https://youtube.com/watch?v=..."
-                />
-              )}
-            </div>
-
-            {/* Markdown File */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
-                <FileText className="w-4 h-4 text-gray-500" />
-                Markdown File
-                <span className="text-gray-500 font-normal">(Optional)</span>
-              </label>
               <FileUploadZone
-                id="md-upload"
-                accept=".md, .markdown"
-                file={mdFile}
-                onFileChange={setMdFile}
-                icon={FileText}
-                label="Click to upload .md file"
+                id="video-upload"
+                accept="video/*"
+                file={videoFile}
+                onFileChange={setVideoFile}
+                icon={Upload}
+                label="Click to upload video"
               />
             </div>
+
+            {/* Markdown Content */}
+            <MarkdownEditor
+              value={mdContent}
+              onChange={setMdContent}
+              label="Markdown Content"
+            />
 
             {/* Submit Button */}
             <SubmitButton

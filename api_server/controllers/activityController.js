@@ -78,6 +78,34 @@ const ActivityController = {
     }
   },
 
+  async updateActivity(req, res) {
+    try {
+      const { activityId } = req.params;
+      const { title, start_date, end_date, md_file_url } = req.body;
+
+      const activity = await Activity.findOne({
+        where: { activity_id: activityId }
+      });
+
+      if (!activity) {
+        return res.status(404).json({ message: "Activity not found" });
+      }
+
+      // Update only provided fields
+      if (title !== undefined) activity.title = title;
+      if (start_date !== undefined) activity.start_date = start_date;
+      if (end_date !== undefined) activity.end_date = end_date;
+      if (md_file_url !== undefined) activity.md_file_url = md_file_url;
+
+      await activity.save();
+
+      res.json(activity);
+    } catch (error) {
+      console.error("Update Activity Error:", error);
+      res.status(500).json({ message: "Failed to update activity", error: error.message });
+    }
+  },
+
   async deleteActivity(req, res) {
     try {
       const { activityId } = req.params;

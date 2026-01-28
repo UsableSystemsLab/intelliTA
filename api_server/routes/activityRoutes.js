@@ -20,6 +20,13 @@ router.get("/", ActivityController.getActivitiesByCourse);
 
 router.get("/:activityId", ActivityController.getActivityById);
 
+router.put(
+    "/:activityId",
+    uploadActivityMulter,
+    uploadActivityFilesToS3,
+    ActivityController.updateActivity
+);
+
 router.delete("/:activityId", ActivityController.deleteActivity);
 
 router.post("/:activityId/submit", ActivityController.submitActivity);
