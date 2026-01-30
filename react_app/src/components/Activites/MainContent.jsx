@@ -23,7 +23,7 @@ import {
     Pencil
 } from "lucide-react";
 
-// we need to add here a status if the student missed the deadline
+
 const getActivityStatus = (startDate, endDate) => {
     const now = new Date();
     const start = new Date(startDate);
@@ -34,7 +34,7 @@ const getActivityStatus = (startDate, endDate) => {
     return 'active';
 };
 
-// Status badge component
+
 const StatusBadge = ({ status }) => {
     const config = {
         upcoming: {
@@ -70,7 +70,7 @@ const StatusBadge = ({ status }) => {
     );
 };
 
-// Activity Card Component
+
 const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navigate }) => {
     const status = getActivityStatus(activity.start_date, activity.end_date);
 
@@ -154,7 +154,7 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navi
     );
 };
 
-// Empty State Component
+
 const EmptyState = ({ isInstructor, onCreateClick }) => (
     <div className="col-span-full flex flex-col items-center justify-center py-16 px-6">
         <div className="w-20 h-20 bg-gray-800 rounded-2xl flex items-center justify-center mb-6 border border-gray-700">
@@ -179,7 +179,7 @@ const EmptyState = ({ isInstructor, onCreateClick }) => (
     </div>
 );
 
-// Token Modal Component
+
 const TokenModal = ({ course, onClose, onGenerate, generating }) => {
     const [codeVisible, setCodeVisible] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
@@ -269,11 +269,11 @@ export default function Maincontent({ user }) {
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [generating, setGenerating] = useState(false);
 
-    // Fetch Course Details and Activities
+
     useEffect(() => {
         async function fetchData() {
             try {
-                // Fetch Course
+
                 const courseRes = await fetch(`http://localhost:4000/api/courses/${courseId}`, {
                     headers: { "Authorization": "Bearer 1111" }
                 });

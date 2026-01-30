@@ -12,7 +12,7 @@ import {
   ChevronUp
 } from "lucide-react";
 
-// Get language from file extension
+
 const getLanguageFromFileName = (fileName) => {
   const ext = fileName.split('.').pop()?.toLowerCase();
   const languageMap = {
@@ -42,7 +42,7 @@ const getLanguageFromFileName = (fileName) => {
   return languageMap[ext] || 'plaintext';
 };
 
-// Get file icon based on extension
+
 const getFileIcon = (fileName) => {
   const ext = fileName.split('.').pop()?.toLowerCase();
   const colors = {
@@ -61,7 +61,7 @@ const getFileIcon = (fileName) => {
   return colors[ext] || 'text-gray-400';
 };
 
-// Default starter files
+
 const defaultFiles = [
   { name: 'index.html', content: '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>Activity</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  \n  <script src="script.js"></script>\n</body>\n</html>' },
   { name: 'style.css', content: '/* Add your styles here */\n' },
@@ -179,11 +179,10 @@ function StarterCodeModal({ isOpen, onClose, files, onFilesChange, prompt, onPro
               {files.map((file, index) => (
                 <div
                   key={file.name}
-                  className={`group flex items-center justify-between px-3 py-2 cursor-pointer transition-all ${
-                    activeFileIndex === index
+                  className={`group flex items-center justify-between px-3 py-2 cursor-pointer transition-all ${activeFileIndex === index
                       ? 'bg-blue-500/10 border-l-2 border-blue-500'
                       : 'hover:bg-gray-800/50 border-l-2 border-transparent'
-                  }`}
+                    }`}
                   onClick={() => setActiveFileIndex(index)}
                 >
                   <div className="flex items-center gap-2 min-w-0">
@@ -295,7 +294,7 @@ Example: Create a simple HTML page with a form that has name and email fields. A
 export default function StarterCodeEditor({ files, onFilesChange, prompt, onPromptChange }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Initialize with default files if empty
+
   const currentFiles = files && files.length > 0 ? files : defaultFiles;
 
   const handleOpenModal = () => {

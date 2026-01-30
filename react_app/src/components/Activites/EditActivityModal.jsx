@@ -17,11 +17,11 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
   const [loadingContent, setLoadingContent] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Populate form when activity changes
+
   useEffect(() => {
     if (activity) {
       setTitle(activity.title || "");
-      // Format dates for datetime-local input
+
       if (activity.start_date) {
         const start = new Date(activity.start_date);
         setStartDate(formatDateForInput(start));
@@ -31,7 +31,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
         setEndDate(formatDateForInput(end));
       }
 
-      // Fetch content
+
       fetchContent(activity);
     }
   }, [activity]);
@@ -39,7 +39,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
   const fetchContent = async (activity) => {
     setLoadingContent(true);
     try {
-      // Fetch markdown content if URL exists
+
       if (activity.md_file_url) {
         const mdResponse = await fetch(activity.md_file_url);
         if (mdResponse.ok) {
@@ -50,7 +50,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
         setMdContent("");
       }
 
-      // Fetch starter code if URL exists
+
       if (activity.starter_code_url) {
         const codeResponse = await fetch(activity.starter_code_url);
         if (codeResponse.ok) {
@@ -92,14 +92,14 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
       formData.append("start_date", new Date(startDate).toISOString());
       formData.append("end_date", new Date(endDate).toISOString());
 
-      // Add markdown content if exists
+
       if (mdContent.trim()) {
         const mdBlob = new Blob([mdContent], { type: "text/markdown" });
         const mdFile = new File([mdBlob], "content.md", { type: "text/markdown" });
         formData.append("md_file", mdFile);
       }
 
-      // Add starter code if files exist
+
       if (starterFiles && starterFiles.length > 0) {
         const starterCodeJson = JSON.stringify(starterFiles);
         const starterCodeBlob = new Blob([starterCodeJson], { type: "application/json" });
