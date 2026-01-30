@@ -1,12 +1,44 @@
 import { useState, useEffect } from "react";
-import { Calendar, Type } from "lucide-react";
+import { Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Save, Loader } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import FormInput from "./form/FormInput";
 import SubmitButton from "./form/SubmitButton";
 import StarterCodeEditor from "./form/StarterCodeEditor";
 import MarkdownEditor from "./form/MarkdownEditor";
 import { ModalHeader, ErrorAlert, CloseButton } from "./form/ModalComponents";
 
+const markdownComponents = {
+  h1: ({ children }) => <h1 className="text-2xl font-bold text-white mb-4 pb-2 border-b border-gray-700">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-xl font-semibold text-white mb-3 mt-6">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-lg font-semibold text-white mb-2 mt-4">{children}</h3>,
+  p: ({ children }) => <p className="text-gray-300 mb-4 leading-relaxed">{children}</p>,
+  ul: ({ children }) => <ul className="list-disc list-inside text-gray-300 mb-4 space-y-1">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal list-inside text-gray-300 mb-4 space-y-1">{children}</ol>,
+  li: ({ children }) => <li className="text-gray-300">{children}</li>,
+  strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
+  em: ({ children }) => <em className="italic text-gray-200">{children}</em>,
+  code: ({ children, className }) => {
+    const isBlock = className?.includes("language-");
+    if (isBlock) {
+      return <code className="text-blue-300 text-sm font-mono">{children}</code>;
+    }
+    return <code className="bg-gray-800 px-1.5 py-0.5 rounded text-blue-400 text-sm font-mono">{children}</code>;
+  },
+  pre: ({ children }) => (
+    <pre className="bg-gray-800 p-4 rounded-lg overflow-x-auto mb-4 border border-gray-700">{children}</pre>
+  ),
+  a: ({ href, children }) => (
+    <a href={href} className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">{children}</a>
+  ),
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-400 mb-4 bg-gray-800/50 py-2 rounded-r">{children}</blockquote>
+  ),
+  hr: () => <hr className="border-gray-700 my-6" />,
+};
+
 export default function EditActivityModal({ isOpen, onClose, courseId, activity, onActivityUpdated }) {
+  // New state added to know which step I'm in, for example 1 = im in form, 2 = im in preview
+  const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -20,6 +52,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
 
   useEffect(() => {
     if (activity) {
+      setStep(1);
       setTitle(activity.title || "");
 
       if (activity.start_date) {
@@ -81,8 +114,21 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
 
   if (!isOpen || !activity) return null;
 
-  const handleSubmit = async (e) => {
+// when close we go back to step 1, also clear the error messages if exist
+  const handleClose = () => {
+    setStep(1);
+    setErrorMsg("");
+    onClose();
+  };
+// when submit we move to step 2 instead calling the API
+  const handleGoToPreview = (e) => {
     e.preventDefault();
+    setErrorMsg("");
+    setStep(2);
+  };
+
+  // rename the method. Also this will call the API after verifying that the lab is good and correct by instructor
+  const handleSave = async () => {
     setLoading(true);
     setErrorMsg("");
 
@@ -125,7 +171,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
 
       const updatedActivity = await response.json();
       onActivityUpdated(updatedActivity);
-      onClose();
+      handleClose();
     } catch (err) {
       setErrorMsg(err.message);
     } finally {
@@ -133,6 +179,144 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
     }
   };
 
+  // formatting the date in preview content
+  const formatPreviewDate = (dateString) => {
+    if (!dateString) return "";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  // Step 2: Preview / Review
+  if (step === 2) {
+    return (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="relative bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-4xl w-full shadow-2xl text-white overflow-hidden max-h-[90vh] overflow-y-auto">
+          {/* Decorative glow */}
+          <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-24 h-24 bg-purple-500/10 rounded-full blur-3xl" />
+
+          <CloseButton onClick={handleClose} />
+
+          <div className="relative z-10">
+            <ModalHeader
+              title="Review Changes"
+              subtitle="Review your changes before saving"
+            />
+
+            <ErrorAlert message={errorMsg} />
+
+            {/* Activity Details */}
+            <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Type className="w-5 h-5 text-blue-400" />
+                Activity Details
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Title</span>
+                  <p className="text-white mt-1">{title}</p>
+                </div>
+                <div />
+                <div>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</span>
+                  <p className="text-gray-300 mt-1 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-gray-500" />
+                    {formatPreviewDate(startDate)}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</span>
+                  <p className="text-gray-300 mt-1 flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4 text-gray-500" />
+                    {formatPreviewDate(endDate)}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Markdown Content Preview */}
+            {mdContent && (
+              <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Eye className="w-5 h-5 text-green-400" />
+                  Content Preview
+                </h3>
+                <div className="bg-gray-900/50 p-5 rounded-lg border border-gray-600 max-h-80 overflow-y-auto">
+                  <ReactMarkdown components={markdownComponents}>
+                    {mdContent}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            )}
+
+            {/* Starter Code Preview */}
+            {starterFiles && starterFiles.length > 0 && (
+              <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Code2 className="w-5 h-5 text-purple-400" />
+                  Starter Code
+                  <span className="text-sm font-normal text-gray-500">
+                    ({starterFiles.length} file{starterFiles.length !== 1 ? "s" : ""})
+                  </span>
+                </h3>
+                <div className="space-y-3">
+                  {starterFiles.map((file) => (
+                    <div key={file.name} className="bg-gray-900/50 rounded-lg border border-gray-600 overflow-hidden">
+                      <div className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 border-b border-gray-600">
+                        <FileCode className="w-4 h-4 text-blue-400" />
+                        <span className="text-sm font-mono text-gray-300">{file.name}</span>
+                      </div>
+                      <pre className="p-3 text-sm font-mono text-gray-300 overflow-x-auto max-h-48 overflow-y-auto">
+                        <code>{file.content}</code>
+                      </pre>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-semibold transition-all duration-300"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back to Edit
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={loading}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <>
+                    <Loader className="w-5 h-5 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-5 h-5" />
+                    Save Changes
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Step 1: Form
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="relative bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-lg w-full shadow-2xl text-white overflow-hidden max-h-[90vh] overflow-y-auto">
@@ -140,7 +324,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-24 h-24 bg-purple-500/10 rounded-full blur-3xl" />
 
-        <CloseButton onClick={onClose} />
+        <CloseButton onClick={handleClose} />
 
         <div className="relative z-10">
           <ModalHeader
@@ -156,7 +340,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
               <span className="ml-3 text-gray-400">Loading activity content...</span>
             </div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleGoToPreview} className="space-y-5">
               {/* Activity Name */}
               <FormInput
                 label="Activity Name"
@@ -202,11 +386,11 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                 onPromptChange={setStarterPrompt}
               />
 
-              {/* Submit Button */}
+              {/* Next: Review Button */}
               <SubmitButton
-                loading={loading}
-                label="Save Changes"
-                loadingLabel="Saving..."
+                loading={false}
+                label="Next: Review & Preview"
+                icon={Eye}
                 className="mt-2"
               />
             </form>

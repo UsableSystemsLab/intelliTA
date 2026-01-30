@@ -217,10 +217,11 @@ export default function Maincontent({ user }) {
         )}
 
         {/* Create Course Button */}
-        <div className="w-full flex justify-center mt-10 mb-15 relative z-10">
+        <div className="w-full flex flex-col items-center mt-10 mb-15 relative z-10">
           <Link to="/courses/create" className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-xl text-white font-semibold shadow-lg">
             + Create Course
           </Link>
+          <p className="text-gray-500 text-sm mt-2">You'll be the instructor of this course</p>
         </div>
       </main>
     </>

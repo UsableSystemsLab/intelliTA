@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, Loader } from "lucide-react";
+import { AlertCircle, Loader, Info } from "lucide-react";
 
 export default function CreateCourseMain({ user }) {
   const [title, setTitle] = useState("");
@@ -93,7 +93,12 @@ export default function CreateCourseMain({ user }) {
   return (
     <main className="flex-1 p-22 flex items-start justify-center text-white w-full overflow-y-auto">
       <div className="bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-2xl w-full shadow-xl shadow-blue-900/10">
-        <h1 className="text-3xl font-bold mb-8 text-white">Create New Course</h1>
+        <h1 className="text-3xl font-bold mb-4 text-white">Create New Course</h1>
+
+        <div className="bg-blue-500/10 border border-blue-500/30 text-blue-300 p-4 rounded-xl mb-6 flex items-start gap-3">
+          <Info className="w-5 h-5 shrink-0 mt-0.5" />
+          <p className="text-sm">You will be assigned as the <strong className="text-white">instructor</strong> of this course. You'll be able to create activities, manage students, and share a token for others to join.</p>
+        </div>
 
         {errorMsg && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-xl mb-6 flex items-center gap-3">

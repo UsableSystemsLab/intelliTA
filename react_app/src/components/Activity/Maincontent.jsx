@@ -301,7 +301,7 @@ export default function Maincontent({ user }) {
                 <div className="flex-1 overflow-auto">
                     <div className="max-w-4xl mx-auto px-8 py-8">
                         {/* Activity Info Card */}
-                        <div className="bg-gray-900/50 border border-gray-800 rounded-xl p-6 mb-8">
+                        <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-6 mb-8 sticky top-0 z-10">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
@@ -378,16 +378,6 @@ export default function Maincontent({ user }) {
                             </div>
                         </div>
 
-                        {/* Bottom Start Button */}
-                        <div className="mt-8 flex justify-center">
-                            <button
-                                onClick={() => setMode('solve')}
-                                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold rounded-lg flex items-center gap-2 transition-all duration-200 shadow-lg shadow-blue-500/20"
-                            >
-                                <Play className="w-5 h-5" />
-                                Start Solving
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
