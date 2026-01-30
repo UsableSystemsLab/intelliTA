@@ -22,7 +22,7 @@ export default function Nav({ user }) {
       }
       return names[0].charAt(0).toUpperCase() + names[0].slice(1).toLowerCase();
     }
-    
+
     return "No user name found";
   };
 
@@ -75,14 +75,14 @@ export default function Nav({ user }) {
               {t("about")}
             </a>
 
-            <a
-              href="#"
+            <Link
+              to="/courses"
               className="relative text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300
              after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
              after:bg-white hover:after:w-full after:transition-all after:duration-300"
             >
               {t("courses")}
-            </a>
+            </Link>
             <a
               href="#"
               className="relative text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300
@@ -134,7 +134,7 @@ export default function Nav({ user }) {
                   <div className={`absolute ${isArabic ? "left-0" : "right-0"} mt-2 z-10 bg-gray-900 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600`}>
                     <div className="px-4 py-3 text-sm text-gray-100 dark:text-white">
                       <div>{getUserInitials() || "User"}</div>
-                      
+
                     </div>
                     <ul
                       className="py-2 text-sm text-gray-100 dark:text-gray-200"
