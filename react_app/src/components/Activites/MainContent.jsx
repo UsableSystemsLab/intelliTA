@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import CreateActivityModal from "./CreateActivityModal";
-import { 
-    Plus, 
-    PlayCircle, 
-    Trash2, 
-    Key, 
-    Calendar, 
-    Clock, 
+import EditActivityModal from "./EditActivityModal";
+import {
+    Plus,
+    PlayCircle,
+    Trash2,
+    Key,
+    Calendar,
+    Clock,
     AlertCircle,
     CheckCircle2,
     Timer,
@@ -18,7 +19,8 @@ import {
     RefreshCw,
     X,
     Eye,
-    EyeOff
+    EyeOff,
+    Pencil
 } from "lucide-react";
 
 // we need to add here a status if the student missed the deadline
@@ -26,9 +28,9 @@ const getActivityStatus = (startDate, endDate) => {
     const now = new Date();
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
+
     if (now < start) return 'upcoming';
-    if (now > end) return 'completed';
+    if (now > end) return 'end';
     return 'active';
 };
 
@@ -57,9 +59,9 @@ const StatusBadge = ({ status }) => {
             label: 'Completed'
         }
     };
-    
+
     const { bg, border, text, icon: Icon, label } = config[status] || config.upcoming;
-    
+
     return (
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${bg} ${border} ${text} border`}>
             <Icon className="w-3 h-3" />
@@ -69,9 +71,9 @@ const StatusBadge = ({ status }) => {
 };
 
 // Activity Card Component
-const ActivityCard = ({ activity, courseId, isInstructor, onDelete, navigate }) => {
+const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navigate }) => {
     const status = getActivityStatus(activity.start_date, activity.end_date);
-    
+
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             month: 'short',
@@ -80,12 +82,12 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, navigate }) 
             minute: '2-digit'
         });
     };
-    
+
     return (
         <div className="group relative bg-gray-800 border border-gray-700 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-500/50 hover:-translate-y-1 flex flex-col h-full min-h-[280px]">
             {/* Decorative glow */}
             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all duration-500" />
-            
+
             <div className="relative z-10 flex flex-col h-full">
                 {/* Header: Icon + Status + Delete */}
                 <div className="flex justify-between items-start mb-4">
@@ -95,25 +97,37 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, navigate }) 
                     <div className="flex items-center gap-2">
                         <StatusBadge status={status} />
                         {isInstructor && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDelete(activity.activity_id);
-                                }}
-                                className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
-                                title="Delete Activity"
-                            >
-                                <Trash2 size={16} />
-                            </button>
+                            <>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEdit(activity);
+                                    }}
+                                    className="p-2 text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all duration-200"
+                                    title="Edit Activity"
+                                >
+                                    <Pencil size={16} />
+                                </button>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onDelete(activity.activity_id);
+                                    }}
+                                    className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                                    title="Delete Activity"
+                                >
+                                    <Trash2 size={16} />
+                                </button>
+                            </>
                         )}
                     </div>
                 </div>
-                
+
                 {/* Title */}
                 <h3 className="text-xl font-bold text-white mb-3 group-hover:text-blue-400 transition-colors line-clamp-2">
                     {activity.title}
                 </h3>
-                
+
                 {/* Dates */}
                 <div className="space-y-2 mb-6 flex-grow">
                     <div className="flex items-center gap-2 text-sm text-gray-400">
@@ -125,7 +139,7 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, navigate }) 
                         <span>End: {formatDate(activity.end_date)}</span>
                     </div>
                 </div>
-                
+
                 {/* Action Button */}
                 <button
                     onClick={() => navigate(`/courses/${courseId}/activities/${activity.activity_id}`)}
@@ -148,7 +162,7 @@ const EmptyState = ({ isInstructor, onCreateClick }) => (
         </div>
         <h3 className="text-xl font-semibold text-gray-300 mb-2">No activities yet</h3>
         <p className="text-gray-500 text-center max-w-md mb-6">
-            {isInstructor 
+            {isInstructor
                 ? "Create your first activity to get started with interactive lessons for your students."
                 : "Your instructor hasn't added any activities yet. Check back soon!"
             }
@@ -169,19 +183,19 @@ const EmptyState = ({ isInstructor, onCreateClick }) => (
 const TokenModal = ({ course, onClose, onGenerate, generating }) => {
     const [codeVisible, setCodeVisible] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
-    
+
     const copyToClipboard = () => {
         navigator.clipboard.writeText(course?.token || "");
         setCopySuccess(true);
         setTimeout(() => setCopySuccess(false), 2000);
     };
-    
+
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="relative bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-md w-full shadow-2xl">
                 {/* Decorative glow */}
                 <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl" />
-                
+
                 <button
                     onClick={onClose}
                     className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
@@ -218,7 +232,7 @@ const TokenModal = ({ course, onClose, onGenerate, generating }) => {
                             </button>
                         </div>
                     </div>
-                    
+
                     {copySuccess && (
                         <p className="text-green-400 text-sm text-center mb-4">Copied to clipboard!</p>
                     )}
@@ -231,7 +245,7 @@ const TokenModal = ({ course, onClose, onGenerate, generating }) => {
                         <RefreshCw className={`w-4 h-4 ${generating ? 'animate-spin' : ''}`} />
                         {generating ? "Generating..." : "Generate New Token"}
                     </button>
-                    
+
                     <p className="flex items-start gap-2 text-xs text-amber-400/80 mt-4">
                         <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                         Warning: Generating a new token will invalidate the previous one.
@@ -251,6 +265,8 @@ export default function Maincontent({ user }) {
     const [activities, setActivities] = useState([]);
     const [showCodeModal, setShowCodeModal] = useState(false);
     const [showActivityModal, setShowActivityModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedActivity, setSelectedActivity] = useState(null);
     const [generating, setGenerating] = useState(false);
 
     // Fetch Course Details and Activities
@@ -361,6 +377,17 @@ export default function Maincontent({ user }) {
         }
     };
 
+    const handleEditActivity = (activity) => {
+        setSelectedActivity(activity);
+        setShowEditModal(true);
+    };
+
+    const handleActivityUpdated = (updatedActivity) => {
+        setActivities(prev =>
+            prev.map(a => a.activity_id === updatedActivity.activity_id ? updatedActivity : a)
+        );
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-900">
@@ -371,7 +398,7 @@ export default function Maincontent({ user }) {
             </div>
         );
     }
-    
+
     if (!course) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-gray-900">
@@ -390,7 +417,7 @@ export default function Maincontent({ user }) {
                 {/* Background decoration */}
                 <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl" />
-                
+
                 <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div className="flex-1">
@@ -434,7 +461,7 @@ export default function Maincontent({ user }) {
                             {activities.length} {activities.length === 1 ? 'activity' : 'activities'} available
                         </p>
                     </div>
-                    {isInstructor() && (
+                    {isInstructor() && activities.length > 0 && (
                         <button
                             onClick={() => setShowActivityModal(true)}
                             className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white rounded-xl font-medium transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40"
@@ -448,9 +475,9 @@ export default function Maincontent({ user }) {
                 {/* Activities Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {activities.length === 0 ? (
-                        <EmptyState 
-                            isInstructor={isInstructor()} 
-                            onCreateClick={() => setShowActivityModal(true)} 
+                        <EmptyState
+                            isInstructor={isInstructor()}
+                            onCreateClick={() => setShowActivityModal(true)}
                         />
                     ) : (
                         activities.map(activity => (
@@ -460,6 +487,7 @@ export default function Maincontent({ user }) {
                                 courseId={courseId}
                                 isInstructor={isInstructor()}
                                 onDelete={handleDeleteActivity}
+                                onEdit={handleEditActivity}
                                 navigate={navigate}
                             />
                         ))
@@ -473,6 +501,17 @@ export default function Maincontent({ user }) {
                 onClose={() => setShowActivityModal(false)}
                 courseId={courseId}
                 onActivityCreated={(newActivity) => setActivities([...activities, newActivity])}
+            />
+
+            <EditActivityModal
+                isOpen={showEditModal}
+                onClose={() => {
+                    setShowEditModal(false);
+                    setSelectedActivity(null);
+                }}
+                courseId={courseId}
+                activity={selectedActivity}
+                onActivityUpdated={handleActivityUpdated}
             />
 
             {showCodeModal && (

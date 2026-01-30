@@ -4,6 +4,7 @@ import FormInput from "./form/FormInput";
 import FileUploadZone from "./form/FileUploadZone";
 import SubmitButton from "./form/SubmitButton";
 import MarkdownEditor from "./form/MarkdownEditor";
+import StarterCodeEditor from "./form/StarterCodeEditor";
 import { ModalHeader, ErrorAlert, CloseButton } from "./form/ModalComponents";
 
 export default function CreateActivityModal({ isOpen, onClose, courseId, onActivityCreated }) {
@@ -12,6 +13,8 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
   const [endDate, setEndDate] = useState("");
   const [videoFile, setVideoFile] = useState(null);
   const [mdContent, setMdContent] = useState("");
+  const [starterFiles, setStarterFiles] = useState([]);
+  const [starterPrompt, setStarterPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -23,6 +26,8 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     setEndDate("");
     setVideoFile(null);
     setMdContent("");
+    setStarterFiles([]);
+    setStarterPrompt("");
   };
 
   const handleSubmit = async (e) => {
@@ -43,6 +48,13 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
       const mdBlob = new Blob([mdContent], { type: "text/markdown" });
       const mdFile = new File([mdBlob], "content.md", { type: "text/markdown" });
       formData.append("md_file", mdFile);
+    }
+
+    if (starterFiles && starterFiles.length > 0) {
+      const starterCodeJson = JSON.stringify(starterFiles);
+      const starterCodeBlob = new Blob([starterCodeJson], { type: "application/json" });
+      const starterCodeFile = new File([starterCodeBlob], "starter-code.json", { type: "application/json" });
+      formData.append("starter_code", starterCodeFile);
     }
 
     try {
@@ -139,6 +151,14 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               value={mdContent}
               onChange={setMdContent}
               label="Markdown Content"
+            />
+
+            {/* Starter Code */}
+            <StarterCodeEditor
+              files={starterFiles}
+              onFilesChange={setStarterFiles}
+              prompt={starterPrompt}
+              onPromptChange={setStarterPrompt}
             />
 
             {/* Submit Button */}

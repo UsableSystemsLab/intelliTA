@@ -42,6 +42,7 @@ const ActivityController = {
 
       const { title, start_date, end_date, video_url } = req.body;
       const md_file_url = req.body.md_file_url;
+      const starter_code_url = req.body.starter_code_url;
 
       // Basic validation
       if (!title || !start_date || !end_date) {
@@ -55,6 +56,7 @@ const ActivityController = {
         end_date,
         video_url: video_url || null,
         md_file_url: md_file_url || null,
+        starter_code_url: starter_code_url || null,
       });
 
       res.status(201).json(newActivity);
@@ -81,7 +83,7 @@ const ActivityController = {
   async updateActivity(req, res) {
     try {
       const { activityId } = req.params;
-      const { title, start_date, end_date, md_file_url } = req.body;
+      const { title, start_date, end_date, md_file_url, starter_code_url } = req.body;
 
       const activity = await Activity.findOne({
         where: { activity_id: activityId }
@@ -96,6 +98,7 @@ const ActivityController = {
       if (start_date !== undefined) activity.start_date = start_date;
       if (end_date !== undefined) activity.end_date = end_date;
       if (md_file_url !== undefined) activity.md_file_url = md_file_url;
+      if (starter_code_url !== undefined) activity.starter_code_url = starter_code_url;
 
       await activity.save();
 
