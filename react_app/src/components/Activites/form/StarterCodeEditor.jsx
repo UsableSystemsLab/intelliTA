@@ -180,8 +180,8 @@ function StarterCodeModal({ isOpen, onClose, files, onFilesChange, prompt, onPro
                 <div
                   key={file.name}
                   className={`group flex items-center justify-between px-3 py-2 cursor-pointer transition-all ${activeFileIndex === index
-                      ? 'bg-blue-500/10 border-l-2 border-blue-500'
-                      : 'hover:bg-gray-800/50 border-l-2 border-transparent'
+                    ? 'bg-blue-500/10 border-l-2 border-blue-500'
+                    : 'hover:bg-gray-800/50 border-l-2 border-transparent'
                     }`}
                   onClick={() => setActiveFileIndex(index)}
                 >

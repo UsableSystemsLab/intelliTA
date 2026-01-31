@@ -55,7 +55,7 @@ export default function VideoSection({
                 <Video className="w-4 h-4 text-purple-400" />
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Video Lesson</span>
             </div>
-            
+
             {/* Video Container */}
             <div className="flex-1 relative flex items-center justify-center bg-black border-b border-gray-800">
                 {isYouTube ? (
@@ -72,7 +72,7 @@ export default function VideoSection({
                     <video
                         ref={videoRef}
                         className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${activeCheckpoint ? 'opacity-30 blur-sm' : 'opacity-100'}`}
-                        src={activity?.video_url || "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"}
+                        src={activity?.video_url || "https://intellita-media-storage.s3.us-east-1.amazonaws.com/videos/1769891714792-cpit_252_-_lab_1__object-oriented_programming_overview.mp4"}
                         onTimeUpdate={onTimeUpdate}
                         onLoadedMetadata={(e) => onDurationChange(e.currentTarget.duration)}
                         onPlay={onPlay}
@@ -112,9 +112,9 @@ export default function VideoSection({
                         }}
                     >
                         {/* Progress bar */}
-                        <div 
-                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all" 
-                            style={{ width: `${(currentTime / duration) * 100}%` }} 
+                        <div
+                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all"
+                            style={{ width: `${(currentTime / duration) * 100}%` }}
                         />
                         {/* Scrubber handle */}
                         <div
@@ -138,38 +138,38 @@ export default function VideoSection({
 
                 {/* Playback Controls */}
                 <div className="h-14 flex items-center justify-center gap-4 px-4 pb-3">
-                    <button 
-                        onClick={() => onSeek(0)} 
-                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" 
+                    <button
+                        onClick={() => onSeek(0)}
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all"
                         title="Restart"
                     >
                         <RotateCcw className="w-4 h-4" />
                     </button>
-                    <button 
-                        onClick={onPrev} 
-                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed" 
-                        disabled={currentTime < 2} 
+                    <button
+                        onClick={onPrev}
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                        disabled={currentTime < 2}
                         title="Previous Checkpoint"
                     >
                         <SkipBack className="w-5 h-5" />
                     </button>
-                    
+
                     {/* Main Play/Pause Button */}
-                    <button 
-                        onClick={isPlaying ? onPause : onPlay} 
+                    <button
+                        onClick={isPlaying ? onPause : onPlay}
                         className="w-12 h-12 flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-full shadow-lg shadow-blue-500/30 transition-all active:scale-95"
                     >
                         {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-1" />}
                     </button>
-                    
-                    <button 
-                        onClick={onNext} 
-                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all" 
+
+                    <button
+                        onClick={onNext}
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all"
                         title="Next Checkpoint"
                     >
                         <SkipForward className="w-5 h-5" />
                     </button>
-                    
+
                     {/* Checkpoint Counter */}
                     <div className="h-6 w-px bg-gray-700 mx-2"></div>
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 rounded-lg border border-gray-700">

@@ -11,40 +11,102 @@ import SubmissionResultOverlay from './SubmissionResultOverlay';
 import { Play, FileText, Clock, ArrowLeft } from 'lucide-react';
 import { useCheckpoints } from '@/components/Activity/useCheckpoints';
 
-// Default fallback files if no starter code is provided
+
 const DEFAULT_FILES = [
     {
-        name: 'index.html',
-        language: 'html',
-        content: `<!DOCTYPE html>
-<html>
-<head>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="app"></div>
-    <script src="script.js"></script>
-</body>
-</html>`
-    },
-    {
-        name: 'style.css',
-        language: 'css',
-        content: `body {
-    font-family: sans-serif;
-    background: #1e1e1e;
-    color: white;
+        name: 'Product.java',
+        language: 'java',
+        content: `public class Product {
+  private int id;
+  private double price;
+  private String name;
+  private int quantity;
+  
+  public Product(int id, double price, String name){
+    this.id = id;
+    this.price = price;
+    this.name = name;
+    this.quantity++;
+  }
+
+  public void applySaleDiscount(double percentage){
+    this.price = this.price - ((percentage/100) * this.price);
+  }
+
+  public void addToShoppingCart(){
+    System.out.println(this.name + " has been added to the shopping cart.");
+  }
+
+  public int getTotalQuantity(){
+    return this.quantity;
+  }
+  
+  public void getSellableStatus(){
+    System.out.println("This product is sellable");
+  }
+
+  public String toString(){
+    return "Product info:\\n+Id: " + this.id + "\\t" + "name: " + this.name +
+      "\\tPrice: SR" + this.price;
+  }
 }`
     },
     {
-        name: 'script.js',
-        language: 'javascript',
-        content: `// Application Logic
-console.log('App starting...');`
+        name: 'App.java',
+        language: 'java',
+        content: `import java.time.LocalDate;
+
+public class App {
+
+  public static void main(String[] args){
+    Product p1 = new Product(6745, 5.50, "Penne Pasta");
+    Product p2 = new Product(8853, 6.50, "Spaghetti Pasta");
+    Product p3 = new Product(2106, 4.50, "Linguine Pasta");
+    System.out.println("Total Quantity: " + p3.getTotalQuantity());
+  }
+}`
+    },
+    {
+        name: 'ElectricProduct.java',
+        language: 'java',
+        content: `public class ElectricProduct extends Product {
+
+  private String voltage;
+
+  public ElectricProduct(int id, double price, String name, String voltage){
+    super(id, price, name);
+    this.voltage = voltage;
+  }
+
+  @Override
+  public String toString(){
+    return super.toString() + "\\t Voltage: " + this.voltage;
+  }
+
+}`
+    },
+    {
+        name: 'FoodProduct.java',
+        language: 'java',
+        content: `import java.time.LocalDate;
+
+public class FoodProduct extends Product {
+  private LocalDate expirationDate;
+
+  public FoodProduct(int id, double price, String name, LocalDate expirationDate){
+    super(id, price, name);
+    this.expirationDate = expirationDate;
+  }
+
+  @Override
+  public String toString(){
+    return super.toString() + "\\t Expiration Date: " + this.expirationDate;
+  }
+}`
     }
 ];
 
-// Helper to get language from file extension
+
 const getLanguageFromFileName = (fileName) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
     const languageMap = {
