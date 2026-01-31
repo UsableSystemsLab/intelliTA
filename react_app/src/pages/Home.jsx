@@ -6,7 +6,7 @@ export default function Home({ user }) {
     return(  
         <>
         <Nav user={ user } />
-        <HomeMain />
+        <HomeMain user={user} />
         <HomeFooter />
         </>
     );

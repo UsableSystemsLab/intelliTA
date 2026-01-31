@@ -10,10 +10,22 @@ export default function CreateCourseMain({ user }) {
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
+    const errors = {};
+    if (!title.trim()) errors.title = true;
+    if (!courseCode.trim()) errors.courseCode = true;
+    if (!description.trim()) errors.description = true;
+    setFieldErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setErrorMsg("Please fill in all required fields.");
+      return;
+    }
+
     setLoading(true);
     setErrorMsg("");
 
@@ -111,10 +123,10 @@ export default function CreateCourseMain({ user }) {
           <label className="block mb-2 font-medium text-gray-300">Course Title</label>
           <input
             type="text"
-            className="w-full p-3 rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+            className={`w-full p-3 rounded-xl bg-gray-900 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${fieldErrors.title ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"}`}
             placeholder="Enter course title"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => { setTitle(e.target.value); setFieldErrors(prev => ({ ...prev, title: false })); }}
           />
         </div>
 
@@ -122,10 +134,10 @@ export default function CreateCourseMain({ user }) {
           <label className="block mb-2 font-medium text-gray-300">Course Code</label>
           <input
             type="text"
-            className="w-full p-3 rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+            className={`w-full p-3 rounded-xl bg-gray-900 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${fieldErrors.courseCode ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"}`}
             placeholder="Enter course code (e.g., CPCS-202)"
             value={courseCode}
-            onChange={(e) => setCourseCode(e.target.value)}
+            onChange={(e) => { setCourseCode(e.target.value); setFieldErrors(prev => ({ ...prev, courseCode: false })); }}
           />
         </div>
 
@@ -133,10 +145,10 @@ export default function CreateCourseMain({ user }) {
           <label className="block mb-2 font-medium text-gray-300">Description</label>
           <textarea
             rows="4"
-            className="w-full p-3 rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
+            className={`w-full p-3 rounded-xl bg-gray-900 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all resize-none ${fieldErrors.description ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"}`}
             placeholder="Write course description"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => { setDescription(e.target.value); setFieldErrors(prev => ({ ...prev, description: false })); }}
           ></textarea>
         </div>
 

@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { MoveRight } from 'lucide-react';
 // This file need to be updated, we should change the icons from SVG to Lucide icons
-export default function HomeMain() {
+export default function HomeMain({ user }) {
   const { t, i18n } = useTranslation();
   //It is okay that isArabic variable to remain unused
   const isArabic = i18n.language === "ar";
@@ -46,7 +46,7 @@ export default function HomeMain() {
 
               <div className="mt-10 flex items-center justify-center gap-x-6">
                 <Link
-                  to="/login"
+                  to={user ? "/courses" : "/login"}
                   className="rounded-md bg-indigo-500 px-3.5 py-2.5 text-2xl font-semibold
                          text-white shadow-sm hover:bg-indigo-400 focus-visible:outline
                          focus-visible:outline-2 focus-visible:outline-offset-2
