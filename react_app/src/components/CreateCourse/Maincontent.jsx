@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Loader, Info } from "lucide-react";
+import Breadcrumb from "../shared/Breadcrumb";
 
 export default function CreateCourseMain({ user }) {
   const [title, setTitle] = useState("");
@@ -103,7 +104,13 @@ export default function CreateCourseMain({ user }) {
   };
 
   return (
-    <main className="flex-1 p-22 flex items-start justify-center text-white w-full overflow-y-auto">
+    <main className="flex-1 p-22 flex flex-col items-center text-white w-full overflow-y-auto">
+      <div className="max-w-2xl w-full mb-4">
+        <Breadcrumb items={[
+          { label: "Courses", href: "/courses" },
+          { label: "Create Course" }
+        ]} />
+      </div>
       <div className="bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-2xl w-full shadow-xl shadow-blue-900/10">
         <h1 className="text-3xl font-bold mb-4 text-white">Create New Course</h1>
 

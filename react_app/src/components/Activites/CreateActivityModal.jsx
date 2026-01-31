@@ -72,6 +72,15 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
   const handleGoToPreview = (e) => {
     e.preventDefault();
     setErrorMsg("");
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (end <= start) {
+      setErrorMsg("End date must be after the start date.");
+      return;
+    }
+
     setStep(2);
   };
   // rename the method. Also this will call the API after verfying that the lab is good and correct by instructor
@@ -309,6 +318,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
                 required
                 value={endDate}
                 onChange={setEndDate}
+                min={startDate}
               />
             </div>
 

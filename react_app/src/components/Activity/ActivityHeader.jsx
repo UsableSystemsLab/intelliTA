@@ -1,8 +1,10 @@
 import { ChevronsLeft, CheckCircle, Loader, Code2 } from 'lucide-react';
+import Breadcrumb from '../shared/Breadcrumb';
 
 export default function ActivityHeader({
     activityTitle,
     courseId,
+    courseName,
     onBack,
     onSubmit,
     isSubmitting
@@ -18,14 +20,11 @@ export default function ActivityHeader({
                     <span className="font-medium text-sm">Back</span>
                 </button>
                 <div className="h-6 w-px bg-gray-700"></div>
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-500/10 rounded-lg">
-                        <Code2 className="w-5 h-5 text-blue-400" />
-                    </div>
-                    <h1 className="text-base font-bold text-gray-100 tracking-wide">
-                        {activityTitle}
-                    </h1>
-                </div>
+                <Breadcrumb items={[
+                    { label: "Courses", href: "/courses" },
+                    ...(courseName ? [{ label: courseName, href: `/courses/${courseId}` }] : []),
+                    { label: activityTitle }
+                ]} />
             </div>
 
             {/* Submit */}

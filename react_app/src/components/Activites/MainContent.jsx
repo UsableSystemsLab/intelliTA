@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import CreateActivityModal from "./CreateActivityModal";
 import EditActivityModal from "./EditActivityModal";
+import Breadcrumb from "../shared/Breadcrumb";
 import {
     Plus,
     PlayCircle,
@@ -419,6 +420,12 @@ export default function Maincontent({ user }) {
                 <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl" />
 
                 <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
+                    <div className="mb-4">
+                        <Breadcrumb items={[
+                            { label: "Courses", href: "/courses" },
+                            { label: course.title }
+                        ]} />
+                    </div>
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                         <div className="flex-1">
                             <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">

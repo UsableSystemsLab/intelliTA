@@ -124,6 +124,15 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
   const handleGoToPreview = (e) => {
     e.preventDefault();
     setErrorMsg("");
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (end <= start) {
+      setErrorMsg("End date must be after the start date.");
+      return;
+    }
+
     setStep(2);
   };
 
@@ -368,6 +377,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                   required
                   value={endDate}
                   onChange={setEndDate}
+                  min={startDate}
                 />
               </div>
 

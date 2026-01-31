@@ -69,6 +69,7 @@ export default function Maincontent({ user }) {
     const videoRef = useRef(null);
 
     const [activity, setActivity] = useState(null);
+    const [courseName, setCourseName] = useState("");
     const [loading, setLoading] = useState(true);
     const [files, setFiles] = useState(DEFAULT_FILES);
     const [activeFile, setActiveFile] = useState(DEFAULT_FILES[0]);
@@ -127,6 +128,17 @@ export default function Maincontent({ user }) {
 
         async function loadActivity() {
             try {
+                // Fetch course name for breadcrumb
+                if (courseId) {
+                    const courseRes = await fetch(`http://localhost:4000/api/courses/${courseId}`, {
+                        headers: { "Authorization": "Bearer 1111" }
+                    });
+                    if (courseRes.ok) {
+                        const courseData = await courseRes.json();
+                        setCourseName(courseData.title || "");
+                    }
+                }
+
                 const url = `http://localhost:4000/api/courses/${courseId || '0'}/activities/${activityId}`;
                 const res = await fetch(url, {
                     headers: { "Authorization": "Bearer 1111" }
@@ -390,6 +402,7 @@ export default function Maincontent({ user }) {
             <ActivityHeader
                 activityTitle={activity.title}
                 courseId={courseId}
+                courseName={courseName}
                 onBack={() => navigate(`/courses`)}
                 onSubmit={handleSubmit}
                 isSubmitting={isSubmitting}
