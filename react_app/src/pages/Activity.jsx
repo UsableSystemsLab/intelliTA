@@ -1,6 +1,5 @@
 import Nav from "@/components/Courses/Nav";
 import Maincontent from "@/components/Activity/Maincontent";
-import Footer from "@/components/Courses/Footer";
 
 export default function Activity({ user }) {
     return (
@@ -9,7 +8,7 @@ export default function Activity({ user }) {
             <div className="flex-1 overflow-hidden relative">
                 <Maincontent user={user} />
             </div>
-            <Footer />
+            {/* Footer removed for full-screen IDE experience */}
         </div>
     );
 }

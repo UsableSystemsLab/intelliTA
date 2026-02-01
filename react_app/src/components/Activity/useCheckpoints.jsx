@@ -3,44 +3,91 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 export const DEFAULT_CHECKPOINTS = [
     {
         id: 1,
-        time: 5,
+        time: 180, // 3:00 - Instance and Class Variables
         type: 'challenge',
-        title: "HTML Structure",
-        instruction: "Add an <h1> tag to the body with the text 'Welcome Agent'.",
-        fileName: "index.html",
-        hint: "Use the standard heading tag.",
-        status: 'pending', // 'pending', 'verified', 'skipped'
+        title: "Fix the Quantity Counter",
+        instruction: "The getTotalQuantity() method returns 1 instead of 3. Fix the Product class by making the 'quantity' variable a class variable (shared across all instances) instead of an instance variable.",
+        fileName: "Product.java",
+        hint: "Think about the difference between instance variables and class variables. Which type is shared across all objects?",
+        status: 'pending',
         check: (files) => {
-            const content = files.find(f => f.name === 'index.html')?.content || "";
-            return content.includes("<h1>Welcome Agent</h1>");
+            const content = files.find(f => f.name === 'Product.java')?.content || "";
+
+            const hasStaticQuantity = /static\s+(private|public|protected)?\s*int\s+quantity/.test(content) ||
+                /(private|public|protected)\s+static\s+int\s+quantity/.test(content);
+            return hasStaticQuantity;
         }
     },
     {
         id: 2,
-        time: 10,
-        type: 'challenge', // Changed from auto_code to challenge
-        title: "CSS Styling",
-        instruction: "In style.css, set the body background to '#1e1e1e' and text color to 'white'.",
-        fileName: "style.css",
-        hint: "Target the 'body' selector.",
+        time: 480, // 8:00 - Inheritance - Abstract Class
+        type: 'challenge',
+        title: "Make Product Abstract",
+        instruction: "The Product class should not be instantiated directly. Only concrete subclasses (FoodProduct, ElectricProduct) should be instantiable. Modify the Product class definition to prevent direct instantiation.",
+        fileName: "Product.java",
+        hint: "There's a Java keyword that prevents a class from being instantiated directly while still allowing subclasses.",
         status: 'pending',
         check: (files) => {
-            const content = files.find(f => f.name === 'style.css')?.content || "";
-            return content.includes("background: #1e1e1e") && content.includes("color: white");
+            const content = files.find(f => f.name === 'Product.java')?.content || "";
+
+            const isAbstract = /abstract\s+class\s+Product/.test(content) ||
+                /public\s+abstract\s+class\s+Product/.test(content) ||
+                /abstract\s+public\s+class\s+Product/.test(content);
+            return isAbstract;
         }
     },
     {
         id: 3,
-        time: 15,
+        time: 900, // 15:00 - Polymorphism
         type: 'challenge',
-        title: "JavaScript Logic",
-        instruction: "In script.js, log 'System Ready' to the console.",
-        fileName: "script.js",
-        hint: "Use console.log()",
+        title: "Polymorphism with Arrays",
+        instruction: "In App.java, create an array of Product references that holds FoodProduct and ElectricProduct objects. Then use an enhanced for loop (for-each) to iterate through the array and print each product using System.out.println().",
+        fileName: "App.java",
+        hint: "A parent class reference can hold child class objects. Use the array type of the parent class and the colon syntax for iteration.",
         status: 'pending',
         check: (files) => {
-            const content = files.find(f => f.name === 'script.js')?.content || "";
-            return content.includes("System Ready");
+            const content = files.find(f => f.name === 'App.java')?.content || "";
+
+            const hasProductArray = /Product\s*\[\s*\]\s*\w+\s*=/.test(content);
+            const hasEnhancedForLoop = /for\s*\(\s*Product\s+\w+\s*:\s*\w+\s*\)/.test(content);
+            return hasProductArray && hasEnhancedForLoop;
+        }
+    },
+    {
+        id: 4,
+        time: 1320, // 22:00 - Controlling Changes (final methods)
+        type: 'challenge',
+        title: "Prevent Method Override",
+        instruction: "Modify the addToShoppingCart() method in the Product class so that subclasses cannot override it. Do this without changing the method's visibility (keep it public).",
+        fileName: "Product.java",
+        hint: "There's a Java keyword that locks a method to prevent subclasses from changing its behavior.",
+        status: 'pending',
+        check: (files) => {
+            const content = files.find(f => f.name === 'Product.java')?.content || "";
+
+            const hasFinalMethod = /final\s+(public\s+)?void\s+addToShoppingCart/.test(content) ||
+                /public\s+final\s+void\s+addToShoppingCart/.test(content);
+            return hasFinalMethod;
+        }
+    },
+    {
+        id: 5,
+        time: 1680, // 28:00 - Encapsulation
+        type: 'challenge',
+        title: "Apply Encapsulation",
+        instruction: "Add a 'weight' field to the Product class. Make it private (not public) and provide proper getter (getWeight) and setter (setWeight) methods to access it.",
+        fileName: "Product.java",
+        hint: "Encapsulation means hiding internal data. Use methods to control access to the field instead of exposing it directly.",
+        status: 'pending',
+        check: (files) => {
+            const content = files.find(f => f.name === 'Product.java')?.content || "";
+
+            const hasPrivateWeight = /private\s+(double|float|int)\s+weight/.test(content);
+            const hasGetter = /public\s+\w+\s+getWeight\s*\(/.test(content) ||
+                /\w+\s+getWeight\s*\(\s*\)\s*\{/.test(content);
+            const hasSetter = /public\s+void\s+setWeight\s*\(/.test(content) ||
+                /void\s+setWeight\s*\([^)]+\)\s*\{/.test(content);
+            return hasPrivateWeight && hasGetter && hasSetter;
         }
     }
 ];
@@ -54,6 +101,7 @@ export function useCheckpoints({
     setActiveFile,
     onFeedback,
     onPlay,
+    onPause,
     onSeek,
     INITIAL_FILES
 }) {
@@ -113,14 +161,14 @@ export function useCheckpoints({
             }
             else if (cp.type === 'challenge') {
                 if (!activeCheckpoint || activeCheckpoint.id !== cp.id) {
-                    if (videoRef.current) videoRef.current.pause();
+                    onPause();
                     setActiveCheckpoint(cp);
                     const file = files.find(f => f.name === cp.fileName);
                     if (file) setActiveFile(file);
                 }
             }
         }
-    }, [currentTime, checkpoints, activeCheckpoint, files, activeFile, onFeedback, setActiveFile, setFiles, videoRef, syncCodeToTime]);
+    }, [currentTime, checkpoints, activeCheckpoint, files, activeFile, onFeedback, onPause, setActiveFile, setFiles, syncCodeToTime]);
 
     const checkSolution = () => {
         if (!activeCheckpoint) return;

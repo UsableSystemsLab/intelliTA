@@ -6,37 +6,43 @@ const storage = multer.memoryStorage();
 
 export const uploadActivityMulter = multer({ storage }).fields([
     { name: 'video', maxCount: 1 },
-    { name: 'md_file', maxCount: 1 }
+    { name: 'md_file', maxCount: 1 },
+    { name: 'starter_code', maxCount: 1 }
 ]);
 
 export async function uploadActivityFilesToS3(req, res, next) {
     if (!req.files || Object.keys(req.files).length === 0) return next();
 
     const uploadFile = async (file, folder) => {
-         const cleanedName = file.originalname
+        const cleanedName = file.originalname
             .toLowerCase()
             .replace(/\s+/g, "_")
             .replace(/[^a-z0-9._-]/g, "");
-         const fileName = `${folder}/${Date.now()}-${cleanedName}`;
-         const params = {
+        const fileName = `${folder}/${Date.now()}-${cleanedName}`;
+        const params = {
             Bucket: process.env.AWS_S3_BUCKET,
             Key: fileName,
             Body: file.buffer,
             ContentType: file.mimetype,
-         };
-         await s3.send(new PutObjectCommand(params));
-         return `https://${process.env.AWS_S3_BUCKET}.s3.amazonaws.com/${fileName}`;
+        };
+        await s3.send(new PutObjectCommand(params));
+        return `https://${process.env.AWS_S3_BUCKET}.s3.amazonaws.com/${fileName}`;
     }
 
     try {
         if (req.files['video'] && req.files['video'][0]) {
             const url = await uploadFile(req.files['video'][0], 'videos');
-            req.body.video_url = url; 
+            req.body.video_url = url;
         }
 
         if (req.files['md_file'] && req.files['md_file'][0]) {
-             const url = await uploadFile(req.files['md_file'][0], 'docs');
-             req.body.md_file_url = url;
+            const url = await uploadFile(req.files['md_file'][0], 'docs');
+            req.body.md_file_url = url;
+        }
+
+        if (req.files['starter_code'] && req.files['starter_code'][0]) {
+            const url = await uploadFile(req.files['starter_code'][0], 'starter-code');
+            req.body.starter_code_url = url;
         }
         next();
     } catch (err) {

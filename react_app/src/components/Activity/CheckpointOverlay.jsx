@@ -1,13 +1,4 @@
-import { CheckCircle, HelpCircle, FastForward } from 'lucide-react';
-
-function CodeIcon() {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="16 18 22 12 16 6"></polyline>
-            <polyline points="8 6 2 12 8 18"></polyline>
-        </svg>
-    );
-}
+import { CheckCircle, HelpCircle, FastForward, Code2 } from 'lucide-react';
 
 export default function CheckpointOverlay({
     activeCheckpoint,
@@ -20,57 +11,72 @@ export default function CheckpointOverlay({
     if (!activeCheckpoint) return null;
 
     return (
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-8 animate-in fade-in zoom-in-95 duration-200 bg-black/40 backdrop-blur-sm">
-            <div className="bg-[#161b22] border border-gray-700 p-6 rounded-xl shadow-2xl max-w-md w-full text-center">
-                <div className="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <CodeIcon />
-                </div>
-                <h2 className="text-xl font-bold text-white mb-2">
-                    Checkpoint: {activeCheckpoint.title}
-                </h2>
-                <p className="text-gray-400 mb-6 text-sm leading-relaxed">
-                    {activeCheckpoint.instruction}
-                </p>
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-8 animate-in fade-in zoom-in-95 duration-200 bg-black/50 backdrop-blur-sm">
+            <div className="bg-gray-800 border border-gray-700 p-8 rounded-2xl shadow-2xl max-w-md w-full text-center relative overflow-hidden">
+                {/* Decorative glow */}
+                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-24 h-24 bg-purple-500/10 rounded-full blur-3xl" />
+                
+                <div className="relative z-10">
+                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-blue-500/30">
+                        <Code2 className="w-7 h-7" />
+                    </div>
+                    
+                    <span className="inline-block px-3 py-1 bg-blue-500/10 text-blue-400 text-xs font-semibold rounded-full mb-3 border border-blue-500/30">
+                        Checkpoint
+                    </span>
+                    
+                    <h2 className="text-xl font-bold text-white mb-3">
+                        {activeCheckpoint.title}
+                    </h2>
+                    <p className="text-gray-400 mb-6 text-sm leading-relaxed">
+                        {activeCheckpoint.instruction}
+                    </p>
 
-                <div className="flex flex-col gap-3">
-                    <button
-                        onClick={onCheckSolution}
-                        className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg"
-                    >
-                        <CheckCircle className="w-4 h-4" />
-                        Verify Solution
-                    </button>
-
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-3">
                         <button
-                            onClick={onToggleHint}
-                            className="flex-1 py-2 px-3 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 border border-gray-700"
+                            onClick={onCheckSolution}
+                            className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
                         >
-                            <HelpCircle className="w-4 h-4" />
-                            {showHint ? "Hide Hint" : "Hint"}
+                            <CheckCircle className="w-5 h-5" />
+                            Verify Solution
                         </button>
 
-                        <button
-                            onClick={onSkip}
-                            className="flex-1 py-2 px-3 bg-red-900/40 hover:bg-red-900/60 text-red-100 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 border border-red-800/50"
-                        >
-                            <FastForward className="w-4 h-4" />
-                            Skip
-                        </button>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={onToggleHint}
+                                className="flex-1 py-2.5 px-4 bg-gray-700/50 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 border border-gray-600"
+                            >
+                                <HelpCircle className="w-4 h-4" />
+                                {showHint ? "Hide Hint" : "Show Hint"}
+                            </button>
+
+                            <button
+                                onClick={onSkip}
+                                className="flex-1 py-2.5 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 border border-red-500/30"
+                            >
+                                <FastForward className="w-4 h-4" />
+                                Skip
+                            </button>
+                        </div>
                     </div>
+
+                    {showHint && (
+                        <div className="mt-5 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-sm text-left">
+                            <span className="font-semibold">💡 Hint:</span> {activeCheckpoint.hint}
+                        </div>
+                    )}
+
+                    {feedback && (
+                        <div className={`mt-4 p-3 rounded-xl text-sm font-medium ${
+                            feedback.type === 'success' 
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
+                                : 'bg-red-500/10 text-red-400 border border-red-500/30'
+                        }`}>
+                            {feedback.message}
+                        </div>
+                    )}
                 </div>
-
-                {showHint && (
-                    <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded text-yellow-200 text-xs text-left">
-                        💡 <strong>Hint:</strong> {activeCheckpoint.hint}
-                    </div>
-                )}
-
-                {feedback && (
-                    <div className={`mt-4 p-2 rounded text-sm font-medium ${feedback.type === 'success' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                        {feedback.message}
-                    </div>
-                )}
             </div>
         </div>
     );

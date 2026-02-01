@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, Loader } from "lucide-react";
+import { AlertCircle, Loader, Info } from "lucide-react";
+import Breadcrumb from "../shared/Breadcrumb";
 
 export default function CreateCourseMain({ user }) {
   const [title, setTitle] = useState("");
@@ -10,10 +11,22 @@ export default function CreateCourseMain({ user }) {
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
+    const errors = {};
+    if (!title.trim()) errors.title = true;
+    if (!courseCode.trim()) errors.courseCode = true;
+    if (!description.trim()) errors.description = true;
+    setFieldErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      setErrorMsg("Please fill in all required fields.");
+      return;
+    }
+
     setLoading(true);
     setErrorMsg("");
 
@@ -91,9 +104,20 @@ export default function CreateCourseMain({ user }) {
   };
 
   return (
-    <main className="flex-1 p-22 flex items-start justify-center text-white w-full overflow-y-auto">
+    <main className="flex-1 p-22 flex flex-col items-center text-white w-full overflow-y-auto">
+      <div className="max-w-2xl w-full mb-4">
+        <Breadcrumb items={[
+          { label: "Courses", href: "/courses" },
+          { label: "Create Course" }
+        ]} />
+      </div>
       <div className="bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-2xl w-full shadow-xl shadow-blue-900/10">
-        <h1 className="text-3xl font-bold mb-8 text-white">Create New Course</h1>
+        <h1 className="text-3xl font-bold mb-4 text-white">Create New Course</h1>
+
+        <div className="bg-blue-500/10 border border-blue-500/30 text-blue-300 p-4 rounded-xl mb-6 flex items-start gap-3">
+          <Info className="w-5 h-5 shrink-0 mt-0.5" />
+          <p className="text-sm">You will be assigned as the <strong className="text-white">instructor</strong> of this course. You'll be able to create activities, manage students, and share a token for others to join.</p>
+        </div>
 
         {errorMsg && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-xl mb-6 flex items-center gap-3">
@@ -106,10 +130,10 @@ export default function CreateCourseMain({ user }) {
           <label className="block mb-2 font-medium text-gray-300">Course Title</label>
           <input
             type="text"
-            className="w-full p-3 rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+            className={`w-full p-3 rounded-xl bg-gray-900 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${fieldErrors.title ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"}`}
             placeholder="Enter course title"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => { setTitle(e.target.value); setFieldErrors(prev => ({ ...prev, title: false })); }}
           />
         </div>
 
@@ -117,10 +141,10 @@ export default function CreateCourseMain({ user }) {
           <label className="block mb-2 font-medium text-gray-300">Course Code</label>
           <input
             type="text"
-            className="w-full p-3 rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+            className={`w-full p-3 rounded-xl bg-gray-900 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${fieldErrors.courseCode ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"}`}
             placeholder="Enter course code (e.g., CPCS-202)"
             value={courseCode}
-            onChange={(e) => setCourseCode(e.target.value)}
+            onChange={(e) => { setCourseCode(e.target.value); setFieldErrors(prev => ({ ...prev, courseCode: false })); }}
           />
         </div>
 
@@ -128,10 +152,10 @@ export default function CreateCourseMain({ user }) {
           <label className="block mb-2 font-medium text-gray-300">Description</label>
           <textarea
             rows="4"
-            className="w-full p-3 rounded-xl bg-gray-900 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
+            className={`w-full p-3 rounded-xl bg-gray-900 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all resize-none ${fieldErrors.description ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"}`}
             placeholder="Write course description"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => { setDescription(e.target.value); setFieldErrors(prev => ({ ...prev, description: false })); }}
           ></textarea>
         </div>
 

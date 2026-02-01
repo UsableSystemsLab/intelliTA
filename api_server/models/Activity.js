@@ -38,6 +38,10 @@ const Activity = sequelize.define(
       type: DataTypes.STRING(500),
       allowNull: true,
     },
+    starter_code_url: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
   },
   {
     tableName: "activities",

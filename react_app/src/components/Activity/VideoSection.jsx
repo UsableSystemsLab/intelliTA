@@ -1,4 +1,4 @@
-import { Play, Pause, SkipBack, SkipForward, RotateCcw } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, RotateCcw, Video } from 'lucide-react';
 
 export default function VideoSection({
     activity,
@@ -41,16 +41,23 @@ export default function VideoSection({
 
     const getCheckpointColor = (status) => {
         switch (status) {
-            case 'verified': return 'bg-green-500';
-            case 'skipped': return 'bg-orange-500';
+            case 'verified': return 'bg-emerald-500';
+            case 'skipped': return 'bg-amber-500';
             case 'completed': return 'bg-blue-500';
-            default: return 'bg-yellow-500/80';
+            default: return 'bg-yellow-400';
         }
     };
 
     return (
-        <div className="w-[45%] flex flex-col bg-black relative border-l border-gray-800 h-full overflow-hidden">
-            <div className="flex-1 relative flex items-center justify-center bg-zinc-900 border-b border-gray-800">
+        <div className="w-[40%] flex flex-col bg-gray-900 relative border-l border-gray-800 h-full overflow-hidden">
+            {/* Header */}
+            <div className="h-10 border-b border-gray-800 bg-gray-900 flex items-center px-4 gap-2">
+                <Video className="w-4 h-4 text-purple-400" />
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Video Lesson</span>
+            </div>
+
+            {/* Video Container */}
+            <div className="flex-1 relative flex items-center justify-center bg-black border-b border-gray-800">
                 {isYouTube ? (
                     <div className={`absolute inset-0 w-full h-full bg-black flex items-center justify-center transition-opacity duration-300 ${activeCheckpoint ? 'opacity-30 blur-sm' : 'opacity-100'}`}>
                         <iframe
@@ -65,7 +72,7 @@ export default function VideoSection({
                     <video
                         ref={videoRef}
                         className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${activeCheckpoint ? 'opacity-30 blur-sm' : 'opacity-100'}`}
-                        src={activity?.video_url || "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"}
+                        src={activity?.video_url || "https://intellita-media-storage.s3.us-east-1.amazonaws.com/videos/1769891714792-cpit_252_-_lab_1__object-oriented_programming_overview.mp4"}
                         onTimeUpdate={onTimeUpdate}
                         onLoadedMetadata={(e) => onDurationChange(e.currentTarget.duration)}
                         onPlay={onPlay}
@@ -78,7 +85,7 @@ export default function VideoSection({
                 {!isPlaying && !activeCheckpoint && (
                     <button
                         onClick={onPlay}
-                        className="absolute z-10 p-4 bg-white/10 hover:bg-white/20 backdrop-blur rounded-full transition-all"
+                        className="absolute z-10 p-5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 backdrop-blur rounded-full transition-all shadow-2xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-105"
                     >
                         <Play className="w-8 h-8 text-white fill-current" />
                     </button>
@@ -87,13 +94,15 @@ export default function VideoSection({
                 {activeCheckpoint && <CheckpointOverlay />}
             </div>
 
-            <div className="bg-[#161b22] border-t border-gray-800 flex flex-col shrink-0">
-                <div className="px-4 py-2 flex items-center gap-4">
-                    <span className="text-[10px] font-mono text-gray-500 w-10 text-right">
+            {/* Video Controls */}
+            <div className="bg-gray-900 border-t border-gray-800 flex flex-col shrink-0">
+                {/* Timeline */}
+                <div className="px-4 py-3 flex items-center gap-4">
+                    <span className="text-xs font-mono text-gray-500 w-12 text-right">
                         {formatTime(currentTime)}
                     </span>
                     <div
-                        className="flex-1 h-1.5 bg-gray-700/50 rounded-full relative overflow-visible group cursor-pointer"
+                        className="flex-1 h-2 bg-gray-800 rounded-full relative overflow-visible group cursor-pointer"
                         onClick={(e) => {
                             if (!activeCheckpoint) {
                                 const rect = e.currentTarget.getBoundingClientRect();
@@ -102,43 +111,75 @@ export default function VideoSection({
                             }
                         }}
                     >
-                        <div className="absolute inset-y-0 left-0 bg-blue-500 rounded-full" style={{ width: `${(currentTime / duration) * 100}%` }} />
+                        {/* Progress bar */}
                         <div
-                            className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                            style={{ left: `${(currentTime / duration) * 100}%` }}
+                            className="absolute inset-y-0 left-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all"
+                            style={{ width: `${(currentTime / duration) * 100}%` }}
                         />
+                        {/* Scrubber handle */}
+                        <div
+                            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity border-2 border-blue-500"
+                            style={{ left: `calc(${(currentTime / duration) * 100}% - 8px)` }}
+                        />
+                        {/* Checkpoint markers */}
                         {checkpoints.map(cp => (
                             <div
                                 key={cp.id}
-                                className={`absolute top-0 w-1.5 h-full z-10 transform -translate-x-1/2 rounded-full cursor-help hover:scale-x-150 transition-transform ${getCheckpointColor(cp.status)}`}
+                                className={`absolute top-0 w-2 h-full z-10 transform -translate-x-1/2 rounded-full cursor-help hover:scale-x-150 transition-transform ${getCheckpointColor(cp.status)}`}
                                 style={{ left: `${(cp.time / duration) * 100}%` }}
                                 title={`${cp.title} (${cp.status})`}
                             />
                         ))}
                     </div>
-                    <span className="text-[10px] font-mono text-gray-500 w-10">
+                    <span className="text-xs font-mono text-gray-500 w-12">
                         {formatTime(duration)}
                     </span>
                 </div>
 
-                <div className="h-12 flex items-center justify-center gap-6 px-4 pb-2">
-                    <button onClick={() => onSeek(0)} className="text-gray-400 hover:text-white transition-colors" title="Restart">
+                {/* Playback Controls */}
+                <div className="h-14 flex items-center justify-center gap-4 px-4 pb-3">
+                    <button
+                        onClick={() => onSeek(0)}
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all"
+                        title="Restart"
+                    >
                         <RotateCcw className="w-4 h-4" />
                     </button>
-                    <button onClick={onPrev} className="text-gray-400 hover:text-white transition-colors disabled:opacity-30" disabled={currentTime < 2} title="Previous Checkpoint">
+                    <button
+                        onClick={onPrev}
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                        disabled={currentTime < 2}
+                        title="Previous Checkpoint"
+                    >
                         <SkipBack className="w-5 h-5" />
                     </button>
-                    <button onClick={isPlaying ? onPause : onPlay} className="w-10 h-10 flex items-center justify-center bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-lg transition-all active:scale-95">
+
+                    {/* Main Play/Pause Button */}
+                    <button
+                        onClick={isPlaying ? onPause : onPlay}
+                        className="w-12 h-12 flex items-center justify-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-full shadow-lg shadow-blue-500/30 transition-all active:scale-95"
+                    >
                         {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-1" />}
                     </button>
-                    <button onClick={onNext} className="text-gray-400 hover:text-white transition-colors" title="Next Checkpoint">
+
+                    <button
+                        onClick={onNext}
+                        className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all"
+                        title="Next Checkpoint"
+                    >
                         <SkipForward className="w-5 h-5" />
                     </button>
-                    <div className="h-4 w-px bg-gray-700 hidden sm:block"></div>
-                    <div className="hidden sm:flex items-center gap-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                        <span>CP</span>
-                        <span className="text-gray-300">
-                            {checkpoints.filter(c => c.status === 'verified').length}/{checkpoints.length}
+
+                    {/* Checkpoint Counter */}
+                    <div className="h-6 w-px bg-gray-700 mx-2"></div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 rounded-lg border border-gray-700">
+                        <span className="text-xs font-medium text-gray-500">Checkpoints</span>
+                        <span className="text-sm font-bold text-emerald-400">
+                            {checkpoints.filter(c => c.status === 'verified').length}
+                        </span>
+                        <span className="text-xs text-gray-600">/</span>
+                        <span className="text-sm font-medium text-gray-400">
+                            {checkpoints.length}
                         </span>
                     </div>
                 </div>
