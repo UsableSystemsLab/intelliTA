@@ -99,7 +99,7 @@ function MarkdownModal({ isOpen, onClose, value, onChange }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-      <div className="relative bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-6xl h-[80vh] shadow-2xl flex flex-col overflow-hidden">
+      <div className="relative bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-[95vw] h-[90vh] shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
           <div className="flex items-center gap-3">

@@ -4,7 +4,7 @@ import Maincontent from "@/components/Activity/Maincontent";
 export default function Activity({ user }) {
     return (
         <div className="flex flex-col h-screen overflow-hidden bg-[#0d1117]">
-            <Nav user={user} />
+            {/* Removing nav from Activity page for better UX */}
             <div className="flex-1 overflow-hidden relative">
                 <Maincontent user={user} />
             </div>

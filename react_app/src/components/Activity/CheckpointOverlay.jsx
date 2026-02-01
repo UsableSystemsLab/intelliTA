@@ -1,11 +1,9 @@
-import { CheckCircle, HelpCircle, FastForward, Code2 } from 'lucide-react';
+import { CheckCircle, FastForward, Code2 } from 'lucide-react';
 
 export default function CheckpointOverlay({
     activeCheckpoint,
-    showHint,
     feedback,
     onCheckSolution,
-    onToggleHint,
     onSkip
 }) {
     if (!activeCheckpoint) return null;
@@ -16,16 +14,16 @@ export default function CheckpointOverlay({
                 {/* Decorative glow */}
                 <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-24 h-24 bg-purple-500/10 rounded-full blur-3xl" />
-                
+
                 <div className="relative z-10">
                     <div className="w-14 h-14 bg-gradient-to-br from-blue-500/20 to-purple-500/20 text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-blue-500/30">
                         <Code2 className="w-7 h-7" />
                     </div>
-                    
+
                     <span className="inline-block px-3 py-1 bg-blue-500/10 text-blue-400 text-xs font-semibold rounded-full mb-3 border border-blue-500/30">
                         Checkpoint
                     </span>
-                    
+
                     <h2 className="text-xl font-bold text-white mb-3">
                         {activeCheckpoint.title}
                     </h2>
@@ -42,35 +40,19 @@ export default function CheckpointOverlay({
                             Verify Solution
                         </button>
 
-                        <div className="flex gap-2">
-                            <button
-                                onClick={onToggleHint}
-                                className="flex-1 py-2.5 px-4 bg-gray-700/50 hover:bg-gray-700 text-gray-300 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 border border-gray-600"
-                            >
-                                <HelpCircle className="w-4 h-4" />
-                                {showHint ? "Hide Hint" : "Show Hint"}
-                            </button>
-
-                            <button
-                                onClick={onSkip}
-                                className="flex-1 py-2.5 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 border border-red-500/30"
-                            >
-                                <FastForward className="w-4 h-4" />
-                                Skip
-                            </button>
-                        </div>
+                        <button
+                            onClick={onSkip}
+                            className="w-full py-2.5 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 border border-red-500/30"
+                        >
+                            <FastForward className="w-4 h-4" />
+                            Skip
+                        </button>
                     </div>
-
-                    {showHint && (
-                        <div className="mt-5 p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-300 text-sm text-left">
-                            <span className="font-semibold">💡 Hint:</span> {activeCheckpoint.hint}
-                        </div>
-                    )}
 
                     {feedback && (
                         <div className={`mt-4 p-3 rounded-xl text-sm font-medium ${
-                            feedback.type === 'success' 
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' 
+                            feedback.type === 'success'
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                                 : 'bg-red-500/10 text-red-400 border border-red-500/30'
                         }`}>
                             {feedback.message}

@@ -149,19 +149,22 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
   if (step === 2) {
     return (
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="relative bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-4xl w-full shadow-2xl text-white overflow-hidden max-h-[90vh] overflow-y-auto">
+        <div className="relative bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-[95vw] h-[90vh] shadow-2xl text-white flex flex-col overflow-hidden">
           {/* Decorative glow */}
           <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl" />
           <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-24 h-24 bg-green-500/10 rounded-full blur-3xl" />
 
-          <CloseButton onClick={handleClose} />
-
-          <div className="relative z-10">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 shrink-0">
             <ModalHeader
               title="Review & Publish"
               subtitle="Review your activity before publishing"
             />
+            <CloseButton onClick={handleClose} />
+          </div>
 
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto px-8 py-6 relative z-10">
             <ErrorAlert message={errorMsg} />
 
             {/* Activity Details */}
@@ -203,7 +206,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
                   <Eye className="w-5 h-5 text-green-400" />
                   Content Preview
                 </h3>
-                <div className="bg-gray-900/50 p-5 rounded-lg border border-gray-600 max-h-80 overflow-y-auto">
+                <div className="bg-gray-900/50 p-5 rounded-lg border border-gray-600">
                   <ReactMarkdown components={markdownComponents}>
                     {mdContent}
                   </ReactMarkdown>
@@ -236,36 +239,36 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
                 </div>
               </div>
             )}
+          </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 mt-6">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-semibold transition-all duration-300"
-              >
-                <ArrowLeft className="w-5 h-5" />
-                Back to Edit
-              </button>
-              <button
-                type="button"
-                onClick={handlePublish}
-                disabled={loading}
-                className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <>
-                    <Loader className="w-5 h-5 animate-spin" />
-                    Publishing...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    Publish Lab
-                  </>
-                )}
-              </button>
-            </div>
+          {/* Footer */}
+          <div className="flex gap-3 px-6 py-4 border-t border-gray-700 bg-gray-900/50 shrink-0">
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-semibold transition-all duration-300"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back to Edit
+            </button>
+            <button
+              type="button"
+              onClick={handlePublish}
+              disabled={loading}
+              className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <Loader className="w-5 h-5 animate-spin" />
+                  Publishing...
+                </>
+              ) : (
+                <>
+                  <Send className="w-5 h-5" />
+                  Publish Lab
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>

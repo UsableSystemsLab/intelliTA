@@ -9,7 +9,8 @@ import {
   FileText,
   Sparkles,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Send
 } from "lucide-react";
 
 
@@ -111,7 +112,7 @@ function StarterCodeModal({ isOpen, onClose, files, onFilesChange, prompt, onPro
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-      <div className="relative bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-7xl h-[90vh] shadow-2xl flex flex-col overflow-hidden">
+      <div className="relative bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-[95vw] h-[90vh] shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 shrink-0">
           <div className="flex items-center gap-3">
@@ -250,7 +251,6 @@ function StarterCodeModal({ isOpen, onClose, files, onFilesChange, prompt, onPro
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-purple-400" />
                   <span className="text-sm font-medium text-gray-300">AI Prompt</span>
-                  <span className="text-xs text-gray-500">(Coming Soon)</span>
                 </div>
                 {promptExpanded ? (
                   <ChevronDown className="w-4 h-4 text-gray-600" />
@@ -260,16 +260,23 @@ function StarterCodeModal({ isOpen, onClose, files, onFilesChange, prompt, onPro
               </button>
 
               {promptExpanded && (
-                <div className="flex-1 p-4 overflow-hidden">
+                <div className="flex-1 p-4 overflow-hidden flex gap-3">
                   <textarea
                     value={prompt}
                     onChange={(e) => onPromptChange(e.target.value)}
                     placeholder="Describe what the AI should generate for the starter code...
 
 Example: Create a simple HTML page with a form that has name and email fields. Add basic CSS styling with a modern look. Include JavaScript to validate the form on submit."
-                    className="w-full h-full px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-200 resize-none text-sm"
-                    disabled
+                    className="flex-1 px-4 py-3 bg-gray-800/50 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500 transition-all duration-200 resize-none text-sm"
                   />
+                  <button
+                    type="button"
+                    disabled={!prompt?.trim()}
+                    className="self-end p-2.5 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-800 disabled:text-gray-600 border border-purple-500 disabled:border-gray-700 rounded-xl text-white transition-colors disabled:cursor-not-allowed shrink-0"
+                    title="Send prompt"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
                 </div>
               )}
             </div>

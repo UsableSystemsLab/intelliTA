@@ -5,6 +5,7 @@ import ActivityHeader from './ActivityHeader';
 import VideoSection from './VideoSection';
 import CodeEditorSection from './CodeEditorSection';
 import CheckpointOverlay from './CheckpointOverlay';
+import HintChatSidebar from './HintChatSidebar';
 import LoadingScreen from './LoadingScreen';
 import ErrorScreen from './ErrorScreen';
 import SubmissionResultOverlay from './SubmissionResultOverlay';
@@ -146,6 +147,7 @@ export default function Maincontent({ user }) {
     const [submissionScore, setSubmissionScore] = useState(0);
     const [mode, setMode] = useState('preview'); // 'preview' or 'solve'
     const [markdownContent, setMarkdownContent] = useState('');
+    const [isHintOpen, setIsHintOpen] = useState(false);
 
     const handleSeek = (newTime) => {
         if (videoRef.current) videoRef.current.currentTime = newTime;
@@ -155,8 +157,6 @@ export default function Maincontent({ user }) {
     const {
         checkpoints,
         activeCheckpoint,
-        showHint,
-        setShowHint,
         checkSolution,
         skipCheckpoint,
         nextCheckpoint,
@@ -463,11 +463,11 @@ export default function Maincontent({ user }) {
         <div className="flex-1 flex flex-col overflow-hidden bg-[#0d1117] text-gray-100 font-sans h-full">
             <ActivityHeader
                 activityTitle={activity.title}
-                courseId={courseId}
-                courseName={courseName}
                 onBack={() => navigate(`/courses`)}
                 onSubmit={handleSubmit}
                 isSubmitting={isSubmitting}
+                onHintClick={() => setIsHintOpen(prev => !prev)}
+                isHintOpen={isHintOpen}
             />
 
             <div className="flex-1 flex overflow-hidden flex-row">
@@ -498,11 +498,9 @@ export default function Maincontent({ user }) {
                     CheckpointOverlay={() => (
                         <CheckpointOverlay
                             activeCheckpoint={activeCheckpoint}
-                            showHint={showHint}
                             feedback={feedback}
                             onCheckSolution={checkSolution}
                             onSkip={skipCheckpoint}
-                            onToggleHint={() => setShowHint(!showHint)}
                         />
                     )}
                 />
@@ -516,6 +514,11 @@ export default function Maincontent({ user }) {
                     onClose={() => setShowResultOverlay(false)}
                 />
             )}
+
+            <HintChatSidebar
+                isOpen={isHintOpen}
+                onClose={() => setIsHintOpen(false)}
+            />
         </div>
     );
 }
