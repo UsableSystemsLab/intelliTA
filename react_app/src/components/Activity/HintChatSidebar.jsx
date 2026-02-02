@@ -61,6 +61,36 @@ const markdownComponents = {
     ),
 };
 
+const userMarkdownComponents = {
+    h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2 pb-1 border-b border-blue-400/40">{children}</h1>,
+    h2: ({ children }) => <h2 className="text-base font-semibold text-white mb-2 mt-3">{children}</h2>,
+    h3: ({ children }) => <h3 className="text-sm font-semibold text-white mb-1 mt-2">{children}</h3>,
+    p: ({ children }) => <p className="text-white mb-2 text-sm leading-relaxed">{children}</p>,
+    ul: ({ children }) => <ul className="list-disc list-inside text-white mb-2 space-y-0.5 ml-2 text-sm">{children}</ul>,
+    ol: ({ children }) => <ol className="list-decimal list-inside text-white mb-2 space-y-0.5 ml-2 text-sm">{children}</ol>,
+    li: ({ children }) => <li className="text-white text-sm">{children}</li>,
+    strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
+    em: ({ children }) => <em className="italic text-blue-100">{children}</em>,
+    code: ({ children, className }) => {
+        const isBlock = className?.includes('language-');
+        if (isBlock) {
+            return <code className="text-blue-100 text-xs font-mono">{children}</code>;
+        }
+        return (
+            <code className="bg-blue-700/50 px-1 py-0.5 rounded text-blue-100 text-xs font-mono">{children}</code>
+        );
+    },
+    pre: ({ children }) => (
+        <pre className="bg-blue-800/50 p-3 rounded-lg overflow-x-auto mb-2 border border-blue-400/30 text-xs">{children}</pre>
+    ),
+    blockquote: ({ children }) => (
+        <blockquote className="border-l-3 border-blue-300 pl-3 italic text-blue-100 mb-2 bg-blue-800/30 py-1 rounded-r text-sm">{children}</blockquote>
+    ),
+    a: ({ href, children }) => (
+        <a href={href} className="text-blue-100 underline hover:text-white text-sm" target="_blank" rel="noopener noreferrer">{children}</a>
+    ),
+};
+
 export default function HintChatSidebar({ isOpen, onClose }) {
     const [messages, setMessages] = useState(PLACEHOLDER_MESSAGES);
     const [input, setInput] = useState('');
@@ -125,13 +155,9 @@ export default function HintChatSidebar({ isOpen, onClose }) {
                                         : 'bg-gray-800 border border-gray-700 rounded-bl-sm'
                                 }`}
                             >
-                                {msg.role === 'assistant' ? (
-                                    <ReactMarkdown components={markdownComponents}>
-                                        {msg.content}
-                                    </ReactMarkdown>
-                                ) : (
-                                    <p className="text-sm">{msg.content}</p>
-                                )}
+                                <ReactMarkdown components={msg.role === 'assistant' ? markdownComponents : userMarkdownComponents}>
+                                    {msg.content}
+                                </ReactMarkdown>
                             </div>
                         </div>
                     ))}

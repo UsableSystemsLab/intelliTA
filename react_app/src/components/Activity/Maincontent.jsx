@@ -478,6 +478,9 @@ export default function Maincontent({ user }) {
                     activeCheckpoint={activeCheckpoint}
                     onFileSelect={setActiveFile}
                     onFileChange={handleFileChange}
+                    courseName={courseName}
+                    courseId={courseId}
+                    activityTitle={activity.title}
                 />
 
                 <VideoSection

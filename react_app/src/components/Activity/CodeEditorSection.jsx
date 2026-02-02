@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import FileExplorer from './FileExplorer';
 import { Terminal, Code2, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import { useState } from 'react';
+import Breadcrumb from '../shared/Breadcrumb';
 
 // Markdown Preview Component
 function MarkdownPreview({ content }) {
@@ -54,7 +55,10 @@ export default function CodeEditorSection({
     feedback,
     activeCheckpoint,
     onFileSelect,
-    onFileChange
+    onFileChange,
+    courseName,
+    courseId,
+    activityTitle
 }) {
     const [consoleExpanded, setConsoleExpanded] = useState(true);
 
@@ -68,9 +72,17 @@ export default function CodeEditorSection({
         <div className="w-[60%] flex flex-col bg-[#0d1117]">
             {/* Header */}
             <div className="h-10 border-b border-gray-800 bg-gray-900 flex items-center justify-between px-4">
-                <div className="flex items-center gap-2">
-                    <Code2 className="w-4 h-4 text-blue-400" />
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sandbox</span>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                        <Code2 className="w-4 h-4 text-blue-400" />
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sandbox</span>
+                    </div>
+                    <div className="h-4 w-px bg-gray-700" />
+                    <Breadcrumb items={[
+                        { label: "Courses", href: "/courses" },
+                        { label: courseName, href: `/courses/${courseId}` },
+                        { label: activityTitle }
+                    ]} />
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="text-xs text-gray-600">
