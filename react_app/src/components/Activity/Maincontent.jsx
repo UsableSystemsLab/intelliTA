@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import ActivityHeader from './ActivityHeader';
@@ -148,6 +148,12 @@ export default function Maincontent({ user }) {
     const [mode, setMode] = useState('preview'); // 'preview' or 'solve'
     const [markdownContent, setMarkdownContent] = useState('');
     const [isHintOpen, setIsHintOpen] = useState(false);
+    const [selectedCodeForChat, setSelectedCodeForChat] = useState('');
+
+    const handleAskAI = useCallback((text) => {
+        setSelectedCodeForChat(text);
+        setIsHintOpen(true);
+    }, []);
 
     const handleSeek = (newTime) => {
         if (videoRef.current) videoRef.current.currentTime = newTime;
@@ -481,6 +487,7 @@ export default function Maincontent({ user }) {
                     courseName={courseName}
                     courseId={courseId}
                     activityTitle={activity.title}
+                    onAskAI={handleAskAI}
                 />
 
                 <VideoSection
@@ -521,6 +528,8 @@ export default function Maincontent({ user }) {
             <HintChatSidebar
                 isOpen={isHintOpen}
                 onClose={() => setIsHintOpen(false)}
+                initialInput={selectedCodeForChat}
+                onInitialInputConsumed={() => setSelectedCodeForChat('')}
             />
         </div>
     );

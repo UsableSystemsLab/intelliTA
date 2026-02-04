@@ -1,8 +1,8 @@
 import Editor from "@monaco-editor/react";
 import ReactMarkdown from "react-markdown";
 import FileExplorer from './FileExplorer';
-import { Terminal, Code2, ChevronDown, ChevronUp, FileText } from 'lucide-react';
-import { useState } from 'react';
+import { Terminal, Code2, ChevronDown, ChevronUp, FileText, Sparkles } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import Breadcrumb from '../shared/Breadcrumb';
 
 // Markdown Preview Component
@@ -58,9 +58,83 @@ export default function CodeEditorSection({
     onFileChange,
     courseName,
     courseId,
-    activityTitle
+    activityTitle,
+    onAskAI
 }) {
     const [consoleExpanded, setConsoleExpanded] = useState(true);
+    const editorRef = useRef(null);
+    const monacoRef = useRef(null);
+    const [floatingBtn, setFloatingBtn] = useState(null); // { top, left }
+    const editorContainerRef = useRef(null);
+    const onAskAIRef = useRef(onAskAI);
+
+    // Keep callback ref in sync
+    useEffect(() => {
+        onAskAIRef.current = onAskAI;
+    }, [onAskAI]);
+
+    const handleFloatingClick = useCallback(() => {
+        const editor = editorRef.current;
+        if (!editor) return;
+        const selection = editor.getSelection();
+        if (!selection || selection.isEmpty()) return;
+        const text = editor.getModel().getValueInRange(selection);
+        if (text && onAskAIRef.current) {
+            onAskAIRef.current(text);
+            setFloatingBtn(null);
+        }
+    }, []);
+
+    const handleEditorMount = useCallback((editor, monacoInstance) => {
+        editorRef.current = editor;
+        monacoRef.current = monacoInstance;
+
+        // Ctrl+I keybinding
+        editor.addAction({
+            id: 'ask-ai',
+            label: 'Ask AI about selection',
+            keybindings: [monacoInstance.KeyMod.CtrlCmd | monacoInstance.KeyCode.KeyI],
+            run: (ed) => {
+                const sel = ed.getSelection();
+                if (!sel || sel.isEmpty()) return;
+                const text = ed.getModel().getValueInRange(sel);
+                if (text && onAskAIRef.current) {
+                    onAskAIRef.current(text);
+                    setFloatingBtn(null);
+                }
+            }
+        });
+
+        // Selection change listener
+        editor.onDidChangeCursorSelection(() => {
+            const selection = editor.getSelection();
+            if (!selection || selection.isEmpty()) {
+                setFloatingBtn(null);
+                return;
+            }
+
+            const selectedText = editor.getModel().getValueInRange(selection);
+            if (!selectedText.trim()) {
+                setFloatingBtn(null);
+                return;
+            }
+
+            // Get the pixel coordinates of the selection end
+            const endPos = { lineNumber: selection.endLineNumber, column: selection.endColumn };
+            const coords = editor.getScrolledVisiblePosition(endPos);
+            if (coords) {
+                const editorDom = editor.getDomNode();
+                const editorRect = editorDom.getBoundingClientRect();
+                const containerRect = editorContainerRef.current?.getBoundingClientRect();
+                if (containerRect) {
+                    setFloatingBtn({
+                        top: editorRect.top - containerRect.top + coords.top + coords.height + 4,
+                        left: editorRect.left - containerRect.left + coords.left + 12,
+                    });
+                }
+            }
+        });
+    }, []);
 
     // Check if the active file is a markdown file
     const isMarkdownFile = (fileName) => {
@@ -100,7 +174,7 @@ export default function CodeEditorSection({
                 />
 
                 {/* Editor + Console */}
-                <div className="flex-1 flex flex-col relative overflow-hidden">
+                <div ref={editorContainerRef} className="flex-1 flex flex-col relative overflow-hidden">
                     {/* Editor or Markdown Preview */}
                     <div className={`${consoleExpanded ? 'flex-1' : 'flex-1'} min-h-0`}>
                         {isMarkdownFile(activeFile?.name) ? (
@@ -112,6 +186,7 @@ export default function CodeEditorSection({
                                 language={activeFile.language}
                                 value={activeFile.content}
                                 onChange={onFileChange}
+                                onMount={handleEditorMount}
                                 theme="vs-dark"
                                 options={{
                                     minimap: { enabled: false },
@@ -127,6 +202,18 @@ export default function CodeEditorSection({
                             />
                         )}
                     </div>
+
+                    {/* Floating Ask AI button */}
+                    {floatingBtn && (
+                        <button
+                            onClick={handleFloatingClick}
+                            className="absolute z-20 p-1.5 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 hover:from-blue-400 hover:to-violet-400 text-white shadow-lg shadow-violet-500/40 hover:shadow-violet-500/60 transition-all duration-200 hover:scale-110"
+                            style={{ top: floatingBtn.top, left: floatingBtn.left }}
+                            title="Ask AI (Ctrl+I)"
+                        >
+                            <Sparkles className="w-3.5 h-3.5" />
+                        </button>
+                    )}
 
                     {/* Console / Output Panel */}
                     <div className={`border-t border-gray-800 bg-[#0d1117] flex flex-col transition-all duration-200 ${consoleExpanded ? 'h-28' : 'h-10'}`}>

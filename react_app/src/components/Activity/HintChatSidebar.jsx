@@ -91,16 +91,33 @@ const userMarkdownComponents = {
     ),
 };
 
-export default function HintChatSidebar({ isOpen, onClose }) {
+export default function HintChatSidebar({ isOpen, onClose, initialInput, onInitialInputConsumed }) {
     const [messages, setMessages] = useState(PLACEHOLDER_MESSAGES);
     const [input, setInput] = useState('');
     const messagesEndRef = useRef(null);
+    const inputRef = useRef(null);
 
     useEffect(() => {
         if (isOpen && messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [isOpen, messages]);
+
+    // Consume initialInput when it changes
+    useEffect(() => {
+        if (initialInput) {
+            setInput(`I need help understanding this code:\n\`\`\`\n${initialInput}\n\`\`\``);
+            onInitialInputConsumed?.();
+            // Focus and select the prompt text so the user can type over it
+            const promptLength = 'I need help understanding this code:'.length;
+            setTimeout(() => {
+                if (inputRef.current) {
+                    inputRef.current.focus();
+                    inputRef.current.setSelectionRange(0, promptLength);
+                }
+            }, 50);
+        }
+    }, [initialInput, onInitialInputConsumed]);
 
     const handleSend = () => {
         const text = input.trim();
@@ -166,14 +183,15 @@ export default function HintChatSidebar({ isOpen, onClose }) {
 
                 {/* Input area */}
                 <div className="p-3 border-t border-gray-700 shrink-0 bg-gray-900">
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="text"
+                    <div className="flex items-start gap-2">
+                        <textarea
+                            ref={inputRef}
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                             placeholder="Ask for a hint..."
-                            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors"
+                            rows={input.includes('\n') ? Math.min(input.split('\n').length, 6) : 1}
+                            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors resize-none"
                         />
                         <button
                             onClick={handleSend}
