@@ -108,6 +108,30 @@ services:
       - api_server
     networks:
       - app_network
+  
+  ollama:
+    build:
+      context: llm
+      dockerfile: Dockerfile
+      args:
+        OLLAMA_MODEL: ${OLLAMA_MODEL}
+    container_name: ollama_container
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - app_network
+    # Optional: GPU Support (If NVIDIA GPU and drivers installed)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
 
 networks:
   app_network:
@@ -116,3 +140,4 @@ networks:
 volumes:
   pg_data:
   pgadmin_data:
+  ollama_data:
