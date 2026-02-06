@@ -46,3 +46,24 @@ CREATE TABLE labs (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
+
+-- CONVERSATIONS Table
+CREATE TABLE conversations (
+  conversation_id SERIAL PRIMARY KEY,
+  firebase_uid    VARCHAR(128) NOT NULL,
+  activity_id     INT NOT NULL,
+  created_at      TIMESTAMP DEFAULT NOW(),
+  updated_at      TIMESTAMP DEFAULT NOW(),
+  UNIQUE(firebase_uid, activity_id)
+);
+
+-- CHAT_MESSAGES Table
+CREATE TABLE chat_messages (
+  message_id      SERIAL PRIMARY KEY,
+  conversation_id INT NOT NULL REFERENCES conversations(conversation_id) ON DELETE CASCADE,
+  role            VARCHAR(10) NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
+  content         TEXT NOT NULL,
+  created_at      TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_chat_messages_conv ON chat_messages(conversation_id);

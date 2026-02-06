@@ -145,12 +145,21 @@ services:
     environment:
       - OLLAMA_HOST=ollama_container
       - OLLAMA_PORT=11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
       - LLM_SERVER_PORT=${LLM_SERVER_PORT}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
     ports:
       - ${LLM_SERVER_PORT}:${LLM_SERVER_PORT}
     volumes:
       - ./llm/server:/app
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - app_network
     healthcheck:
