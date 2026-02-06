@@ -132,6 +132,32 @@ services:
               count: 1
               capabilities: [gpu]
 
+  llm_server:
+    env_file:
+      - .env
+    build:
+      context: llm/server
+      dockerfile: Dockerfile
+      args:
+        PORT: ${LLM_SERVER_PORT}
+    image: llm_server_image
+    container_name: llm_server_container
+    environment:
+      - OLLAMA_HOST=ollama_container
+      - OLLAMA_PORT=11434
+      - LLM_SERVER_PORT=${LLM_SERVER_PORT}
+    ports:
+      - ${LLM_SERVER_PORT}:${LLM_SERVER_PORT}
+    volumes:
+      - ./llm/server:/app
+    restart: unless-stopped
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${LLM_SERVER_PORT}/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
 networks:
   app_network:
