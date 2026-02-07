@@ -1,35 +1,15 @@
-import { useState, useRef, useEffect } from 'react';
-import { X, Send, Bot, User } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { X, Send, Bot, Loader2, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-const PLACEHOLDER_MESSAGES = [
-    {
-        role: 'assistant',
-        content: `Hi! I'm your **IntelliTA** teaching assistant I can help you work through this activity.
+const LLM_SERVER_URL = 'http://localhost:8000';
 
-Here's a quick example of code formatted using markdown:
+const WELCOME_MESSAGE = {
+    role: 'assistant',
+    content: `Hi! I'm your **IntelliTA** teaching assistant. I can help you work through this activity.
 
-\`\`\`java
-public class Example {
-    public static void main(String[] args) {
-        System.out.println("Hello, World!");
-    }
-}
-\`\`\`
-
-Feel free to ask me for hints when you get stuck solving the lab!`
-    },
-    {
-        role: 'assistant',
-        content: `### Tips for this activity
-
-1. **Read the instructions** carefully before writing code
-2. Use the \`Verify Solution\` button at each checkpoint
-3. Pay attention to the *method signatures* and *return types*
-
-> Remember: understanding the problem is half the solution!`
-    }
-];
+Feel free to ask me for hints when you get stuck solving the lab!`,
+};
 
 const markdownComponents = {
     h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2 pb-1 border-b border-gray-600">{children}</h1>,
@@ -51,7 +31,7 @@ const markdownComponents = {
         );
     },
     pre: ({ children }) => (
-        <pre className="bg-gray-900 p-3 rounded-lg overflow-x-auto mb-2 border border-gray-700 text-xs">{children}</pre>
+        <pre className="bg-gray-900 p-3 rounded-lg mb-2 border border-gray-700 text-xs whitespace-pre-wrap break-words">{children}</pre>
     ),
     blockquote: ({ children }) => (
         <blockquote className="border-l-3 border-blue-500 pl-3 italic text-gray-400 mb-2 bg-gray-900/40 py-1 rounded-r text-sm">{children}</blockquote>
@@ -81,7 +61,7 @@ const userMarkdownComponents = {
         );
     },
     pre: ({ children }) => (
-        <pre className="bg-blue-800/50 p-3 rounded-lg overflow-x-auto mb-2 border border-blue-400/30 text-xs">{children}</pre>
+        <pre className="bg-blue-800/50 p-3 rounded-lg mb-2 border border-blue-400/30 text-xs whitespace-pre-wrap break-words">{children}</pre>
     ),
     blockquote: ({ children }) => (
         <blockquote className="border-l-3 border-blue-300 pl-3 italic text-blue-100 mb-2 bg-blue-800/30 py-1 rounded-r text-sm">{children}</blockquote>
@@ -91,24 +71,54 @@ const userMarkdownComponents = {
     ),
 };
 
-export default function HintChatSidebar({ isOpen, onClose, initialInput, onInitialInputConsumed }) {
-    const [messages, setMessages] = useState(PLACEHOLDER_MESSAGES);
+export default function HintChatSidebar({ isOpen, onClose, initialInput, onInitialInputConsumed, user, activityId, activityContext }) {
+    const [messages, setMessages] = useState([WELCOME_MESSAGE]);
     const [input, setInput] = useState('');
+    const [isStreaming, setIsStreaming] = useState(false);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [historyLoaded, setHistoryLoaded] = useState(false);
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
+    const abortControllerRef = useRef(null);
 
+    // Scroll to bottom when messages change
     useEffect(() => {
         if (isOpen && messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
         }
     }, [isOpen, messages]);
 
+    // Load history when sidebar opens
+    useEffect(() => {
+        if (!isOpen || historyLoaded || !user?.uid || !activityId) return;
+
+        async function loadHistory() {
+            setIsLoadingHistory(true);
+            try {
+                const res = await fetch(
+                    `${LLM_SERVER_URL}/hint/history?firebase_uid=${encodeURIComponent(user.uid)}&activity_id=${activityId}`
+                );
+                if (res.ok) {
+                    const history = await res.json();
+                    if (history.length > 0) {
+                        setMessages([WELCOME_MESSAGE, ...history]);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to load chat history:', err);
+            } finally {
+                setIsLoadingHistory(false);
+                setHistoryLoaded(true);
+            }
+        }
+        loadHistory();
+    }, [isOpen, historyLoaded, user, activityId]);
+
     // Consume initialInput when it changes
     useEffect(() => {
         if (initialInput) {
             setInput(`I need help understanding this code:\n\`\`\`\n${initialInput}\n\`\`\``);
             onInitialInputConsumed?.();
-            // Focus and select the prompt text so the user can type over it
             const promptLength = 'I need help understanding this code:'.length;
             setTimeout(() => {
                 if (inputRef.current) {
@@ -119,12 +129,120 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
         }
     }, [initialInput, onInitialInputConsumed]);
 
-    const handleSend = () => {
+    const handleSend = useCallback(async () => {
         const text = input.trim();
-        if (!text) return;
-        setMessages(prev => [...prev, { role: 'user', content: text }]);
+        if (!text || isStreaming) return;
+
+        if (!user?.uid || !activityId) {
+            setMessages(prev => [...prev, { role: 'user', content: text }, { role: 'assistant', content: 'Please log in to use the AI assistant.' }]);
+            setInput('');
+            return;
+        }
+
+        // Add user message and empty assistant message for streaming
+        setMessages(prev => [...prev, { role: 'user', content: text }, { role: 'assistant', content: '', isStreaming: true }]);
         setInput('');
-    };
+        setIsStreaming(true);
+
+        // Abort any previous request
+        abortControllerRef.current?.abort();
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
+        try {
+            const res = await fetch(`${LLM_SERVER_URL}/hint/chat`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    firebase_uid: user.uid,
+                    activity_id: parseInt(activityId),
+                    message: text,
+                    activity_context: activityContext || null,
+                }),
+                signal: controller.signal,
+            });
+
+            if (!res.ok) {
+                throw new Error(`Server error: ${res.status}`);
+            }
+
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed.startsWith('data: ')) continue;
+                    const payload = trimmed.slice(6);
+
+                    if (payload === '[DONE]') break;
+
+                    try {
+                        const parsed = JSON.parse(payload);
+                        if (parsed.error) {
+                            setMessages(prev => {
+                                const updated = [...prev];
+                                updated[updated.length - 1] = {
+                                    role: 'assistant',
+                                    content: `Error: ${parsed.error}`,
+                                };
+                                return updated;
+                            });
+                            break;
+                        }
+                        if (parsed.token) {
+                            setMessages(prev => {
+                                const updated = [...prev];
+                                const last = updated[updated.length - 1];
+                                updated[updated.length - 1] = {
+                                    ...last,
+                                    content: last.content + parsed.token,
+                                };
+                                return updated;
+                            });
+                        }
+                    } catch {
+                        // skip malformed JSON
+                    }
+                }
+            }
+        } catch (err) {
+            if (err.name !== 'AbortError') {
+                setMessages(prev => {
+                    const updated = [...prev];
+                    const last = updated[updated.length - 1];
+                    if (last && last.isStreaming && !last.content) {
+                        updated[updated.length - 1] = {
+                            role: 'assistant',
+                            content: 'Sorry, I couldn\'t connect to the AI service. Please try again later.',
+                        };
+                    }
+                    return updated;
+                });
+            }
+        } finally {
+            // Remove isStreaming flag from the last message
+            setMessages(prev => {
+                const updated = [...prev];
+                if (updated.length > 0) {
+                    const last = updated[updated.length - 1];
+                    if (last.isStreaming) {
+                        updated[updated.length - 1] = { role: last.role, content: last.content };
+                    }
+                }
+                return updated;
+            });
+            setIsStreaming(false);
+        }
+    }, [input, isStreaming, user, activityId, activityContext]);
 
     return (
         <>
@@ -160,24 +278,38 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                    {messages.map((msg, i) => (
-                        <div
-                            key={i}
-                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                            <div
-                                className={`max-w-[85%] rounded-xl px-4 py-3 ${
-                                    msg.role === 'user'
-                                        ? 'bg-blue-600 text-white rounded-br-sm'
-                                        : 'bg-gray-800 border border-gray-700 rounded-bl-sm'
-                                }`}
-                            >
-                                <ReactMarkdown components={msg.role === 'assistant' ? markdownComponents : userMarkdownComponents}>
-                                    {msg.content}
-                                </ReactMarkdown>
-                            </div>
+                    {isLoadingHistory ? (
+                        <div className="flex items-center justify-center py-8">
+                            <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
+                            <span className="ml-2 text-sm text-gray-400">Loading conversation...</span>
                         </div>
-                    ))}
+                    ) : (
+                        messages.map((msg, i) => (
+                            <div
+                                key={i}
+                                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                            >
+                                <div
+                                    className={`max-w-[85%] rounded-xl px-4 py-3 ${
+                                        msg.role === 'user'
+                                            ? 'bg-blue-600 text-white rounded-br-sm'
+                                            : 'bg-gray-800 border border-gray-700 rounded-bl-sm'
+                                    }`}
+                                >
+                                    {msg.isStreaming && !msg.content ? (
+                                        <div className="flex items-center gap-2">
+                                            <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                                            <span className="text-sm text-gray-400">Thinking...</span>
+                                        </div>
+                                    ) : (
+                                        <ReactMarkdown components={msg.role === 'assistant' ? markdownComponents : userMarkdownComponents}>
+                                            {msg.content}
+                                        </ReactMarkdown>
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    )}
                     <div ref={messagesEndRef} />
                 </div>
 
@@ -191,15 +323,26 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
                             onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                             placeholder="Ask for a hint..."
                             rows={input.includes('\n') ? Math.min(input.split('\n').length, 6) : 1}
-                            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors resize-none"
+                            disabled={isStreaming}
+                            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors resize-none disabled:opacity-50"
                         />
-                        <button
-                            onClick={handleSend}
-                            disabled={!input.trim()}
-                            className="p-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-600 border border-blue-500 disabled:border-gray-700 rounded-lg text-white transition-colors disabled:cursor-not-allowed"
-                        >
-                            <Send className="w-4 h-4" />
-                        </button>
+                        {isStreaming ? (
+                            <button
+                                onClick={() => abortControllerRef.current?.abort()}
+                                className="p-2 bg-red-600 hover:bg-red-500 border border-red-500 rounded-lg text-white transition-colors"
+                                title="Stop generating"
+                            >
+                                <Square className="w-4 h-4 fill-current" />
+                            </button>
+                        ) : (
+                            <button
+                                onClick={handleSend}
+                                disabled={!input.trim()}
+                                className="p-2 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-600 border border-blue-500 disabled:border-gray-700 rounded-lg text-white transition-colors disabled:cursor-not-allowed"
+                            >
+                                <Send className="w-4 h-4" />
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

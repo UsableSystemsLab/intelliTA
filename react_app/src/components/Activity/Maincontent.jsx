@@ -530,6 +530,12 @@ export default function Maincontent({ user }) {
                 onClose={() => setIsHintOpen(false)}
                 initialInput={selectedCodeForChat}
                 onInitialInputConsumed={() => setSelectedCodeForChat('')}
+                user={user}
+                activityId={activityId}
+                activityContext={
+                    (markdownContent ? `## Activity Instructions\n${markdownContent}\n\n` : '') +
+                    files.filter(f => f.name !== 'README.md').map(f => `## File: ${f.name}\n\`\`\`${f.language}\n${f.content}\n\`\`\``).join('\n\n')
+                }
             />
         </div>
     );
