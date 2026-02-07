@@ -12,62 +12,62 @@ Feel free to ask me for hints when you get stuck solving the lab!`,
 };
 
 const markdownComponents = {
-    h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2 pb-1 border-b border-gray-600">{children}</h1>,
-    h2: ({ children }) => <h2 className="text-base font-semibold text-white mb-2 mt-3">{children}</h2>,
-    h3: ({ children }) => <h3 className="text-sm font-semibold text-white mb-1 mt-2">{children}</h3>,
-    p: ({ children }) => <p className="text-gray-300 mb-2 text-sm leading-relaxed">{children}</p>,
-    ul: ({ children }) => <ul className="list-disc list-inside text-gray-300 mb-2 space-y-0.5 ml-2 text-sm">{children}</ul>,
-    ol: ({ children }) => <ol className="list-decimal list-inside text-gray-300 mb-2 space-y-0.5 ml-2 text-sm">{children}</ol>,
-    li: ({ children }) => <li className="text-gray-300 text-sm">{children}</li>,
+    h1: ({ children }) => <h1 className="text-xl font-bold text-white mb-2 pb-1 border-b border-gray-600">{children}</h1>,
+    h2: ({ children }) => <h2 className="text-lg font-semibold text-white mb-2 mt-3">{children}</h2>,
+    h3: ({ children }) => <h3 className="text-base font-semibold text-white mb-1 mt-2">{children}</h3>,
+    p: ({ children }) => <p className="text-gray-300 mb-2 text-base leading-relaxed">{children}</p>,
+    ul: ({ children }) => <ul className="list-disc list-inside text-gray-300 mb-2 space-y-0.5 ml-2 text-base">{children}</ul>,
+    ol: ({ children }) => <ol className="list-decimal list-inside text-gray-300 mb-2 space-y-0.5 ml-2 text-base">{children}</ol>,
+    li: ({ children }) => <li className="text-gray-300 text-base">{children}</li>,
     strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
     em: ({ children }) => <em className="italic text-gray-200">{children}</em>,
     code: ({ children, className }) => {
         const isBlock = className?.includes('language-');
         if (isBlock) {
-            return <code className="text-blue-300 text-xs font-mono">{children}</code>;
+            return <code className="text-blue-300 text-sm font-mono">{children}</code>;
         }
         return (
-            <code className="bg-gray-900/60 px-1 py-0.5 rounded text-blue-400 text-xs font-mono">{children}</code>
+            <code className="bg-gray-900/60 px-1 py-0.5 rounded text-blue-400 text-sm font-mono">{children}</code>
         );
     },
     pre: ({ children }) => (
-        <pre className="bg-gray-900 p-3 rounded-lg mb-2 border border-gray-700 text-xs whitespace-pre-wrap break-words">{children}</pre>
+        <pre className="bg-gray-900 p-3 rounded-lg mb-2 border border-gray-700 text-sm whitespace-pre-wrap break-words">{children}</pre>
     ),
     blockquote: ({ children }) => (
-        <blockquote className="border-l-3 border-blue-500 pl-3 italic text-gray-400 mb-2 bg-gray-900/40 py-1 rounded-r text-sm">{children}</blockquote>
+        <blockquote className="border-l-3 border-blue-500 pl-3 italic text-gray-400 mb-2 bg-gray-900/40 py-1 rounded-r text-base">{children}</blockquote>
     ),
     a: ({ href, children }) => (
-        <a href={href} className="text-blue-400 hover:underline text-sm" target="_blank" rel="noopener noreferrer">{children}</a>
+        <a href={href} className="text-blue-400 hover:underline text-base" target="_blank" rel="noopener noreferrer">{children}</a>
     ),
 };
 
 const userMarkdownComponents = {
-    h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2 pb-1 border-b border-blue-400/40">{children}</h1>,
-    h2: ({ children }) => <h2 className="text-base font-semibold text-white mb-2 mt-3">{children}</h2>,
-    h3: ({ children }) => <h3 className="text-sm font-semibold text-white mb-1 mt-2">{children}</h3>,
-    p: ({ children }) => <p className="text-white mb-2 text-sm leading-relaxed">{children}</p>,
-    ul: ({ children }) => <ul className="list-disc list-inside text-white mb-2 space-y-0.5 ml-2 text-sm">{children}</ul>,
-    ol: ({ children }) => <ol className="list-decimal list-inside text-white mb-2 space-y-0.5 ml-2 text-sm">{children}</ol>,
-    li: ({ children }) => <li className="text-white text-sm">{children}</li>,
+    h1: ({ children }) => <h1 className="text-xl font-bold text-white mb-2 pb-1 border-b border-blue-400/40">{children}</h1>,
+    h2: ({ children }) => <h2 className="text-lg font-semibold text-white mb-2 mt-3">{children}</h2>,
+    h3: ({ children }) => <h3 className="text-base font-semibold text-white mb-1 mt-2">{children}</h3>,
+    p: ({ children }) => <p className="text-white mb-2 text-base leading-relaxed">{children}</p>,
+    ul: ({ children }) => <ul className="list-disc list-inside text-white mb-2 space-y-0.5 ml-2 text-base">{children}</ul>,
+    ol: ({ children }) => <ol className="list-decimal list-inside text-white mb-2 space-y-0.5 ml-2 text-base">{children}</ol>,
+    li: ({ children }) => <li className="text-white text-base">{children}</li>,
     strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
     em: ({ children }) => <em className="italic text-blue-100">{children}</em>,
     code: ({ children, className }) => {
         const isBlock = className?.includes('language-');
         if (isBlock) {
-            return <code className="text-blue-100 text-xs font-mono">{children}</code>;
+            return <code className="text-blue-100 text-sm font-mono">{children}</code>;
         }
         return (
-            <code className="bg-blue-700/50 px-1 py-0.5 rounded text-blue-100 text-xs font-mono">{children}</code>
+            <code className="bg-blue-700/50 px-1 py-0.5 rounded text-blue-100 text-sm font-mono">{children}</code>
         );
     },
     pre: ({ children }) => (
-        <pre className="bg-blue-800/50 p-3 rounded-lg mb-2 border border-blue-400/30 text-xs whitespace-pre-wrap break-words">{children}</pre>
+        <pre className="bg-blue-800/50 p-3 rounded-lg mb-2 border border-blue-400/30 text-sm whitespace-pre-wrap break-words">{children}</pre>
     ),
     blockquote: ({ children }) => (
-        <blockquote className="border-l-3 border-blue-300 pl-3 italic text-blue-100 mb-2 bg-blue-800/30 py-1 rounded-r text-sm">{children}</blockquote>
+        <blockquote className="border-l-3 border-blue-300 pl-3 italic text-blue-100 mb-2 bg-blue-800/30 py-1 rounded-r text-base">{children}</blockquote>
     ),
     a: ({ href, children }) => (
-        <a href={href} className="text-blue-100 underline hover:text-white text-sm" target="_blank" rel="noopener noreferrer">{children}</a>
+        <a href={href} className="text-blue-100 underline hover:text-white text-base" target="_blank" rel="noopener noreferrer">{children}</a>
     ),
 };
 
@@ -256,7 +256,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
 
             {/* Sidebar */}
             <div
-                className={`fixed top-10 right-0 bottom-0 w-[400px] bg-gray-900 border-l border-gray-700 z-40 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
+                className={`fixed top-10 right-0 bottom-0 w-[500px] bg-gray-900 border-l border-gray-700 z-40 flex flex-col shadow-2xl transition-transform duration-300 ease-in-out ${
                     isOpen ? 'translate-x-0' : 'translate-x-full'
                 }`}
             >
@@ -266,7 +266,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
                         <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center">
                             <Bot className="w-4 h-4 text-blue-400" />
                         </div>
-                        <span className="text-sm font-semibold text-white">AI Assistant</span>
+                        <span className="text-base font-semibold text-white">AI Assistant</span>
                     </div>
                     <button
                         onClick={onClose}
@@ -299,7 +299,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
                                     {msg.isStreaming && !msg.content ? (
                                         <div className="flex items-center gap-2">
                                             <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
-                                            <span className="text-sm text-gray-400">Thinking...</span>
+                                            <span className="text-base text-gray-400">Thinking...</span>
                                         </div>
                                     ) : (
                                         <ReactMarkdown components={msg.role === 'assistant' ? markdownComponents : userMarkdownComponents}>
@@ -324,7 +324,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
                             placeholder="Ask for a hint..."
                             rows={input.includes('\n') ? Math.min(input.split('\n').length, 6) : 1}
                             disabled={isStreaming}
-                            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors resize-none disabled:opacity-50"
+                            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-base text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors resize-none disabled:opacity-50"
                         />
                         {isStreaming ? (
                             <button
