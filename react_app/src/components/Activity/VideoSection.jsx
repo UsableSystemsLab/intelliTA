@@ -72,7 +72,7 @@ export default function VideoSection({
                     <video
                         ref={videoRef}
                         className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${activeCheckpoint ? 'opacity-30 blur-sm' : 'opacity-100'}`}
-                        src={activity?.video_url || "https://intellita-media-storage.s3.us-east-1.amazonaws.com/videos/1769891714792-cpit_252_-_lab_1__object-oriented_programming_overview.mp4"}
+                        src={activity?.video_url || "https://intellita.s3.eu-north-1.amazonaws.com/videos/1770476743889-cpit_252_-_lab_1__object-oriented_programming_overview.mp4"}
                         onTimeUpdate={onTimeUpdate}
                         onLoadedMetadata={(e) => onDurationChange(e.currentTarget.duration)}
                         onPlay={onPlay}
