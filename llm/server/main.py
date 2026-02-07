@@ -277,13 +277,20 @@ async def generate(request: GenerateRequest) -> Union[GenerateResponse, Streamin
                 raise HTTPException(status_code=503, detail=f"Ollama service error: {str(e)}")
 
 
-SYSTEM_PROMPT_TEMPLATE = """You are IntelliTA, a helpful teaching assistant for a programming course. \
-Your role is to guide students through coding activities by providing hints, explanations, and encouragement. \
-Do NOT give away full solutions directly — instead, help students think through the problem step by step.
-
-CRITICAL: You MUST keep responses very short (1-2 sentences only). No bullet points, no lists, no detailed explanations. Just one brief hint or question to guide the student.
+SYSTEM_PROMPT_TEMPLATE = """You are IntelliTA, a programming teaching assistant.
 
 {activity_context}"""
+
+SHORT_WRAPPER = """[INSTRUCTION: Reply in 1-3 plain sentences. No bullet points, no numbered lists, no code blocks.]
+
+{message}"""
+
+LONG_WRAPPER = """[INSTRUCTION: The student shared a longer piece of code. Explain what each method does briefly. Use plain text. You may write up to 6-8 sentences. No bullet points, no numbered lists, no code blocks. Do NOT explain line by line syntax, just summarize what each part does in plain words.]
+
+{message}"""
+
+# Messages longer than this threshold get the detailed wrapper
+LONG_MESSAGE_THRESHOLD = 200
 
 
 class HintChatRequest(BaseModel):
@@ -293,14 +300,71 @@ class HintChatRequest(BaseModel):
     activity_context: Optional[str] = None
 
 
+OFF_TOPIC_RESPONSE = "Sorry, I can only help with programming-related questions."
+
+CLASSIFY_PROMPT = """Look at the conversation below. Is the LAST user message related to programming, coding, software development, or a follow-up to a previous programming discussion?
+Reply with ONLY one word: YES or NO.
+
+{context}Last user message: "{message}"
+
+Answer:"""
+
+
+async def is_programming_related(message: str, history: list[dict]) -> bool:
+    """Ask the LLM to classify whether the message is programming-related."""
+    # Include last few messages for context so follow-ups are understood
+    context = ""
+    recent = [m for m in history if m["role"] in ("user", "assistant")][-4:]
+    if recent:
+        context = "Recent conversation:\n"
+        for m in recent:
+            context += f"{m['role']}: {m['content'][:150]}\n"
+        context += "\n"
+
+    payload = {
+        "model": HINT_MODEL,
+        "prompt": CLASSIFY_PROMPT.format(message=message, context=context),
+        "stream": False,
+        "options": {"temperature": 0.0, "num_predict": 5},
+    }
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(f"{OLLAMA_BASE_URL}/api/generate", json=payload)
+            resp.raise_for_status()
+            answer = resp.json().get("response", "").strip().upper()
+            return answer.startswith("YES")
+    except Exception:
+        # If classification fails, allow the message through
+        return True
+
+
 @app.post("/hint/chat")
 async def hint_chat(request: HintChatRequest):
     conversation_id = await get_or_create_conversation(
         request.firebase_uid, request.activity_id
     )
 
-    # Load previous messages from DB
+    # Load history early so classifier can use it for context
     history = await get_messages(conversation_id)
+
+    # Save user message to DB
+    await save_message(conversation_id, "user", request.message)
+
+    # Classify: reject off-topic messages before generating
+    # Skip classification for short follow-ups in active conversations
+    # (e.g. "I don't understand", "explain more", "give me an example")
+    has_history = any(m["role"] == "assistant" for m in history)
+    is_short_followup = has_history and len(request.message.split()) <= 10
+    is_on_topic = is_short_followup or await is_programming_related(request.message, history)
+    if not is_on_topic:
+        # Save the canned refusal and return immediately
+        await save_message(conversation_id, "assistant", OFF_TOPIC_RESPONSE)
+
+        async def off_topic_stream():
+            yield f"data: {json.dumps({'token': OFF_TOPIC_RESPONSE})}\n\n"
+            yield "data: [DONE]\n\n"
+
+        return StreamingResponse(off_topic_stream(), media_type="text/event-stream")
 
     # Build system prompt
     activity_section = ""
@@ -313,10 +377,11 @@ async def hint_chat(request: HintChatRequest):
     for msg in history:
         if msg["role"] != "system":
             ollama_messages.append({"role": msg["role"], "content": msg["content"]})
-    ollama_messages.append({"role": "user", "content": request.message})
-
-    # Save user message to DB
-    await save_message(conversation_id, "user", request.message)
+    # Pick wrapper based on message length
+    is_long = len(request.message) > LONG_MESSAGE_THRESHOLD
+    wrapper = LONG_WRAPPER if is_long else SHORT_WRAPPER
+    wrapped_message = wrapper.format(message=request.message)
+    ollama_messages.append({"role": "user", "content": wrapped_message})
 
     payload = {
         "model": HINT_MODEL,
@@ -324,7 +389,7 @@ async def hint_chat(request: HintChatRequest):
         "stream": True,
         "options": {"temperature": 0.7},
     }
-    # Stream the response, not sending it as a whole responese
+
     async def stream_response():
         full_response = ""
         try:
