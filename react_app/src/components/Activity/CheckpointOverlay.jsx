@@ -1,10 +1,13 @@
-import { CheckCircle, FastForward, Code2 } from 'lucide-react';
+import { CheckCircle, FastForward, Code2, Lightbulb, Loader2 } from 'lucide-react';
 
 export default function CheckpointOverlay({
     activeCheckpoint,
     feedback,
     onCheckSolution,
-    onSkip
+    onSkip,
+    onHint,
+    hintText,
+    isLoadingHint
 }) {
     if (!activeCheckpoint) return null;
 
@@ -41,6 +44,19 @@ export default function CheckpointOverlay({
                         </button>
 
                         <button
+                            onClick={onHint}
+                            disabled={isLoadingHint}
+                            className="w-full py-2.5 px-4 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 border border-amber-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {isLoadingHint ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Lightbulb className="w-4 h-4" />
+                            )}
+                            {isLoadingHint ? 'Generating Hint...' : 'Hint'}
+                        </button>
+
+                        <button
                             onClick={onSkip}
                             className="w-full py-2.5 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 border border-red-500/30"
                         >
@@ -48,6 +64,16 @@ export default function CheckpointOverlay({
                             Skip
                         </button>
                     </div>
+
+                    {hintText && (
+                        <div className="mt-4 p-3 rounded-xl text-sm text-left bg-amber-500/10 text-amber-200 border border-amber-500/30">
+                            <div className="flex items-center gap-2 mb-1.5 text-amber-400 font-semibold">
+                                <Lightbulb className="w-4 h-4" />
+                                Hint
+                            </div>
+                            {hintText}
+                        </div>
+                    )}
 
                     {feedback && (
                         <div className={`mt-4 p-3 rounded-xl text-sm font-medium ${

@@ -149,6 +149,8 @@ export default function Maincontent({ user }) {
     const [markdownContent, setMarkdownContent] = useState('');
     const [isHintOpen, setIsHintOpen] = useState(false);
     const [selectedCodeForChat, setSelectedCodeForChat] = useState('');
+    const [checkpointHintText, setCheckpointHintText] = useState('');
+    const [isLoadingCheckpointHint, setIsLoadingCheckpointHint] = useState(false);
 
     const handleAskAI = useCallback((text) => {
         setSelectedCodeForChat(text);
@@ -186,6 +188,41 @@ export default function Maincontent({ user }) {
         onSeek: handleSeek,
         INITIAL_FILES: initialFiles
     });
+
+    const handleCheckpointHint = useCallback(async () => {
+        if (!activeCheckpoint || isLoadingCheckpointHint) return;
+        setIsLoadingCheckpointHint(true);
+        try {
+            const fileName = activeCheckpoint.fileName || activeFile.name;
+            const targetFile = files.find(f => f.name === fileName) || activeFile;
+            const res = await fetch('http://localhost:8000/hint/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    firebase_uid: user?.uid || 'anonymous',
+                    activity_id: parseInt(activityId) || 0,
+                    checkpoint_instruction: activeCheckpoint.instruction,
+                    student_code: targetFile.content,
+                    file_name: targetFile.name,
+                }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setCheckpointHintText(data.hint || 'No hint available.');
+            } else {
+                setCheckpointHintText('Failed to generate hint. Please try again.');
+            }
+        } catch {
+            setCheckpointHintText('Hint service is unavailable. Please try again later.');
+        } finally {
+            setIsLoadingCheckpointHint(false);
+        }
+    }, [activeCheckpoint, isLoadingCheckpointHint, activeFile, files, user, activityId]);
+
+    // Clear hint when checkpoint changes
+    useEffect(() => {
+        setCheckpointHintText('');
+    }, [activeCheckpoint?.id]);
 
     useEffect(() => {
         if (!activityId) {
@@ -511,6 +548,9 @@ export default function Maincontent({ user }) {
                             feedback={feedback}
                             onCheckSolution={checkSolution}
                             onSkip={skipCheckpoint}
+                            onHint={handleCheckpointHint}
+                            hintText={checkpointHintText}
+                            isLoadingHint={isLoadingCheckpointHint}
                         />
                     )}
                 />
