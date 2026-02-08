@@ -2,13 +2,16 @@ from fastapi import APIRouter, Query
 from fastapi.responses import StreamingResponse
 import httpx
 import json
+import logging
 
-from config import OLLAMA_BASE_URL, HINT_MODEL, LONG_MESSAGE_THRESHOLD
+logger = logging.getLogger("uvicorn")
+
+from config import OLLAMA_BASE_URL, HINT_MODEL, LONG_MESSAGE_THRESHOLD, MAX_HISTORY_MESSAGES
 from database import get_or_create_conversation, save_message, get_messages
-from models import HintChatRequest
+from models import HintChatRequest, HintGenerateRequest
 from prompts import (
     SYSTEM_PROMPT_TEMPLATE, SHORT_WRAPPER, LONG_WRAPPER,
-    CLASSIFY_PROMPT, OFF_TOPIC_RESPONSE,
+    CLASSIFY_PROMPT, OFF_TOPIC_RESPONSE, HINT_WRAPPER,
 )
 
 router = APIRouter()
@@ -36,9 +39,12 @@ async def is_programming_related(message: str, history: list[dict]) -> bool:
             resp = await client.post(f"{OLLAMA_BASE_URL}/api/generate", json=payload)
             resp.raise_for_status()
             answer = resp.json().get("response", "").strip().upper()
-            return answer.startswith("YES")
-    except Exception:
+            result = answer.startswith("YES")
+            logger.info(f"Classifier input: '{message}' | Raw answer: '{answer}' | Is on-topic: {result}")
+            return result
+    except Exception as e:
         # If classification fails, allow the message through
+        logger.warning(f"Classifier failed: {e}")
         return True
 
 
@@ -55,11 +61,9 @@ async def hint_chat(request: HintChatRequest):
     await save_message(conversation_id, "user", request.message)
 
     # Classify: reject off-topic messages before generating
-    # Skip classification for short follow-ups in active conversations
-    # (e.g. "I don't understand", "explain more", "give me an example")
-    has_history = any(m["role"] == "assistant" for m in history)
-    is_short_followup = has_history and len(request.message.split()) <= 10
-    is_on_topic = is_short_followup or await is_programming_related(request.message, history)
+    # Always run the classifier — no shortcuts based on message length
+    # Old code was skipping classifier if the message length was < 10. Now it checks every message
+    is_on_topic = await is_programming_related(request.message, history)
     if not is_on_topic:
         # Save the canned refusal and return immediately
         await save_message(conversation_id, "assistant", OFF_TOPIC_RESPONSE)
@@ -76,11 +80,11 @@ async def hint_chat(request: HintChatRequest):
         activity_section = f"\n\nHere is the current activity context:\n{request.activity_context}"
     system_prompt = SYSTEM_PROMPT_TEMPLATE.format(activity_context=activity_section)
 
-    # Build messages array for Ollama
+    # Build messages array for Ollama (only use recent history to keep context focused)
     ollama_messages = [{"role": "system", "content": system_prompt}]
-    for msg in history:
-        if msg["role"] != "system":
-            ollama_messages.append({"role": msg["role"], "content": msg["content"]})
+    recent_history = [m for m in history if m["role"] != "system"][-MAX_HISTORY_MESSAGES:]
+    for msg in recent_history:
+        ollama_messages.append({"role": msg["role"], "content": msg["content"]})
     # Pick wrapper based on message length
     is_long = len(request.message) > LONG_MESSAGE_THRESHOLD
     wrapper = LONG_WRAPPER if is_long else SHORT_WRAPPER
@@ -123,6 +127,35 @@ async def hint_chat(request: HintChatRequest):
             yield "data: [DONE]\n\n"
 
     return StreamingResponse(stream_response(), media_type="text/event-stream")
+
+
+@router.post("/hint/generate")
+async def hint_generate(request: HintGenerateRequest):
+    """Generate a focused hint for a checkpoint challenge (non-streaming)."""
+    prompt = HINT_WRAPPER.format(
+        checkpoint_instruction=request.checkpoint_instruction,
+        student_code=request.student_code,
+        file_name=request.file_name,
+    )
+
+    payload = {
+        "model": HINT_MODEL,
+        "prompt": prompt,
+        "stream": False,
+        "options": {"temperature": 0.7, "num_predict": 300},
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(f"{OLLAMA_BASE_URL}/api/generate", json=payload)
+            resp.raise_for_status()
+            hint_text = resp.json().get("response", "").strip()
+            return {"hint": hint_text}
+    except httpx.ConnectError:
+        return {"hint": "Hint service is currently unavailable. Please try again later."}
+    except Exception as e:
+        logger.error(f"Hint generation failed: {e}")
+        return {"hint": "Failed to generate hint. Please try again."}
 
 
 @router.get("/hint/history")

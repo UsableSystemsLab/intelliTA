@@ -18,5 +18,6 @@ OLLAMA_PORT = os.environ["OLLAMA_PORT"]
 OLLAMA_BASE_URL = f"http://{OLLAMA_HOST}:{OLLAMA_PORT}"
 HINT_MODEL = os.environ["OLLAMA_MODEL"]
 
-# - Thresholds 
+# - Thresholds
 LONG_MESSAGE_THRESHOLD = 200
+MAX_HISTORY_MESSAGES = 10  # Only send the last N messages to the LLM to keep context focused
