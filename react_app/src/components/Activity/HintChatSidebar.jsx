@@ -4,6 +4,12 @@ import ReactMarkdown from 'react-markdown';
 
 const LLM_SERVER_URL = 'http://localhost:8000';
 
+const AVAILABLE_MODELS = [
+    { id: 'qwen2.5-coder:7b', label: 'Qwen Coder' },
+    { id: 'codellama:7b', label: 'Code Llama' },
+    // Future: { id: 'openai:gpt-4', label: 'GPT-4', requiresApiKey: true }
+];
+
 const WELCOME_MESSAGE = {
     role: 'assistant',
     content: `Hi! I'm your **IntelliTA** teaching assistant. I can help you work through this activity.
@@ -74,6 +80,7 @@ const userMarkdownComponents = {
 export default function HintChatSidebar({ isOpen, onClose, initialInput, onInitialInputConsumed, user, activityId, activityContext }) {
     const [messages, setMessages] = useState([WELCOME_MESSAGE]);
     const [input, setInput] = useState('');
+    const [selectedModel, setSelectedModel] = useState(AVAILABLE_MODELS[0].id);
     const [isStreaming, setIsStreaming] = useState(false);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const [historyLoaded, setHistoryLoaded] = useState(false);
@@ -158,6 +165,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
                     activity_id: parseInt(activityId),
                     message: text,
                     activity_context: activityContext || null,
+                    model: selectedModel,
                 }),
                 signal: controller.signal,
             });
@@ -242,7 +250,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
             });
             setIsStreaming(false);
         }
-    }, [input, isStreaming, user, activityId, activityContext]);
+    }, [input, isStreaming, user, activityId, activityContext, selectedModel]);
 
     return (
         <>
@@ -268,12 +276,23 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
                         </div>
                         <span className="text-base font-semibold text-white">AI Assistant</span>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-800 transition-colors"
-                    >
-                        <X className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <select
+                            value={selectedModel}
+                            onChange={(e) => setSelectedModel(e.target.value)}
+                            className="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg px-2 py-1 outline-none focus:border-blue-500 transition-colors cursor-pointer"
+                        >
+                            {AVAILABLE_MODELS.map((m) => (
+                                <option key={m.id} value={m.id}>{m.label}</option>
+                            ))}
+                        </select>
+                        <button
+                            onClick={onClose}
+                            className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-800 transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Messages */}

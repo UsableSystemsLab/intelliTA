@@ -40,6 +40,7 @@ class HintChatRequest(BaseModel):
     activity_id: int
     message: str
     activity_context: Optional[str] = None
+    model: Optional[str] = None
 
 
 class HintGenerateRequest(BaseModel):

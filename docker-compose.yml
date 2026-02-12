@@ -113,8 +113,6 @@ services:
     build:
       context: llm
       dockerfile: Dockerfile
-      args:
-        OLLAMA_MODEL: ${OLLAMA_MODEL}
     container_name: ollama_container
     ports:
       - "11434:11434"

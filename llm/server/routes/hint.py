@@ -91,8 +91,10 @@ async def hint_chat(request: HintChatRequest):
     wrapped_message = wrapper.format(message=request.message)
     ollama_messages.append({"role": "user", "content": wrapped_message})
 
+    chat_model = request.model or HINT_MODEL
+    logger.info(f"Hint chat using model: {chat_model}")
     payload = {
-        "model": HINT_MODEL,
+        "model": chat_model,
         "messages": ollama_messages,
         "stream": True,
         "options": {"temperature": 0.7},
