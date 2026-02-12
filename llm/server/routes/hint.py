@@ -43,9 +43,9 @@ async def is_programming_related(message: str, history: list[dict]) -> bool:
             logger.info(f"Classifier input: '{message}' | Raw answer: '{answer}' | Is on-topic: {result}")
             return result
     except Exception as e:
-        # If classification fails, allow the message through
+        # Classifeir now returns false when an exception thrown
         logger.warning(f"Classifier failed: {e}")
-        return True
+        return False
 
 
 @router.post("/hint/chat")
