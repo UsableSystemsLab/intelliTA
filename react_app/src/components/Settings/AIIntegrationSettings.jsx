@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Eye, EyeOff, Loader2, CheckCircle, XCircle, Info } from 'lucide-react';
 
 const AIIntegrationSettings = () => {
   const [modelName, setModelName] = useState('');
@@ -31,6 +31,19 @@ const AIIntegrationSettings = () => {
       <div>
         <h2 className="text-xl font-semibold text-gray-100 mb-1">AI Integration</h2>
         <p className="text-gray-400 text-sm">Configure your API key for the AI-powered hint sidebar chat.</p>
+      </div>
+
+      <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+        <Info className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
+        <div className="text-sm text-gray-300 leading-relaxed">
+          <p className="mb-1">
+            Connect your own AI model to power the <span className="text-blue-400 font-medium">Hint Chat</span> in activities.
+            Enter the model name and its API key below, then hit Save to validate your credentials.
+          </p>
+          <p className="text-gray-400">
+            Once saved, the AI assistant will use your model to generate personalized hints and guidance while you work through activities. Your API key is stored securely and only used for hint generation.
+          </p>
+        </div>
       </div>
 
       <div className="space-y-2">
