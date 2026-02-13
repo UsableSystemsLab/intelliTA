@@ -276,23 +276,12 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
                         </div>
                         <span className="text-base font-semibold text-white">AI Assistant</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <select
-                            value={selectedModel}
-                            onChange={(e) => setSelectedModel(e.target.value)}
-                            className="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg px-2 py-1 outline-none focus:border-blue-500 transition-colors cursor-pointer"
-                        >
-                            {AVAILABLE_MODELS.map((m) => (
-                                <option key={m.id} value={m.id}>{m.label}</option>
-                            ))}
-                        </select>
-                        <button
-                            onClick={onClose}
-                            className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-800 transition-colors"
-                        >
-                            <X className="w-4 h-4" />
-                        </button>
-                    </div>
+                    <button
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-white p-1 rounded-lg hover:bg-gray-800 transition-colors"
+                    >
+                        <X className="w-4 h-4" />
+                    </button>
                 </div>
 
                 {/* Messages */}
@@ -334,17 +323,26 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
 
                 {/* Input area */}
                 <div className="p-3 border-t border-gray-700 shrink-0 bg-gray-900">
-                    <div className="flex items-start gap-2">
-                        <textarea
-                            ref={inputRef}
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                            placeholder="Ask for a hint..."
-                            rows={input.includes('\n') ? Math.min(input.split('\n').length, 6) : 1}
-                            disabled={isStreaming}
-                            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-base text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors resize-none disabled:opacity-50"
-                        />
+                    <textarea
+                        ref={inputRef}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                        placeholder="Ask for a hint..."
+                        rows={input.includes('\n') ? Math.min(input.split('\n').length, 6) : 1}
+                        disabled={isStreaming}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-base text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors resize-none disabled:opacity-50 mb-2"
+                    />
+                    <div className="flex items-center justify-between">
+                        <select
+                            value={selectedModel}
+                            onChange={(e) => setSelectedModel(e.target.value)}
+                            className="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg px-2 py-1 outline-none focus:border-blue-500 transition-colors cursor-pointer"
+                        >
+                            {AVAILABLE_MODELS.map((m) => (
+                                <option key={m.id} value={m.id}>{m.label}</option>
+                            ))}
+                        </select>
                         {isStreaming ? (
                             <button
                                 onClick={() => abortControllerRef.current?.abort()}
