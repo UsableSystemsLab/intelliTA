@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { User, Shield, PersonStanding , Award, LogOut } from 'lucide-react';
+import { User, Shield, PersonStanding , Award, LogOut, Bot } from 'lucide-react';
 import ProfileSettings from './ProfileSettings';
+import AIIntegrationSettings from './AIIntegrationSettings';
 // a placeholder for possible settings we would have settings
 const SecuritySettings = () => <div className="text-gray-400">Didnt do it yet</div>;
 const AccessibilitySettings = () => <div className="text-gray-400">Didnt do it yet</div>;
@@ -17,6 +18,7 @@ const SettingsLayout = ({ user }) => {
     { id: 'security', label: 'Security', icon: Shield, component: SecuritySettings },
     { id: 'accessibility', label: 'Accessibility', icon: PersonStanding, component: AccessibilitySettings },
     { id: 'progress', label: 'Progress', icon: Award, component: ProgressSettings },
+    { id: 'ai-integration', label: 'AI Integration', icon: Bot, component: AIIntegrationSettings },
   ];
 
   const ActiveComponent = menuItems.find(item => item.id === activeTab)?.component || ProfileSettings;
