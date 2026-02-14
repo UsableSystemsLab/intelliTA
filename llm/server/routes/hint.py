@@ -1,14 +1,14 @@
 from fastapi import APIRouter, Query
 from fastapi.responses import StreamingResponse
-import httpx
 import json
 import logging
 
 logger = logging.getLogger("uvicorn")
 
-from config import OLLAMA_BASE_URL, HINT_MODEL, LONG_MESSAGE_THRESHOLD, MAX_HISTORY_MESSAGES
+from config import GROQ_HINT_MODEL, LONG_MESSAGE_THRESHOLD, MAX_HISTORY_MESSAGES
 from database import get_or_create_conversation, save_message, get_messages
 from models import HintChatRequest, HintGenerateRequest
+from groq_client import get_groq_client
 from prompts import (
     SYSTEM_PROMPT_TEMPLATE, SHORT_WRAPPER, LONG_WRAPPER,
     CLASSIFY_PROMPT, OFF_TOPIC_RESPONSE, HINT_WRAPPER,
@@ -28,22 +28,22 @@ async def is_programming_related(message: str, history: list[dict]) -> bool:
             context += f"{m['role']}: {m['content'][:150]}\n"
         context += "\n"
 
-    payload = {
-        "model": HINT_MODEL,
-        "prompt": CLASSIFY_PROMPT.format(message=message, context=context),
-        "stream": False,
-        "options": {"temperature": 0.1, "num_predict": 100},
-    }
+    prompt_text = CLASSIFY_PROMPT.format(message=message, context=context)
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(f"{OLLAMA_BASE_URL}/api/generate", json=payload)
-            resp.raise_for_status()
-            answer = resp.json().get("response", "").strip().upper()
-            result = answer.startswith("YES")
-            logger.info(f"Classifier input: '{message}' | Raw answer: '{answer}' | Is on-topic: {result}")
-            return result
+        client = get_groq_client()
+        resp = await client.chat.completions.create(
+            model=GROQ_HINT_MODEL,
+            messages=[{"role": "user", "content": prompt_text}],
+            temperature=0.1,
+            max_tokens=100,
+            stream=False,
+        )
+        answer = resp.choices[0].message.content.strip().upper()
+        result = answer.startswith("YES")
+        logger.info(f"Classifier input: '{message}' | Raw answer: '{answer}' | Is on-topic: {result}")
+        return result
     except Exception as e:
-        # Classifeir now returns false when an exception thrown
+        # Classifier now returns false when an exception thrown
         logger.warning(f"Classifier failed: {e}")
         return False
 
@@ -62,7 +62,6 @@ async def hint_chat(request: HintChatRequest):
 
     # Classify: reject off-topic messages before generating
     # Always run the classifier — no shortcuts based on message length
-    # Old code was skipping classifier if the message length was < 10. Now it checks every message
     is_on_topic = await is_programming_related(request.message, history)
     if not is_on_topic:
         # Save the canned refusal and return immediately
@@ -80,48 +79,38 @@ async def hint_chat(request: HintChatRequest):
         activity_section = f"\n\nHere is the current activity context:\n{request.activity_context}"
     system_prompt = SYSTEM_PROMPT_TEMPLATE.format(activity_context=activity_section)
 
-    # Build messages array for Ollama (only use recent history to keep context focused)
-    ollama_messages = [{"role": "system", "content": system_prompt}]
+    # Build messages array (only use recent history to keep context focused)
+    messages = [{"role": "system", "content": system_prompt}]
     recent_history = [m for m in history if m["role"] != "system"][-MAX_HISTORY_MESSAGES:]
     for msg in recent_history:
-        ollama_messages.append({"role": msg["role"], "content": msg["content"]})
+        messages.append({"role": msg["role"], "content": msg["content"]})
     # Pick wrapper based on message length
     is_long = len(request.message) > LONG_MESSAGE_THRESHOLD
     wrapper = LONG_WRAPPER if is_long else SHORT_WRAPPER
     wrapped_message = wrapper.format(message=request.message)
-    ollama_messages.append({"role": "user", "content": wrapped_message})
+    messages.append({"role": "user", "content": wrapped_message})
 
-    chat_model = request.model or HINT_MODEL
+    chat_model = request.model or GROQ_HINT_MODEL
     logger.info(f"Hint chat using model: {chat_model}")
-    payload = {
-        "model": chat_model,
-        "messages": ollama_messages,
-        "stream": True,
-        "options": {"temperature": 0.7},
-    }
 
     async def stream_response():
         full_response = ""
         try:
-            async with httpx.AsyncClient(timeout=300.0) as client:
-                async with client.stream(
-                    "POST", f"{OLLAMA_BASE_URL}/api/chat", json=payload
-                ) as response:
-                    async for line in response.aiter_lines():
-                        if not line:
-                            continue
-                        try:
-                            data = json.loads(line)
-                            token = data.get("message", {}).get("content", "")
-                            if token:
-                                full_response += token
-                                yield f"data: {json.dumps({'token': token})}\n\n"
-                            if data.get("done"):
-                                break
-                        except json.JSONDecodeError:
-                            continue
-        except httpx.ConnectError:
-            yield f"data: {json.dumps({'error': 'Ollama service unavailable'})}\n\n"
+            client = get_groq_client()
+            stream = await client.chat.completions.create(
+                model=chat_model,
+                messages=messages,
+                temperature=0.7,
+                stream=True,
+            )
+            async for chunk in stream:
+                token = chunk.choices[0].delta.content or ""
+                if token:
+                    full_response += token
+                    yield f"data: {json.dumps({'token': token})}\n\n"
+        except Exception as e:
+            logger.error(f"Groq streaming error: {e}")
+            yield f"data: {json.dumps({'error': 'Hint service unavailable'})}\n\n"
         finally:
             # Save the complete assistant response
             if full_response:
@@ -140,24 +129,23 @@ async def hint_generate(request: HintGenerateRequest):
         file_name=request.file_name,
     )
 
-    payload = {
-        "model": HINT_MODEL,
-        "prompt": prompt,
-        "stream": False,
-        "options": {"temperature": 0.7, "num_predict": 300},
-    }
-
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(f"{OLLAMA_BASE_URL}/api/generate", json=payload)
-            resp.raise_for_status()
-            hint_text = resp.json().get("response", "").strip()
-            return {"hint": hint_text}
-    except httpx.ConnectError:
-        return {"hint": "Hint service is currently unavailable. Please try again later."}
+        client = get_groq_client()
+        resp = await client.chat.completions.create(
+            model=GROQ_HINT_MODEL,
+            messages=[
+                {"role": "system", "content": "You are a programming teaching assistant. Follow the instructions exactly."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.7,
+            max_tokens=300,
+            stream=False,
+        )
+        hint_text = resp.choices[0].message.content.strip()
+        return {"hint": hint_text}
     except Exception as e:
         logger.error(f"Hint generation failed: {e}")
-        return {"hint": "Failed to generate hint. Please try again."}
+        return {"hint": "Hint service is currently unavailable. Please try again later."}
 
 
 @router.get("/hint/history")
