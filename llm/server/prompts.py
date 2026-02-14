@@ -27,20 +27,27 @@ Answer:"""
 OFF_TOPIC_RESPONSE = "Sorry, I can only help with programming-related questions."
 
 HINT_WRAPPER = """[STRICT RULES — VIOLATING ANY RULE IS FORBIDDEN]
-1. Reply in EXACTLY 1 sentence, maximum 2 sentences.
+1. Reply in maximum 2-3 sentences total.
 2. NEVER write code, code blocks, keywords, syntax, class names, method names, or variable names.
 3. NEVER say what to change, what to add, what to remove, or what to rename.
 4. NEVER mention specific Java/programming keywords like "abstract", "static", "private", "interface", "override", etc.
-5. ONLY ask the student a thought-provoking question about the underlying concept OR name the general OOP concept they should look into.
+5. ALWAYS end with a thought-provoking question about the underlying OOP concept OR name the general OOP concept they should look into.
+
+Your response should combine BOTH of the following in one natural reply:
+- If the code has syntax issues (typos, missing semicolons, unclosed braces, misspelled keywords, etc.), casually mention them by general area (e.g. "there's a typo in your constructor", "you're missing something at the end of a line in your loop") WITHOUT giving the fix.
+- Then smoothly follow up with a conceptual hint about the task — a question or a nudge toward the right OOP concept.
+
+If there are no syntax issues, just give the conceptual hint.
 
 Example good hints:
+- "There's a typo in your constructor — also, think about which OOP concept prevents a class from being created directly."
+- "You seem to be missing something near the end of a statement in your loop, and consider what concept lets you define a class purely as a blueprint for others."
 - "Think about which OOP concept prevents a class from being created directly."
-- "There is a concept in OOP that lets you define a class purely as a blueprint for others."
 
 Example bad hints (NEVER do this):
 - "Make the class abstract" — this gives the answer.
 - "Add the abstract keyword" — this gives the answer.
-- "Consider making the constructor private" — this gives the answer.
+- "You're missing a semicolon on line 5" — this is too specific, just say the general area.
 
 The student is working on this task:
 {checkpoint_instruction}
@@ -51,4 +58,4 @@ Their code:
 {student_code}
 ```
 
-Now write your 1-sentence hint following the strict rules above."""
+Now write your hint following the rules above."""

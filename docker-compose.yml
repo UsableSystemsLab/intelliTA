@@ -152,6 +152,8 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - GROQ_API_KEY=${GROQ_API_KEY}
       - GROQ_HINT_MODEL=${GROQ_HINT_MODEL:-llama-3.3-70b-versatile}
+      - API_SERVER_HOST=api_server_container
+      - API_SERVER_PORT=${API_SERVER_PORT}
     ports:
       - ${LLM_SERVER_PORT}:${LLM_SERVER_PORT}
     volumes:

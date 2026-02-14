@@ -41,6 +41,13 @@ class HintChatRequest(BaseModel):
     message: str
     activity_context: Optional[str] = None
     model: Optional[str] = None
+    external_key_id: Optional[int] = None
+
+
+class ValidateKeyRequest(BaseModel):
+    base_url: str
+    api_key: str
+    model_name: str
 
 
 class HintGenerateRequest(BaseModel):

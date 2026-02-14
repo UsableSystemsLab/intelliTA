@@ -3,6 +3,7 @@ import Course from "./Course.js";
 import Enrollment from "./Enrollment.js";
 import Lab from "./Lab.js";
 import Activity from "./Activity.js";
+import UserApiKey from "./UserApiKey.js";
 
 // USER -> COURSE (Creator/Instructor)
 User.hasMany(Course, { foreignKey: "instructor_id", as: "taughtCourses" });
@@ -51,6 +52,10 @@ Submission.belongsTo(User, { foreignKey: "user_id", as: "student" });
 Activity.hasMany(Submission, { foreignKey: "activity_id", as: "submissions" });
 Submission.belongsTo(Activity, { foreignKey: "activity_id", as: "activity" });
 
+// USER -> API KEYS
+User.hasMany(UserApiKey, { foreignKey: "user_id", as: "apiKeys" });
+UserApiKey.belongsTo(User, { foreignKey: "user_id", as: "user" });
+
 
 export {
   User,
@@ -59,4 +64,5 @@ export {
   Lab,
   Activity,
   Submission,
+  UserApiKey,
 };
