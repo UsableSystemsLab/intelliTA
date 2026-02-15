@@ -3,6 +3,12 @@ import { X, Send, Bot, Loader2, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 const LLM_SERVER_URL = 'http://localhost:8000';
+const NODE_API_URL = 'http://localhost:4000/api';
+
+const LOCAL_MODELS = [
+    { id: 'qwen2.5-coder:7b', label: 'Qwen Coder' },
+    { id: 'codellama:7b', label: 'Code Llama' },
+];
 
 const WELCOME_MESSAGE = {
     role: 'assistant',
@@ -74,12 +80,40 @@ const userMarkdownComponents = {
 export default function HintChatSidebar({ isOpen, onClose, initialInput, onInitialInputConsumed, user, activityId, activityContext }) {
     const [messages, setMessages] = useState([WELCOME_MESSAGE]);
     const [input, setInput] = useState('');
+    const [availableModels, setAvailableModels] = useState(LOCAL_MODELS);
+    const [selectedModel, setSelectedModel] = useState(LOCAL_MODELS[0].id);
     const [isStreaming, setIsStreaming] = useState(false);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const [historyLoaded, setHistoryLoaded] = useState(false);
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
     const abortControllerRef = useRef(null);
+
+    // Fetch external models when sidebar opens
+    useEffect(() => {
+        if (!isOpen || !user?.uid) return;
+
+        async function loadExternalModels() {
+            try {
+                const res = await fetch(`${NODE_API_URL}/users/${user.uid}/api-keys`, {
+                    headers: { 'Authorization': 'Bearer 1111' },
+                });
+                if (res.ok) {
+                    const keys = await res.json();
+                    const externalModels = keys.map((k) => ({
+                        id: `external-${k.id}`,
+                        label: `${k.model_name} (${k.label})`,
+                        isExternal: true,
+                        externalId: k.id,
+                    }));
+                    setAvailableModels([...LOCAL_MODELS, ...externalModels]);
+                }
+            } catch (err) {
+                console.error('Failed to load external models:', err);
+            }
+        }
+        loadExternalModels();
+    }, [isOpen, user?.uid]);
 
     // Scroll to bottom when messages change
     useEffect(() => {
@@ -149,16 +183,28 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
         const controller = new AbortController();
         abortControllerRef.current = controller;
 
+        // Determine if external model is selected
+        const currentModel = availableModels.find((m) => m.id === selectedModel);
+        const isExternal = currentModel?.isExternal;
+
         try {
+            const body = {
+                firebase_uid: user.uid,
+                activity_id: parseInt(activityId),
+                message: text,
+                activity_context: activityContext || null,
+            };
+
+            if (isExternal) {
+                body.external_key_id = currentModel.externalId;
+            } else {
+                body.model = selectedModel;
+            }
+
             const res = await fetch(`${LLM_SERVER_URL}/hint/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    firebase_uid: user.uid,
-                    activity_id: parseInt(activityId),
-                    message: text,
-                    activity_context: activityContext || null,
-                }),
+                body: JSON.stringify(body),
                 signal: controller.signal,
             });
 
@@ -242,7 +288,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
             });
             setIsStreaming(false);
         }
-    }, [input, isStreaming, user, activityId, activityContext]);
+    }, [input, isStreaming, user, activityId, activityContext, selectedModel, availableModels]);
 
     return (
         <>
@@ -315,17 +361,37 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
 
                 {/* Input area */}
                 <div className="p-3 border-t border-gray-700 shrink-0 bg-gray-900">
-                    <div className="flex items-start gap-2">
-                        <textarea
-                            ref={inputRef}
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                            placeholder="Ask for a hint..."
-                            rows={input.includes('\n') ? Math.min(input.split('\n').length, 6) : 1}
-                            disabled={isStreaming}
-                            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-base text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors resize-none disabled:opacity-50"
-                        />
+                    <textarea
+                        ref={inputRef}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                        placeholder="Ask for a hint..."
+                        rows={input.includes('\n') ? Math.min(input.split('\n').length, 6) : 1}
+                        disabled={isStreaming}
+                        className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-base text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors resize-none disabled:opacity-50 mb-2"
+                    />
+                    <div className="flex items-center justify-between">
+                        <select
+                            value={selectedModel}
+                            onChange={(e) => setSelectedModel(e.target.value)}
+                            className="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg px-2 py-1 outline-none focus:border-blue-500 transition-colors cursor-pointer"
+                        >
+                            {availableModels.some((m) => !m.isExternal) && (
+                                <optgroup label="Local Models">
+                                    {availableModels.filter((m) => !m.isExternal).map((m) => (
+                                        <option key={m.id} value={m.id}>{m.label}</option>
+                                    ))}
+                                </optgroup>
+                            )}
+                            {availableModels.some((m) => m.isExternal) && (
+                                <optgroup label="External Models">
+                                    {availableModels.filter((m) => m.isExternal).map((m) => (
+                                        <option key={m.id} value={m.id}>{m.label}</option>
+                                    ))}
+                                </optgroup>
+                            )}
+                        </select>
                         {isStreaming ? (
                             <button
                                 onClick={() => abortControllerRef.current?.abort()}

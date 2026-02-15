@@ -40,3 +40,19 @@ class HintChatRequest(BaseModel):
     activity_id: int
     message: str
     activity_context: Optional[str] = None
+    model: Optional[str] = None
+    external_key_id: Optional[int] = None
+
+
+class ValidateKeyRequest(BaseModel):
+    base_url: str
+    api_key: str
+    model_name: str
+
+
+class HintGenerateRequest(BaseModel):
+    firebase_uid: str
+    activity_id: int
+    checkpoint_instruction: str
+    student_code: str
+    file_name: str

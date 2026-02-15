@@ -2,6 +2,7 @@ import UserRoutes from "./UserRoutes.js";
 import LabRoutes from "./lab.routes.js";
 import CourseRoutes from "./course.routes.js";
 import ActivityRoutes from "./activityRoutes.js";
+import UserApiKeyRoutes from "./UserApiKeyRoutes.js";
 
 const apiRoutes = (router) => {
   /**
@@ -30,6 +31,7 @@ const apiRoutes = (router) => {
   });
 
   router.use("/users", UserRoutes);
+  router.use("/users/:firebaseUid/api-keys", UserApiKeyRoutes);
 
   // Activity routes
   router.use("/courses/:courseId/activities", ActivityRoutes);

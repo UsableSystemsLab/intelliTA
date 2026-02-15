@@ -113,8 +113,6 @@ services:
     build:
       context: llm
       dockerfile: Dockerfile
-      args:
-        OLLAMA_MODEL: ${OLLAMA_MODEL}
     container_name: ollama_container
     ports:
       - "11434:11434"
@@ -152,6 +150,10 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_HINT_MODEL=${GROQ_HINT_MODEL:-llama-3.3-70b-versatile}
+      - API_SERVER_HOST=api_server_container
+      - API_SERVER_PORT=${API_SERVER_PORT}
     ports:
       - ${LLM_SERVER_PORT}:${LLM_SERVER_PORT}
     volumes:
