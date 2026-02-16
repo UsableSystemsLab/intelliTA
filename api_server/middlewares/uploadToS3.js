@@ -1,5 +1,5 @@
 import multer from "multer";
-import { s3 } from "../configs/s3.js";
+import { s3, S3_BUCKET, S3_PUBLIC_URL } from "../configs/s3.js";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 
@@ -22,7 +22,7 @@ const fileName = `videos/${Date.now()}-${cleanedName}`;
 
 
   const params = {
-    Bucket: process.env.AWS_S3_BUCKET,
+    Bucket: S3_BUCKET,
     Key: fileName,
     Body: file.buffer,
     ContentType: file.mimetype,
@@ -33,7 +33,7 @@ const fileName = `videos/${Date.now()}-${cleanedName}`;
     await s3.send(new PutObjectCommand(params));
 
     // Save URL for controller
-    req.file.location = `https://${process.env.AWS_S3_BUCKET}.s3.amazonaws.com/${fileName}`;
+    req.file.location = `${S3_PUBLIC_URL}/${S3_BUCKET}/${fileName}`;
 
     next();
   } catch (err) {
