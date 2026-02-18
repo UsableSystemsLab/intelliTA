@@ -1,5 +1,5 @@
 import multer from "multer";
-import { s3 } from "../configs/s3.js";
+import { s3, S3_BUCKET, S3_PUBLIC_URL } from "../configs/s3.js";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 const storage = multer.memoryStorage();
@@ -21,13 +21,13 @@ export async function uploadActivityFilesToS3(req, res, next) {
             .replace(/[^a-z0-9._-]/g, "");
         const fileName = `${folder}/${Date.now()}-${cleanedName}`;
         const params = {
-            Bucket: process.env.AWS_S3_BUCKET,
+            Bucket: S3_BUCKET,
             Key: fileName,
             Body: file.buffer,
             ContentType: file.mimetype,
         };
         await s3.send(new PutObjectCommand(params));
-        return `https://${process.env.AWS_S3_BUCKET}.s3.amazonaws.com/${fileName}`;
+        return `${S3_PUBLIC_URL}/${S3_BUCKET}/${fileName}`;
     }
 
     try {

@@ -4,6 +4,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerConfigs from "./configs/swaggerConfig.js";
 import apiRoutes from "./routes/index.js";
 import { postgresDB } from "./configs/postgresDB.js";
+import { ensureBucketExists } from "./configs/s3.js";
 import "./models/index.js";
 import validateApiKey from "./middlewares/validateApiKey.js";
 import errorHandling from "./middlewares/errorHandling.js";
@@ -32,9 +33,12 @@ app.use(
   swaggerUi.setup(swaggerConfigs, swaggerUiOptions),
 );
 
-// connect to the databases
+// connect to databases and storage
 postgresDB()
-  .then(() => {
+  .then(async () => {
+    // Ensure S3 bucket exists
+    await ensureBucketExists();
+
     app.listen(port, () => {
       console.log(`Example app listening on port ${port}`);
     });

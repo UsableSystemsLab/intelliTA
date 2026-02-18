@@ -85,7 +85,7 @@ const ActivityController = {
   async updateActivity(req, res) {
     try {
       const { activityId } = req.params;
-      const { title, start_date, end_date, md_file_url, starter_code_url, quiz_url } = req.body;
+      const { title, start_date, end_date, video_url, md_file_url, starter_code_url, quiz_url } = req.body;
 
       const activity = await Activity.findOne({
         where: { activity_id: activityId }
@@ -99,6 +99,7 @@ const ActivityController = {
       if (title !== undefined) activity.title = title;
       if (start_date !== undefined) activity.start_date = start_date;
       if (end_date !== undefined) activity.end_date = end_date;
+      if (video_url !== undefined) activity.video_url = video_url;
       if (md_file_url !== undefined) activity.md_file_url = md_file_url;
       if (starter_code_url !== undefined) activity.starter_code_url = starter_code_url;
       if (quiz_url !== undefined) activity.quiz_url = quiz_url;
