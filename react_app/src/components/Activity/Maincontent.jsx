@@ -151,6 +151,7 @@ export default function Maincontent({ user }) {
     const [selectedCodeForChat, setSelectedCodeForChat] = useState('');
     const [checkpointHintText, setCheckpointHintText] = useState('');
     const [isLoadingCheckpointHint, setIsLoadingCheckpointHint] = useState(false);
+    const [quizQuestions, setQuizQuestions] = useState([]);
 
     const handleAskAI = useCallback((text) => {
         setSelectedCodeForChat(text);
@@ -166,9 +167,11 @@ export default function Maincontent({ user }) {
         checkpoints,
         activeCheckpoint,
         checkSolution,
+        submitQuizAnswer,
         skipCheckpoint,
         nextCheckpoint,
-        prevCheckpoint
+        prevCheckpoint,
+        retryCheckpoint
     } = useCheckpoints({
         currentTime,
         files,
@@ -186,7 +189,8 @@ export default function Maincontent({ user }) {
             setIsPlaying(false);
         },
         onSeek: handleSeek,
-        INITIAL_FILES: initialFiles
+        INITIAL_FILES: initialFiles,
+        quizQuestions
     });
 
     const handleCheckpointHint = useCallback(async () => {
@@ -290,6 +294,19 @@ export default function Maincontent({ user }) {
                             }
                         } catch (mdErr) {
                             console.error("Failed to fetch MD file:", mdErr);
+                        }
+                    }
+
+                    // Load quiz questions if available
+                    if (data.quiz_url) {
+                        try {
+                            const quizRes = await fetch(data.quiz_url);
+                            if (quizRes.ok) {
+                                const quizData = await quizRes.json();
+                                setQuizQuestions(quizData.quizzes || []);
+                            }
+                        } catch (quizErr) {
+                            console.error("Failed to fetch quiz data:", quizErr);
                         }
                     }
                 } else {
@@ -542,11 +559,13 @@ export default function Maincontent({ user }) {
                     onSeek={handleSeek}
                     onNext={nextCheckpoint}
                     onPrev={prevCheckpoint}
+                    onRetryCheckpoint={retryCheckpoint}
                     CheckpointOverlay={() => (
                         <CheckpointOverlay
                             activeCheckpoint={activeCheckpoint}
                             feedback={feedback}
                             onCheckSolution={checkSolution}
+                            onSubmitQuizAnswer={submitQuizAnswer}
                             onSkip={skipCheckpoint}
                             onHint={handleCheckpointHint}
                             hintText={checkpointHintText}
