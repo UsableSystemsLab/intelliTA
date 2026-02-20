@@ -430,13 +430,10 @@ function CodingFields({ question, onChange, fileNames = [] }) {
             ))}
           </select>
         ) : (
-          <input
-            type="text"
-            value={question.fileName || ""}
-            onChange={(e) => update("fileName", e.target.value)}
-            placeholder="e.g., Product.java"
-            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 placeholder-gray-500"
-          />
+          <div className="flex items-center gap-2 px-3 py-2 bg-yellow-900/30 border border-yellow-600/50 rounded-lg">
+            <span className="text-yellow-400">⚠</span>
+            <p className="text-yellow-400 text-xs">No starter files added to this activity yet.</p>
+          </div>
         )}
       </div>
     </>
