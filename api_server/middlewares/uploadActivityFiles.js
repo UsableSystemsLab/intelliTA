@@ -7,7 +7,8 @@ const storage = multer.memoryStorage();
 export const uploadActivityMulter = multer({ storage }).fields([
     { name: 'video', maxCount: 1 },
     { name: 'md_file', maxCount: 1 },
-    { name: 'starter_code', maxCount: 1 }
+    { name: 'starter_code', maxCount: 1 },
+    { name: 'quiz_file', maxCount: 1 }
 ]);
 
 export async function uploadActivityFilesToS3(req, res, next) {
@@ -43,6 +44,11 @@ export async function uploadActivityFilesToS3(req, res, next) {
         if (req.files['starter_code'] && req.files['starter_code'][0]) {
             const url = await uploadFile(req.files['starter_code'][0], 'starter-code');
             req.body.starter_code_url = url;
+        }
+
+        if (req.files['quiz_file'] && req.files['quiz_file'][0]) {
+            const url = await uploadFile(req.files['quiz_file'][0], 'quizzes');
+            req.body.quiz_url = url;
         }
         next();
     } catch (err) {

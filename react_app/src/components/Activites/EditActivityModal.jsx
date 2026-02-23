@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Save, Loader } from "lucide-react";
+import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Save, Loader, HelpCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import FormInput from "./form/FormInput";
+import FileUploadZone from "./form/FileUploadZone";
 import SubmitButton from "./form/SubmitButton";
 import StarterCodeEditor from "./form/StarterCodeEditor";
+import QuizEditor from "./form/QuizEditor";
 import MarkdownEditor from "./form/MarkdownEditor";
 import { ModalHeader, ErrorAlert, CloseButton } from "./form/ModalComponents";
 
@@ -45,6 +47,9 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
   const [mdContent, setMdContent] = useState("");
   const [starterFiles, setStarterFiles] = useState([]);
   const [starterPrompt, setStarterPrompt] = useState("");
+  const [videoFile, setVideoFile] = useState(null);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [quizQuestions, setQuizQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingContent, setLoadingContent] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -54,6 +59,19 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
     if (activity) {
       setStep(1);
       setTitle(activity.title || "");
+      setVideoFile(null);
+      setVideoDuration(0);
+
+      // Extract duration from existing video
+      if (activity.video_url) {
+        const video = document.createElement("video");
+        video.preload = "metadata";
+        video.onloadedmetadata = () => {
+          setVideoDuration(Math.floor(video.duration));
+          URL.revokeObjectURL(video.src);
+        };
+        video.src = activity.video_url;
+      }
 
       if (activity.start_date) {
         const start = new Date(activity.start_date);
@@ -93,10 +111,21 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
       } else {
         setStarterFiles([]);
       }
+      // Fetch quiz questions
+      if (activity.quiz_url) {
+        const quizResponse = await fetch(activity.quiz_url);
+        if (quizResponse.ok) {
+          const quizData = await quizResponse.json();
+          setQuizQuestions(quizData.quizzes || []);
+        }
+      } else {
+        setQuizQuestions([]);
+      }
     } catch (err) {
       console.error("Failed to fetch content:", err);
       setMdContent("");
       setStarterFiles([]);
+      setQuizQuestions([]);
     } finally {
       setLoadingContent(false);
     }
@@ -113,6 +142,29 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
   };
 
   if (!isOpen || !activity) return null;
+// Exctract video duration
+  const handleVideoChange = (file) => {
+    setVideoFile(file);
+    if (file) {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        setVideoDuration(Math.floor(video.duration));
+        URL.revokeObjectURL(video.src);
+      };
+      video.src = URL.createObjectURL(file);
+    } else if (activity.video_url) {
+      // Reset to existing video duration
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        setVideoDuration(Math.floor(video.duration));
+      };
+      video.src = activity.video_url;
+    } else {
+      setVideoDuration(0);
+    }
+  };
 
 // when close we go back to step 1, also clear the error messages if exist
   const handleClose = () => {
@@ -147,6 +199,9 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
       formData.append("start_date", new Date(startDate).toISOString());
       formData.append("end_date", new Date(endDate).toISOString());
 
+      if (videoFile) {
+        formData.append("video", videoFile);
+      }
 
       if (mdContent.trim()) {
         const mdBlob = new Blob([mdContent], { type: "text/markdown" });
@@ -160,6 +215,22 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
         const starterCodeBlob = new Blob([starterCodeJson], { type: "application/json" });
         const starterCodeFile = new File([starterCodeBlob], "starter-code.json", { type: "application/json" });
         formData.append("starter_code", starterCodeFile);
+      }
+      // Build the JSON
+      if (quizQuestions && quizQuestions.length > 0) {
+        const quizPayload = {
+          quizzes: quizQuestions.map(({ id, time, type, question, options, correctAnswer, title, instruction, fileName, hint, check }) => {
+            const base = { id, time, type };
+            if (type === "mcq") return { ...base, question, options, correctAnswer };
+            if (type === "true_false") return { ...base, question, correctAnswer };
+            if (type === "fill_blank") return { ...base, question, correctAnswer };
+            if (type === "coding") return { ...base, title, instruction, fileName, hint, check };
+            return base;
+          }),
+        };
+        const quizBlob = new Blob([JSON.stringify(quizPayload)], { type: "application/json" });
+        const quizFile = new File([quizBlob], "quiz.json", { type: "application/json" });
+        formData.append("quiz_file", quizFile);
       }
 
       const response = await fetch(
@@ -234,7 +305,12 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                   <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Title</span>
                   <p className="text-white mt-1">{title}</p>
                 </div>
-                <div />
+                <div>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Video</span>
+                  <p className="text-gray-300 mt-1">
+                    {videoFile ? videoFile.name : activity.video_url ? "No changes (keeping current)" : "No video"}
+                  </p>
+                </div>
                 <div>
                   <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</span>
                   <p className="text-gray-300 mt-1 flex items-center gap-1.5">
@@ -289,6 +365,33 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                       </pre>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Quiz Preview */}
+            {quizQuestions && quizQuestions.length > 0 && (
+              <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <HelpCircle className="w-5 h-5 text-blue-400" />
+                  Video Quiz
+                  <span className="text-sm font-normal text-gray-500">
+                    ({quizQuestions.length} question{quizQuestions.length !== 1 ? "s" : ""})
+                  </span>
+                </h3>
+                <div className="space-y-2">
+                  {quizQuestions.map((q, idx) => {
+                    const mins = Math.floor(q.time / 60);
+                    const secs = q.time % 60;
+                    const timeStr = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+                    return (
+                      <div key={q.id} className="flex items-center gap-3 px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50">
+                        <span className="text-xs font-mono text-blue-400 bg-blue-500/10 px-2 py-1 rounded">{timeStr}</span>
+                        <span className="text-xs text-gray-500 uppercase">{q.type.replace("_", "/")}</span>
+                        <span className="text-sm text-gray-300 truncate">{q.question || q.title || `Question ${idx + 1}`}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -384,6 +487,32 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                 />
               </div>
 
+              {/* Video Upload */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-3">
+                  Video
+                  <span className="text-gray-500 font-normal">
+                    {activity.video_url ? "(Replace existing)" : "(Optional)"}
+                  </span>
+                </label>
+
+                {activity.video_url && !videoFile && (
+                  <div className="mb-2 flex items-center gap-2 px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg">
+                    <Upload className="w-4 h-4 text-green-400" />
+                    <span className="text-sm text-gray-300 truncate">Current video uploaded</span>
+                  </div>
+                )}
+
+                <FileUploadZone
+                  id="edit-video-upload"
+                  accept="video/*"
+                  file={videoFile}
+                  onFileChange={handleVideoChange}
+                  icon={Upload}
+                  label={activity.video_url ? "Click to upload a new video" : "Click to upload video"}
+                />
+              </div>
+
               {/* Markdown Content */}
               <MarkdownEditor
                 value={mdContent}
@@ -397,6 +526,14 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                 onFilesChange={setStarterFiles}
                 prompt={starterPrompt}
                 onPromptChange={setStarterPrompt}
+              />
+
+              {/* Video Quiz */}
+              <QuizEditor
+                questions={quizQuestions}
+                onQuestionsChange={setQuizQuestions}
+                fileNames={starterFiles.map(f => f.name)}
+                videoDuration={videoDuration}
               />
 
               {/* Next: Review Button */}

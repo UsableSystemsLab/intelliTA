@@ -1,96 +1,38 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
-export const DEFAULT_CHECKPOINTS = [
-    {
-        id: 1,
-        time: 180, // 3:00 - Instance and Class Variables
-        type: 'challenge',
-        title: "Fix the Quantity Counter",
-        instruction: "The getTotalQuantity() method returns 1 instead of 3. Fix the Product class by making the 'quantity' variable a class variable (shared across all instances) instead of an instance variable.",
-        fileName: "Product.java",
-        hint: "Think about the difference between instance variables and class variables. Which type is shared across all objects?",
-        status: 'pending',
-        check: (files) => {
-            const content = files.find(f => f.name === 'Product.java')?.content || "";
+// Quiz types that pause the video and show an overlay (non-code-editing types)
+const QUIZ_OVERLAY_TYPES = ['mcq', 'true_false', 'fill_blank'];
 
-            const hasStaticQuantity = /static\s+(private|public|protected)?\s*int\s+quantity/.test(content) ||
-                /(private|public|protected)\s+static\s+int\s+quantity/.test(content);
-            return hasStaticQuantity;
+/**
+ * Convert quiz JSON items into checkpoints
+ */
+function quizToCheckpoints(quizQuestions) {
+    if (!quizQuestions || quizQuestions.length === 0) return [];
+
+    return quizQuestions.map(q => {
+        const base = {
+            ...q,
+            id: `quiz_${q.id}`,
+            status: 'pending',
+        };
+
+        if (q.type === 'coding') {
+            // Convert regex string to a check function (same shape as challenge checkpoints)
+            const regex = new RegExp(q.check);
+            return {
+                ...base,
+                type: 'challenge', 
+                check: (files) => {
+                    const content = files.find(f => f.name === q.fileName)?.content || "";
+                    return regex.test(content);
+                }
+            };
         }
-    },
-    {
-        id: 2,
-        time: 480, // 8:00 - Inheritance - Abstract Class
-        type: 'challenge',
-        title: "Make Product Abstract",
-        instruction: "The Product class should not be instantiated directly. Only concrete subclasses (FoodProduct, ElectricProduct) should be instantiable. Modify the Product class definition to prevent direct instantiation.",
-        fileName: "Product.java",
-        hint: "There's a Java keyword that prevents a class from being instantiated directly while still allowing subclasses.",
-        status: 'pending',
-        check: (files) => {
-            const content = files.find(f => f.name === 'Product.java')?.content || "";
 
-            const isAbstract = /abstract\s+class\s+Product/.test(content) ||
-                /public\s+abstract\s+class\s+Product/.test(content) ||
-                /abstract\s+public\s+class\s+Product/.test(content);
-            return isAbstract;
-        }
-    },
-    {
-        id: 3,
-        time: 900, // 15:00 - Polymorphism
-        type: 'challenge',
-        title: "Polymorphism with Arrays",
-        instruction: "In App.java, create an array of Product references that holds FoodProduct and ElectricProduct objects. Then use an enhanced for loop (for-each) to iterate through the array and print each product using System.out.println().",
-        fileName: "App.java",
-        hint: "A parent class reference can hold child class objects. Use the array type of the parent class and the colon syntax for iteration.",
-        status: 'pending',
-        check: (files) => {
-            const content = files.find(f => f.name === 'App.java')?.content || "";
-
-            const hasProductArray = /Product\s*\[\s*\]\s*\w+\s*=/.test(content);
-            const hasEnhancedForLoop = /for\s*\(\s*Product\s+\w+\s*:\s*\w+\s*\)/.test(content);
-            return hasProductArray && hasEnhancedForLoop;
-        }
-    },
-    {
-        id: 4,
-        time: 1320, // 22:00 - Controlling Changes (final methods)
-        type: 'challenge',
-        title: "Prevent Method Override",
-        instruction: "Modify the addToShoppingCart() method in the Product class so that subclasses cannot override it. Do this without changing the method's visibility (keep it public).",
-        fileName: "Product.java",
-        hint: "There's a Java keyword that locks a method to prevent subclasses from changing its behavior.",
-        status: 'pending',
-        check: (files) => {
-            const content = files.find(f => f.name === 'Product.java')?.content || "";
-
-            const hasFinalMethod = /final\s+(public\s+)?void\s+addToShoppingCart/.test(content) ||
-                /public\s+final\s+void\s+addToShoppingCart/.test(content);
-            return hasFinalMethod;
-        }
-    },
-    {
-        id: 5,
-        time: 1680, // 28:00 - Encapsulation
-        type: 'challenge',
-        title: "Apply Encapsulation",
-        instruction: "Add a 'weight' field to the Product class. Make it private (not public) and provide proper getter (getWeight) and setter (setWeight) methods to access it.",
-        fileName: "Product.java",
-        hint: "Encapsulation means hiding internal data. Use methods to control access to the field instead of exposing it directly.",
-        status: 'pending',
-        check: (files) => {
-            const content = files.find(f => f.name === 'Product.java')?.content || "";
-
-            const hasPrivateWeight = /private\s+(double|float|int)\s+weight/.test(content);
-            const hasGetter = /public\s+\w+\s+getWeight\s*\(/.test(content) ||
-                /\w+\s+getWeight\s*\(\s*\)\s*\{/.test(content);
-            const hasSetter = /public\s+void\s+setWeight\s*\(/.test(content) ||
-                /void\s+setWeight\s*\([^)]+\)\s*\{/.test(content);
-            return hasPrivateWeight && hasGetter && hasSetter;
-        }
-    }
-];
+        // mcq, true_false, fill_blank — no file check needed
+        return base;
+    });
+}
 
 export function useCheckpoints({
     currentTime,
@@ -103,12 +45,24 @@ export function useCheckpoints({
     onPlay,
     onPause,
     onSeek,
-    INITIAL_FILES
+    INITIAL_FILES,
+    quizQuestions = []
 }) {
-    const [checkpoints, setCheckpoints] = useState(DEFAULT_CHECKPOINTS);
+    // Build merged + sorted checkpoint list when quizQuestions change
+    const initialCheckpoints = useMemo(() => {
+        const quizCps = quizToCheckpoints(quizQuestions);
+        return [...quizCps].sort((a, b) => a.time - b.time);
+    }, [quizQuestions]);
+
+    const [checkpoints, setCheckpoints] = useState(initialCheckpoints);
     const [activeCheckpoint, setActiveCheckpoint] = useState(null);
     const [showHint, setShowHint] = useState(false);
     const prevTimeRef = useRef(currentTime);
+
+    // Re-sync checkpoints when quizQuestions change (e.g. after fetch)
+    useEffect(() => {
+        setCheckpoints(initialCheckpoints);
+    }, [initialCheckpoints]);
 
     const syncCodeToTime = useCallback((targetTime, autoMark = false) => {
         let newFiles = JSON.parse(JSON.stringify(INITIAL_FILES));
@@ -136,9 +90,20 @@ export function useCheckpoints({
 
     useEffect(() => {
         const timeDelta = Math.abs(currentTime - prevTimeRef.current);
+        const seekedBackward = currentTime < prevTimeRef.current - 2;
         if (timeDelta > 2) {
             syncCodeToTime(currentTime, true);
             setActiveCheckpoint(null);
+
+            // Reset skipped checkpoints that are ahead of (or at) the new time
+            if (seekedBackward) {
+                setCheckpoints(prev => prev.map(c => {
+                    if (c.status === 'skipped' && c.time >= currentTime) {
+                        return { ...c, status: 'pending' };
+                    }
+                    return c;
+                }));
+            }
         }
         prevTimeRef.current = currentTime;
 
@@ -160,6 +125,7 @@ export function useCheckpoints({
                 setTimeout(() => onFeedback(null), 3000);
             }
             else if (cp.type === 'challenge') {
+                // challenge + coding quiz type — pause and show code editor overlay
                 if (!activeCheckpoint || activeCheckpoint.id !== cp.id) {
                     onPause();
                     setActiveCheckpoint(cp);
@@ -167,9 +133,17 @@ export function useCheckpoints({
                     if (file) setActiveFile(file);
                 }
             }
+            else if (QUIZ_OVERLAY_TYPES.includes(cp.type)) {
+                // mcq, true_false, fill_blank — pause and show quiz overlay
+                if (!activeCheckpoint || activeCheckpoint.id !== cp.id) {
+                    onPause();
+                    setActiveCheckpoint(cp);
+                }
+            }
         }
     }, [currentTime, checkpoints, activeCheckpoint, files, activeFile, onFeedback, onPause, setActiveFile, setFiles, syncCodeToTime]);
 
+    // For challenge/coding types — check code in editor
     const checkSolution = () => {
         if (!activeCheckpoint) return;
         const isCorrect = activeCheckpoint.check(files);
@@ -184,6 +158,36 @@ export function useCheckpoints({
             }, 1000);
         } else {
             onFeedback({ type: 'error', message: 'Incorrect. Try again or use a hint.' });
+            setTimeout(() => onFeedback(null), 3000);
+        }
+    };
+
+    // For mcq, true_false, fill_blank, this will check the correct answer
+    const submitQuizAnswer = (answer) => {
+        if (!activeCheckpoint) return;
+
+        let isCorrect = false;
+        const type = activeCheckpoint.type;
+
+        if (type === 'mcq') {
+            isCorrect = answer === activeCheckpoint.correctAnswer;
+        } else if (type === 'true_false') {
+            isCorrect = answer === activeCheckpoint.correctAnswer;
+        } else if (type === 'fill_blank') {
+            isCorrect = answer.trim().toLowerCase() === String(activeCheckpoint.correctAnswer).trim().toLowerCase();
+        }
+
+        if (isCorrect) {
+            onFeedback({ type: 'success', message: 'Correct! Continuing lesson...' });
+            setCheckpoints(prev => prev.map(cp => cp.id === activeCheckpoint.id ? { ...cp, status: 'verified' } : cp));
+            setActiveCheckpoint(null);
+            setShowHint(false);
+            setTimeout(() => {
+                onFeedback(null);
+                onPlay();
+            }, 1000);
+        } else {
+            onFeedback({ type: 'error', message: 'Incorrect. Try again!' });
             setTimeout(() => onFeedback(null), 3000);
         }
     };
@@ -206,6 +210,13 @@ export function useCheckpoints({
         onSeek(cp.time);
         onPlay();
     };
+    // Retry the checkpoint
+    const retryCheckpoint = (cpId) => {
+        const cp = checkpoints.find(c => c.id === cpId);
+        if (!cp || cp.status === 'pending') return;
+        setCheckpoints(prev => prev.map(c => c.id === cpId ? { ...c, status: 'pending' } : c));
+        onSeek(cp.time);
+    };
 
     const nextCheckpoint = () => {
         const targetIndex = checkpoints.findIndex(cp => cp.time > currentTime + 0.5);
@@ -226,9 +237,11 @@ export function useCheckpoints({
         showHint,
         setShowHint,
         checkSolution,
+        submitQuizAnswer,
         skipCheckpoint,
         jumpToCheckpoint,
         nextCheckpoint,
-        prevCheckpoint
+        prevCheckpoint,
+        retryCheckpoint
     };
 }
