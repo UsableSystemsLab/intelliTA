@@ -1,4 +1,5 @@
 import { User, UserApiKey } from "../models/index.js";
+import { encryptApiKey, decryptApiKey } from "../utils/encryption.js";
 
 function generateLabel(baseUrl) {
   try {
@@ -39,13 +40,16 @@ const UserApiKeyController = {
 
       const label = generateLabel(base_url);
 
+      // Encrypt the API key before storing
+      const encryptedKey = await encryptApiKey(api_key);
+
       const [entry, created] = await UserApiKey.findOrCreate({
         where: { user_id: user.id, base_url },
-        defaults: { api_key, model_name, label },
+        defaults: { api_key: encryptedKey, model_name, label },
       });
 
       if (!created) {
-        await entry.update({ api_key, model_name, label });
+        await entry.update({ api_key: encryptedKey, model_name, label });
       }
 
       res.status(200).json({
@@ -53,7 +57,7 @@ const UserApiKeyController = {
         base_url: entry.base_url,
         model_name: entry.model_name,
         label: entry.label,
-        api_key_masked: maskKey(entry.api_key),
+        api_key_masked: maskKey(api_key),
       });
     } catch (error) {
       res.status(500).json({ message: "Error saving API key", error: error.message });
@@ -74,13 +78,18 @@ const UserApiKeyController = {
         order: [["created_at", "ASC"]],
       });
 
-      const result = keys.map((k) => ({
-        id: k.id,
-        base_url: k.base_url,
-        model_name: k.model_name,
-        label: k.label,
-        api_key_masked: maskKey(k.api_key),
-      }));
+      const result = await Promise.all(
+        keys.map(async (k) => {
+          const rawKey = await decryptApiKey(k.api_key);
+          return {
+            id: k.id,
+            base_url: k.base_url,
+            model_name: k.model_name,
+            label: k.label,
+            api_key_masked: maskKey(rawKey),
+          };
+        })
+      );
 
       res.status(200).json(result);
     } catch (error) {
@@ -128,8 +137,10 @@ const UserApiKeyController = {
         return res.status(404).json({ message: "API key not found" });
       }
 
+      const rawKey = await decryptApiKey(entry.api_key);
+
       res.status(200).json({
-        api_key: entry.api_key,
+        api_key: rawKey,
         base_url: entry.base_url,
         model_name: entry.model_name,
       });
