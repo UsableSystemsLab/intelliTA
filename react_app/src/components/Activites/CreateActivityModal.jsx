@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Send, Loader } from "lucide-react";
+import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Send, Loader, HelpCircle } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import FormInput from "./form/FormInput";
 import FileUploadZone from "./form/FileUploadZone";
 import SubmitButton from "./form/SubmitButton";
 import MarkdownEditor from "./form/MarkdownEditor";
 import StarterCodeEditor from "./form/StarterCodeEditor";
+import QuizEditor from "./form/QuizEditor";
 import { ModalHeader, ErrorAlert, CloseButton } from "./form/ModalComponents";
 
 const markdownComponents = {
@@ -44,9 +45,11 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [videoFile, setVideoFile] = useState(null);
+  const [videoDuration, setVideoDuration] = useState(0);
   const [mdContent, setMdContent] = useState("");
   const [starterFiles, setStarterFiles] = useState([]);
   const [starterPrompt, setStarterPrompt] = useState("");
+  const [quizQuestions, setQuizQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -58,10 +61,27 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     setStartDate("");
     setEndDate("");
     setVideoFile(null);
+    setVideoDuration(0);
     setMdContent("");
     setStarterFiles([]);
     setStarterPrompt("");
+    setQuizQuestions([]);
     setErrorMsg("");
+  };
+// Extract video duration
+  const handleVideoChange = (file) => {
+    setVideoFile(file);
+    if (file) {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        setVideoDuration(Math.floor(video.duration));
+        URL.revokeObjectURL(video.src);
+      };
+      video.src = URL.createObjectURL(file);
+    } else {
+      setVideoDuration(0);
+    }
   };
 
   const handleClose = () => {
@@ -108,6 +128,24 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
       const starterCodeBlob = new Blob([starterCodeJson], { type: "application/json" });
       const starterCodeFile = new File([starterCodeBlob], "starter-code.json", { type: "application/json" });
       formData.append("starter_code", starterCodeFile);
+    }
+
+    if (quizQuestions && quizQuestions.length > 0) {
+      // Strip UI-only fields and build the quiz JSON
+      const quizPayload = {
+        quizzes: quizQuestions.map(({ id, time, type, question, options, correctAnswer, title, instruction, fileName, hint, check }) => {
+          const base = { id, time, type };
+          if (type === "mcq") return { ...base, question, options, correctAnswer };
+          if (type === "true_false") return { ...base, question, correctAnswer };
+          if (type === "fill_blank") return { ...base, question, correctAnswer };
+          if (type === "coding") return { ...base, title, instruction, fileName, hint, check };
+          return base;
+        }),
+      };
+      // Send quiz files as JSON
+      const quizBlob = new Blob([JSON.stringify(quizPayload)], { type: "application/json" });
+      const quizFile = new File([quizBlob], "quiz.json", { type: "application/json" });
+      formData.append("quiz_file", quizFile);
     }
 
     try {
@@ -239,6 +277,33 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
                 </div>
               </div>
             )}
+
+            {/* Quiz Preview */}
+            {quizQuestions && quizQuestions.length > 0 && (
+              <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <HelpCircle className="w-5 h-5 text-blue-400" />
+                  Video Quiz
+                  <span className="text-sm font-normal text-gray-500">
+                    ({quizQuestions.length} question{quizQuestions.length !== 1 ? "s" : ""})
+                  </span>
+                </h3>
+                <div className="space-y-2">
+                  {quizQuestions.map((q, idx) => {
+                    const mins = Math.floor(q.time / 60);
+                    const secs = q.time % 60;
+                    const timeStr = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+                    return (
+                      <div key={q.id} className="flex items-center gap-3 px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50">
+                        <span className="text-xs font-mono text-blue-400 bg-blue-500/10 px-2 py-1 rounded">{timeStr}</span>
+                        <span className="text-xs text-gray-500 uppercase">{q.type.replace("_", "/")}</span>
+                        <span className="text-sm text-gray-300 truncate">{q.question || q.title || `Question ${idx + 1}`}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer */}
@@ -336,7 +401,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
                 id="video-upload"
                 accept="video/*"
                 file={videoFile}
-                onFileChange={setVideoFile}
+                onFileChange={handleVideoChange}
                 icon={Upload}
                 label="Click to upload video"
               />
@@ -355,6 +420,14 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               onFilesChange={setStarterFiles}
               prompt={starterPrompt}
               onPromptChange={setStarterPrompt}
+            />
+
+            {/* Video Quiz */}
+            <QuizEditor
+              questions={quizQuestions}
+              onQuestionsChange={setQuizQuestions}
+              fileNames={starterFiles.map(f => f.name)}
+              videoDuration={videoDuration}
             />
 
             {/* Next: Review Button */}
