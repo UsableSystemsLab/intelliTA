@@ -428,6 +428,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               onQuestionsChange={setQuizQuestions}
               fileNames={starterFiles.map(f => f.name)}
               videoDuration={videoDuration}
+              videoFile={videoFile}
             />
 
             {/* Next: Review Button */}

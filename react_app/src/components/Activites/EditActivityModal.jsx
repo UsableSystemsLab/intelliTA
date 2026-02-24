@@ -534,6 +534,8 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                 onQuestionsChange={setQuizQuestions}
                 fileNames={starterFiles.map(f => f.name)}
                 videoDuration={videoDuration}
+                videoFile={videoFile}
+                videoUrl={!videoFile ? activity.video_url : null}
               />
 
               {/* Next: Review Button */}
