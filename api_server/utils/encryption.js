@@ -43,10 +43,3 @@ export async function decryptApiKey(encryptedText) {
 
   return result.decrypted;
 }
-
-/**
- * Ensures pgcrypto extension is enabled in the database.
- */
-export async function ensurePgCrypto() {
-  await sequelize.query("CREATE EXTENSION IF NOT EXISTS pgcrypto");
-}
