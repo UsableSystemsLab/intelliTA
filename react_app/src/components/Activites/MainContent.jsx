@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import CreateActivityModal from "./CreateActivityModal";
 import EditActivityModal from "./EditActivityModal";
 import Breadcrumb from "../shared/Breadcrumb";
+import MembersModal from "../CourseMembers/MembersModal";
 import {
     Plus,
     PlayCircle,
@@ -21,7 +22,8 @@ import {
     X,
     Eye,
     EyeOff,
-    Pencil
+    Pencil,
+    Users
 } from "lucide-react";
 
 
@@ -269,6 +271,7 @@ export default function Maincontent({ user }) {
     const [showEditModal, setShowEditModal] = useState(false);
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [generating, setGenerating] = useState(false);
+    const [showMembersModal, setShowMembersModal] = useState(false);
 
 
     useEffect(() => {
@@ -439,6 +442,13 @@ export default function Maincontent({ user }) {
                         {isInstructor() && (
                             <div className="flex flex-wrap gap-3">
                                 <button
+                                    onClick={() => setShowMembersModal(true)}
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 hover:border-blue-500/50 rounded-xl font-medium transition-all duration-300"
+                                >
+                                    <Users className="w-4 h-4 text-blue-400" />
+                                    Members
+                                </button>
+                                <button
                                     onClick={() => setShowCodeModal(true)}
                                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 hover:border-blue-500/50 rounded-xl font-medium transition-all duration-300"
                                 >
@@ -527,6 +537,14 @@ export default function Maincontent({ user }) {
                     onClose={() => setShowCodeModal(false)}
                     onGenerate={handleGenerateNewCode}
                     generating={generating}
+                />
+            )}
+
+            {showMembersModal && (
+                <MembersModal
+                    courseId={courseId}
+                    user={user}
+                    onClose={() => setShowMembersModal(false)}
                 />
             )}
         </main>
