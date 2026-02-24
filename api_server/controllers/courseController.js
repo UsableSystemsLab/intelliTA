@@ -446,7 +446,7 @@ const CourseController = {
   async regenerateToken(req, res) {
     try {
       const { id } = req.params;
-      
+
       const generateToken = () => {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let result = '';
@@ -475,6 +475,182 @@ const CourseController = {
     } catch (error) {
       return res.status(500).json({
         message: "Error regenerating token",
+        error: error.message,
+      });
+    }
+  },
+
+  /**
+   * @swagger
+   * /courses/{id}/students:
+   *   get:
+   *     security:
+   *       - bearerAuth: []
+   *     summary: Get all enrolled students for a course
+   *     tags: [Courses]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Course ID
+   *       - in: query
+   *         name: firebaseId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Firebase UID of the requesting user (must be instructor)
+   *     responses:
+   *       200:
+   *         description: List of enrolled students
+   *       403:
+   *         description: Not authorized (not the instructor)
+   *       404:
+   *         description: Course not found
+   */
+  async getEnrolledStudents(req, res) {
+    try {
+      const { id } = req.params;
+      const { firebaseId } = req.query;
+
+      if (!firebaseId) {
+        return res.status(400).json({ message: "firebaseId is required" });
+      }
+
+      // Find the requesting user
+      const requestingUser = await User.findOne({ where: { firebaseId } });
+      if (!requestingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Find the course
+      const course = await Course.findByPk(id);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Check if the requesting user is the instructor
+      if (course.instructor_id !== requestingUser.id) {
+        return res.status(403).json({ message: "Only the course instructor can view enrolled students" });
+      }
+
+      // Fetch enrolled students with enrollment details
+      const enrollments = await Enrollment.findAll({
+        where: { course_id: id },
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: ["id", "first_name", "last_name", "email", "firebaseId"]
+          }
+        ],
+        order: [["enrollment_date", "DESC"]]
+      });
+
+      // Format response
+      const students = enrollments.map(enrollment => ({
+        enrollment_id: enrollment.enrollment_id,
+        user_id: enrollment.user_id,
+        first_name: enrollment.user.first_name,
+        last_name: enrollment.user.last_name,
+        email: enrollment.user.email,
+        enrolled_name: enrollment.enrolled_name,
+        enrollment_date: enrollment.enrollment_date,
+        status: enrollment.status,
+        points: enrollment.points,
+        grade: enrollment.grade
+      }));
+
+      return res.status(200).json(students);
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error fetching enrolled students",
+        error: error.message,
+      });
+    }
+  },
+
+  /**
+   * @swagger
+   * /courses/{id}/students/{userId}:
+   *   delete:
+   *     security:
+   *       - bearerAuth: []
+   *     summary: Remove a student from a course
+   *     tags: [Courses]
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: Course ID
+   *       - in: path
+   *         name: userId
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: User ID of the student to remove
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             properties:
+   *               firebaseId:
+   *                 type: string
+   *                 description: Firebase UID of the requesting user (must be instructor)
+   *     responses:
+   *       200:
+   *         description: Student removed successfully
+   *       403:
+   *         description: Not authorized (not the instructor)
+   *       404:
+   *         description: Course or enrollment not found
+   */
+  async removeStudent(req, res) {
+    try {
+      const { id, userId } = req.params;
+      const { firebaseId } = req.body;
+
+      if (!firebaseId) {
+        return res.status(400).json({ message: "firebaseId is required" });
+      }
+
+      // Find the requesting user
+      const requestingUser = await User.findOne({ where: { firebaseId } });
+      if (!requestingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Find the course
+      const course = await Course.findByPk(id);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Check if the requesting user is the instructor
+      if (course.instructor_id !== requestingUser.id) {
+        return res.status(403).json({ message: "Only the course instructor can remove students" });
+      }
+
+      // Find and delete the enrollment
+      const deleted = await Enrollment.destroy({
+        where: {
+          course_id: id,
+          user_id: userId
+        }
+      });
+
+      if (!deleted) {
+        return res.status(404).json({ message: "Enrollment not found" });
+      }
+
+      return res.status(200).json({ message: "Student removed successfully" });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error removing student",
         error: error.message,
       });
     }
