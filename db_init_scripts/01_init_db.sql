@@ -69,3 +69,22 @@ CREATE TABLE chat_messages (
 );
 
 CREATE INDEX idx_chat_messages_conv ON chat_messages(conversation_id);
+
+-- VIDEO_TRANSCRIPTS Table
+CREATE TABLE video_transcripts (
+  transcript_id SERIAL PRIMARY KEY,
+  activity_id INT NOT NULL UNIQUE REFERENCES activities(activity_id) ON DELETE CASCADE,
+  video_url TEXT NOT NULL,
+  transcript_url TEXT,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'processing', 'completed', 'failed')),
+  error_message TEXT,
+  duration_seconds INT,
+  word_count INT,
+  language VARCHAR(10),
+  created_at TIMESTAMP DEFAULT NOW(),
+  started_at TIMESTAMP,
+  completed_at TIMESTAMP
+);
+
+CREATE INDEX idx_video_transcripts_status ON video_transcripts(status);
