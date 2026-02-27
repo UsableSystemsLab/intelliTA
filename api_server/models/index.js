@@ -56,6 +56,25 @@ Submission.belongsTo(Activity, { foreignKey: "activity_id", as: "activity" });
 User.hasMany(UserApiKey, { foreignKey: "user_id", as: "apiKeys" });
 UserApiKey.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
+// QUIZ QUESTIONS
+import QuizQuestion from "./QuizQuestion.js";
+import VideoProgress from "./VideoProgress.js";
+import StudentAnswer from "./StudentAnswer.js";
+
+Activity.hasMany(QuizQuestion, { foreignKey: "activity_id", as: "quizQuestions", onDelete: "CASCADE" });
+QuizQuestion.belongsTo(Activity, { foreignKey: "activity_id", as: "activity" });
+
+User.hasMany(VideoProgress, { foreignKey: "user_id", as: "videoProgress" });
+VideoProgress.belongsTo(User, { foreignKey: "user_id", as: "student" });
+Activity.hasMany(VideoProgress, { foreignKey: "activity_id", as: "videoProgress" });
+VideoProgress.belongsTo(Activity, { foreignKey: "activity_id", as: "activity" });
+
+User.hasMany(StudentAnswer, { foreignKey: "user_id", as: "answers" });
+StudentAnswer.belongsTo(User, { foreignKey: "user_id", as: "student" });
+QuizQuestion.hasMany(StudentAnswer, { foreignKey: "question_id", as: "answers" });
+StudentAnswer.belongsTo(QuizQuestion, { foreignKey: "question_id", as: "question" });
+Activity.hasMany(StudentAnswer, { foreignKey: "activity_id", as: "studentAnswers" });
+StudentAnswer.belongsTo(Activity, { foreignKey: "activity_id", as: "activity" });
 
 export {
   User,
@@ -65,4 +84,7 @@ export {
   Activity,
   Submission,
   UserApiKey,
+  QuizQuestion,
+  VideoProgress,
+  StudentAnswer,
 };
