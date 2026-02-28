@@ -130,24 +130,6 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
       formData.append("starter_code", starterCodeFile);
     }
 
-    if (quizQuestions && quizQuestions.length > 0) {
-      // Strip UI-only fields and build the quiz JSON
-      const quizPayload = {
-        quizzes: quizQuestions.map(({ id, time, type, question, options, correctAnswer, title, instruction, fileName, hint, check }) => {
-          const base = { id, time, type };
-          if (type === "mcq") return { ...base, question, options, correctAnswer };
-          if (type === "true_false") return { ...base, question, correctAnswer };
-          if (type === "fill_blank") return { ...base, question, correctAnswer };
-          if (type === "coding") return { ...base, title, instruction, fileName, hint, check };
-          return base;
-        }),
-      };
-      // Send quiz files as JSON
-      const quizBlob = new Blob([JSON.stringify(quizPayload)], { type: "application/json" });
-      const quizFile = new File([quizBlob], "quiz.json", { type: "application/json" });
-      formData.append("quiz_file", quizFile);
-    }
-
     try {
       const response = await fetch(`http://localhost:4000/api/courses/${courseId}/activities`, {
         method: "POST",
@@ -162,6 +144,29 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
       }
 
       const newActivity = await response.json();
+
+      // Save quiz questions to DB via API
+      if (quizQuestions && quizQuestions.length > 0) {
+        const quizPayload = {
+          quizzes: quizQuestions.map(({ id, time, type, question, options, correctAnswer, title, instruction, fileName, hint, check }) => {
+            const base = { id, time, type };
+            if (type === "mcq") return { ...base, question, options, correctAnswer };
+            if (type === "true_false") return { ...base, question, correctAnswer };
+            if (type === "fill_blank") return { ...base, question, correctAnswer };
+            if (type === "coding") return { ...base, title, instruction, fileName, hint, check };
+            return base;
+          }),
+        };
+        await fetch(
+          `http://localhost:4000/api/courses/${courseId}/activities/${newActivity.activity_id}/quiz`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
+            body: JSON.stringify(quizPayload),
+          }
+        );
+      }
+
       onActivityCreated(newActivity);
       handleClose();
     } catch (err) {

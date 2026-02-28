@@ -111,14 +111,19 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
       } else {
         setStarterFiles([]);
       }
-      // Fetch quiz questions
-      if (activity.quiz_url) {
-        const quizResponse = await fetch(activity.quiz_url);
+      // Fetch quiz questions from DB
+      try {
+        const quizResponse = await fetch(
+          `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}/quiz`,
+          { headers: { Authorization: "Bearer 1111" } }
+        );
         if (quizResponse.ok) {
           const quizData = await quizResponse.json();
           setQuizQuestions(quizData.quizzes || []);
+        } else {
+          setQuizQuestions([]);
         }
-      } else {
+      } catch {
         setQuizQuestions([]);
       }
     } catch (err) {
@@ -216,23 +221,6 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
         const starterCodeFile = new File([starterCodeBlob], "starter-code.json", { type: "application/json" });
         formData.append("starter_code", starterCodeFile);
       }
-      // Build the JSON
-      if (quizQuestions && quizQuestions.length > 0) {
-        const quizPayload = {
-          quizzes: quizQuestions.map(({ id, time, type, question, options, correctAnswer, title, instruction, fileName, hint, check }) => {
-            const base = { id, time, type };
-            if (type === "mcq") return { ...base, question, options, correctAnswer };
-            if (type === "true_false") return { ...base, question, correctAnswer };
-            if (type === "fill_blank") return { ...base, question, correctAnswer };
-            if (type === "coding") return { ...base, title, instruction, fileName, hint, check };
-            return base;
-          }),
-        };
-        const quizBlob = new Blob([JSON.stringify(quizPayload)], { type: "application/json" });
-        const quizFile = new File([quizBlob], "quiz.json", { type: "application/json" });
-        formData.append("quiz_file", quizFile);
-      }
-
       const response = await fetch(
         `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}`,
         {
@@ -250,6 +238,27 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
       }
 
       const updatedActivity = await response.json();
+
+      // Save quiz questions to DB via API
+      const quizPayload = {
+        quizzes: (quizQuestions || []).map(({ id, time, type, question, options, correctAnswer, title, instruction, fileName, hint, check }) => {
+          const base = { id, time, type };
+          if (type === "mcq") return { ...base, question, options, correctAnswer };
+          if (type === "true_false") return { ...base, question, correctAnswer };
+          if (type === "fill_blank") return { ...base, question, correctAnswer };
+          if (type === "coding") return { ...base, title, instruction, fileName, hint, check };
+          return base;
+        }),
+      };
+      await fetch(
+        `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}/quiz`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
+          body: JSON.stringify(quizPayload),
+        }
+      );
+
       onActivityUpdated(updatedActivity);
       handleClose();
     } catch (err) {
