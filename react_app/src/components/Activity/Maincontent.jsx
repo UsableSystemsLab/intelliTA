@@ -130,6 +130,8 @@ export default function Maincontent({ user }) {
     const { courseId, activityId } = useParams();
     const navigate = useNavigate();
     const videoRef = useRef(null);
+    const lastProgressSaveRef = useRef(0);
+    const savedProgressRef = useRef(0);
 
     const [activity, setActivity] = useState(null);
     const [courseName, setCourseName] = useState("");
@@ -152,6 +154,7 @@ export default function Maincontent({ user }) {
     const [checkpointHintText, setCheckpointHintText] = useState('');
     const [isLoadingCheckpointHint, setIsLoadingCheckpointHint] = useState(false);
     const [quizQuestions, setQuizQuestions] = useState([]);
+    const [answeredQuestions, setAnsweredQuestions] = useState([]);
 
     const handleAskAI = useCallback((text) => {
         setSelectedCodeForChat(text);
@@ -161,6 +164,15 @@ export default function Maincontent({ user }) {
     const handleSeek = (newTime) => {
         if (videoRef.current) videoRef.current.currentTime = newTime;
     };
+
+    const recordAnswer = useCallback(({ question_id, answer, is_correct }) => {
+        if (!user?.uid || !courseId || !activityId) return;
+        fetch(`http://localhost:4000/api/courses/${courseId}/activities/${activityId}/answers`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer 1111' },
+            body: JSON.stringify({ firebaseId: user.uid, question_id, answer })
+        }).catch(() => {});
+    }, [user, courseId, activityId]);
 
     // Initialize Checkpoint Logic Engine
     const {
@@ -190,7 +202,9 @@ export default function Maincontent({ user }) {
         },
         onSeek: handleSeek,
         INITIAL_FILES: initialFiles,
-        quizQuestions
+        quizQuestions,
+        onAnswerRecorded: recordAnswer,
+        answeredQuestions
     });
 
     const handleCheckpointHint = useCallback(async () => {
@@ -297,16 +311,51 @@ export default function Maincontent({ user }) {
                         }
                     }
 
-                    // Load quiz questions if available
-                    if (data.quiz_url) {
+                    // Load quiz questions from DB
+                    try {
+                        const quizRes = await fetch(
+                            `http://localhost:4000/api/courses/${courseId}/activities/${activityId}/quiz`,
+                            { headers: { "Authorization": "Bearer 1111" } }
+                        );
+                        if (quizRes.ok) {
+                            const quizData = await quizRes.json();
+                            setQuizQuestions(quizData.quizzes || []);
+                        }
+                    } catch (quizErr) {
+                        console.error("Failed to fetch quiz data:", quizErr);
+                    }
+
+                    // Load student's previous answers
+                    if (user?.uid) {
                         try {
-                            const quizRes = await fetch(data.quiz_url);
-                            if (quizRes.ok) {
-                                const quizData = await quizRes.json();
-                                setQuizQuestions(quizData.quizzes || []);
+                            const answersRes = await fetch(
+                                `http://localhost:4000/api/courses/${courseId}/activities/${activityId}/answers?firebaseId=${user.uid}`,
+                                { headers: { "Authorization": "Bearer 1111" } }
+                            );
+                            if (answersRes.ok) {
+                                const { answers } = await answersRes.json();
+                                setAnsweredQuestions(answers || []);
                             }
-                        } catch (quizErr) {
-                            console.error("Failed to fetch quiz data:", quizErr);
+                        } catch (answersErr) {
+                            console.error("Failed to fetch student answers:", answersErr);
+                        }
+                    }
+
+                    // Load video progress (store in ref, apply when video loads)
+                    if (user?.uid) {
+                        try {
+                            const progressRes = await fetch(
+                                `http://localhost:4000/api/courses/${courseId}/activities/${activityId}/progress?firebaseId=${user.uid}`,
+                                { headers: { "Authorization": "Bearer 1111" } }
+                            );
+                            if (progressRes.ok) {
+                                const { last_watched_seconds } = await progressRes.json();
+                                if (last_watched_seconds > 5) {
+                                    savedProgressRef.current = last_watched_seconds;
+                                }
+                            }
+                        } catch (progressErr) {
+                            console.error("Failed to fetch video progress:", progressErr);
                         }
                     }
                 } else {
@@ -320,7 +369,7 @@ export default function Maincontent({ user }) {
             }
         }
         loadActivity();
-    }, [courseId, activityId]);
+    }, [courseId, activityId, user]);
 
 
     const isYouTube = activity?.video_url && (activity.video_url.includes('youtube.com') || activity.video_url.includes('youtu.be'));
@@ -340,9 +389,25 @@ export default function Maincontent({ user }) {
     }, [isYouTube, isPlaying, activeCheckpoint, duration]);
 
 
+    const saveVideoProgress = useCallback((seconds) => {
+        if (!user?.uid || !courseId || !activityId) return;
+        fetch(`http://localhost:4000/api/courses/${courseId}/activities/${activityId}/progress`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer 1111' },
+            body: JSON.stringify({ firebaseId: user.uid, last_watched_seconds: Math.floor(seconds) })
+        }).catch(() => {});
+    }, [user, courseId, activityId]);
+
     const handleTimeUpdate = () => {
         if (!videoRef.current) return;
-        setCurrentTime(videoRef.current.currentTime);
+        const time = videoRef.current.currentTime;
+        setCurrentTime(time);
+
+        // Throttled save every 10 seconds
+        if (time - lastProgressSaveRef.current > 10) {
+            lastProgressSaveRef.current = time;
+            saveVideoProgress(time);
+        }
     };
 
     const handlePlay = () => {
@@ -358,6 +423,7 @@ export default function Maincontent({ user }) {
     const handlePause = () => {
         videoRef.current?.pause();
         setIsPlaying(false);
+        if (videoRef.current) saveVideoProgress(videoRef.current.currentTime);
     };
 
     const handleFileChange = (newContent) => {
@@ -553,7 +619,14 @@ export default function Maincontent({ user }) {
                     checkpoints={checkpoints}
                     activeCheckpoint={activeCheckpoint}
                     onTimeUpdate={handleTimeUpdate}
-                    onDurationChange={setDuration}
+                    onDurationChange={(d) => {
+                        setDuration(d);
+                        if (savedProgressRef.current > 0 && videoRef.current) {
+                            videoRef.current.currentTime = savedProgressRef.current;
+                            setCurrentTime(savedProgressRef.current);
+                            savedProgressRef.current = 0;
+                        }
+                    }}
                     onPlay={handlePlay}
                     onPause={handlePause}
                     onSeek={handleSeek}

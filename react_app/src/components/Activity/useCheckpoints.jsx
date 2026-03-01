@@ -46,13 +46,32 @@ export function useCheckpoints({
     onPause,
     onSeek,
     INITIAL_FILES,
-    quizQuestions = []
+    quizQuestions = [],
+    onAnswerRecorded,
+    answeredQuestions = []
 }) {
     // Build merged + sorted checkpoint list when quizQuestions change
+    // Mark questions the student already answered correctly as 'verified'
     const initialCheckpoints = useMemo(() => {
-        const quizCps = quizToCheckpoints(quizQuestions);
+        // Build a set of question IDs the student answered correctly
+        const correctIds = new Set(
+            answeredQuestions
+                .filter(a => a.is_correct)
+                .map(a => a.question_id)
+        );
+
+        const quizCps = quizToCheckpoints(quizQuestions).map(cp => {
+            const numericId = typeof cp.id === 'string' && cp.id.startsWith('quiz_')
+                ? parseInt(cp.id.replace('quiz_', ''), 10)
+                : cp.id;
+            if (correctIds.has(numericId)) {
+                return { ...cp, status: 'verified' };
+            }
+            return cp;
+        });
+
         return [...quizCps].sort((a, b) => a.time - b.time);
-    }, [quizQuestions]);
+    }, [quizQuestions, answeredQuestions]);
 
     const [checkpoints, setCheckpoints] = useState(initialCheckpoints);
     const [activeCheckpoint, setActiveCheckpoint] = useState(null);
@@ -147,6 +166,16 @@ export function useCheckpoints({
     const checkSolution = () => {
         if (!activeCheckpoint) return;
         const isCorrect = activeCheckpoint.check(files);
+
+        // Record answer to backend for coding quiz questions
+        const quizId = activeCheckpoint.id;
+        if (typeof quizId === 'string' && quizId.startsWith('quiz_') && onAnswerRecorded) {
+            const numericId = parseInt(quizId.replace('quiz_', ''), 10);
+            const fileName = activeCheckpoint.fileName || activeFile?.name;
+            const code = files.find(f => f.name === fileName)?.content || '';
+            onAnswerRecorded({ question_id: numericId, answer: code, is_correct: isCorrect });
+        }
+
         if (isCorrect) {
             onFeedback({ type: 'success', message: 'Correct! Continuing lesson...' });
             setCheckpoints(prev => prev.map(cp => cp.id === activeCheckpoint.id ? { ...cp, status: 'verified' } : cp));
@@ -175,6 +204,15 @@ export function useCheckpoints({
             isCorrect = answer === activeCheckpoint.correctAnswer;
         } else if (type === 'fill_blank') {
             isCorrect = answer.trim().toLowerCase() === String(activeCheckpoint.correctAnswer).trim().toLowerCase();
+        }
+
+        // Record answer to backend
+        const quizId = activeCheckpoint.id;
+        const numericId = typeof quizId === 'string' && quizId.startsWith('quiz_')
+            ? parseInt(quizId.replace('quiz_', ''), 10)
+            : quizId;
+        if (onAnswerRecorded) {
+            onAnswerRecorded({ question_id: numericId, answer, is_correct: isCorrect });
         }
 
         if (isCorrect) {
