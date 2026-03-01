@@ -185,6 +185,28 @@ services:
     networks:
       - app_network
 
+  whisper_server:
+    build:
+      context: whisper_server
+      dockerfile: Dockerfile
+    image: whisper_server_image
+    container_name: whisper_server_container
+    environment:
+      - WHISPER_MODEL=${WHISPER_MODEL}
+      - WHISPER_PORT=${WHISPER_PORT}
+    ports:
+      - "${WHISPER_PORT:-8001}:${WHISPER_PORT:-8001}"
+    volumes:
+      - whisper_cache:/root/.cache/whisper
+    restart: unless-stopped
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${WHISPER_PORT:-8001}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 networks:
   app_network:
     driver: bridge
@@ -194,3 +216,4 @@ volumes:
   pgadmin_data:
   ollama_data:
   rustfs_data:
+  whisper_cache:

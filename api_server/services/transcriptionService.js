@@ -2,10 +2,14 @@ import { spawn } from "child_process";
 import fs from "fs/promises";
 import path from "path";
 import os from "os";
-import groq from "../configs/groq.js";
 import { s3, S3_BUCKET, S3_PUBLIC_URL } from "../configs/s3.js";
 import { GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { VideoTranscript } from "../models/index.js";
+
+// Whisper configuration
+const WHISPER_HOST = process.env.WHISPER_HOST || "whisper_server_container";
+const WHISPER_PORT = process.env.WHISPER_PORT || "8001";
+const WHISPER_URL = `http://${WHISPER_HOST}:${WHISPER_PORT}`;
 
 class TranscriptionService {
   /**
@@ -39,12 +43,12 @@ class TranscriptionService {
   /**
    * Extract audio from video using ffmpeg
    * @param {Buffer} videoBuffer - Video file buffer
-   * @returns {Promise<Buffer>} - Audio buffer (MP3 format)
+   * @returns {Promise<Buffer>} - Audio buffer (WAV format)
    */
   async extractAudio(videoBuffer) {
     const tempDir = os.tmpdir();
     const inputPath = path.join(tempDir, `video-${Date.now()}.mp4`);
-    const outputPath = path.join(tempDir, `audio-${Date.now()}.mp3`);
+    const outputPath = path.join(tempDir, `audio-${Date.now()}.wav`);
 
     try {
       await fs.writeFile(inputPath, videoBuffer);
@@ -53,10 +57,9 @@ class TranscriptionService {
         const ffmpeg = spawn("ffmpeg", [
           "-i", inputPath,
           "-vn",                    // No video
-          "-acodec", "libmp3lame",  // MP3 codec
+          "-acodec", "pcm_s16le",   // WAV codec
           "-ar", "16000",           // 16kHz sample rate
           "-ac", "1",               // Mono
-          "-b:a", "64k",            // Bitrate
           "-y",                     // Overwrite
           outputPath,
         ]);
@@ -84,20 +87,29 @@ class TranscriptionService {
   }
 
   /**
-   * Transcribe audio using Groq Whisper
+   * Transcribe audio using local Whisper microservice
    * @param {Buffer} audioBuffer - Audio file buffer
    * @returns {Promise<Object>} - Transcription result with text and metadata
    */
   async transcribeAudio(audioBuffer) {
-    // Create a File object for the Groq API
-    const file = new File([audioBuffer], "audio.mp3", { type: "audio/mpeg" });
+    // Create FormData with the audio file
+    const formData = new FormData();
+    const blob = new Blob([audioBuffer], { type: "audio/wav" });
+    formData.append("file", blob, "audio.wav");
+    formData.append("language", "en");
 
-    const transcription = await groq.audio.transcriptions.create({
-      file: file,
-      model: "whisper-large-v3",
-      response_format: "verbose_json",
-      language: "en",
+    // Send to Whisper microservice
+    const response = await fetch(`${WHISPER_URL}/transcribe`, {
+      method: "POST",
+      body: formData,
     });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Whisper service error: ${error}`);
+    }
+
+    const transcription = await response.json();
 
     return {
       text: transcription.text,
@@ -153,7 +165,7 @@ class TranscriptionService {
       console.log(`[Transcription] Extracting audio...`);
       const audioBuffer = await this.extractAudio(videoBuffer);
 
-      // Step 3: Transcribe using Groq Whisper
+      // Step 3: Transcribe using local Whisper service
       console.log(`[Transcription] Transcribing with Whisper...`);
       const transcription = await this.transcribeAudio(audioBuffer);
 
