@@ -10,5 +10,7 @@ router.get("/:id", CourseController.getCourseById);
 router.post("/:id/code", CourseController.regenerateToken);
 router.put("/:id", CourseController.updateCourse);
 router.delete("/:id", CourseController.deleteCourse);
+router.get("/:id/students", CourseController.getEnrolledStudents);
+router.delete("/:id/students/:userId", CourseController.removeStudent);
 
 export default router;
