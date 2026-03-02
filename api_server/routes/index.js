@@ -3,6 +3,7 @@ import LabRoutes from "./lab.routes.js";
 import CourseRoutes from "./course.routes.js";
 import ActivityRoutes from "./activityRoutes.js";
 import UserApiKeyRoutes from "./UserApiKeyRoutes.js";
+import TranscriptRoutes from "./transcript.routes.js";
 
 const apiRoutes = (router) => {
   /**
@@ -41,6 +42,9 @@ const apiRoutes = (router) => {
 
   // Course routes
   router.use("/courses", CourseRoutes);
+
+  // Transcript routes
+  router.use("/transcripts", TranscriptRoutes);
 
   router.use((req, res) => {
     res.status(404).json({ error: "Not Found" });
