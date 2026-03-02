@@ -60,6 +60,13 @@ const StatusBadge = ({ status }) => {
             text: 'text-gray-400',
             icon: CheckCircle2,
             label: 'Completed'
+        },
+        end: {
+            bg: 'bg-red-500/10',
+            border: 'border-red-500/30',
+            text: 'text-red-400',
+            icon: CheckCircle2,
+            label: 'Ended'
         }
     };
 

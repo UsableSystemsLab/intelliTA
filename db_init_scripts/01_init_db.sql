@@ -133,3 +133,16 @@ CREATE TABLE student_answers (
 
 CREATE INDEX idx_quiz_questions_activity  ON quiz_questions(activity_id);
 CREATE INDEX idx_student_answers_activity ON student_answers(activity_id, user_id);
+
+-- USER_API_KEYS Table
+CREATE TABLE user_api_keys (
+  id         SERIAL PRIMARY KEY,
+  user_id    INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  base_url   VARCHAR(255) NOT NULL,
+  api_key    TEXT NOT NULL,
+  model_name VARCHAR(100) NOT NULL,
+  label      VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(user_id, base_url)
+);

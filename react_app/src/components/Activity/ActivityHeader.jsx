@@ -5,6 +5,8 @@ export default function ActivityHeader({
     onBack,
     onSubmit,
     isSubmitting,
+    isEnded,
+    isUpcoming,
     onHintClick,
     isHintOpen
 }) {
@@ -38,7 +40,8 @@ export default function ActivityHeader({
                 </button>
                 <button
                     onClick={onSubmit}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isEnded || isUpcoming}
+                    title={isEnded ? "This activity has ended" : isUpcoming ? "This activity has not started yet" : undefined}
                     className="flex items-center gap-1.5 text-sm font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed px-4 py-1.5 rounded-lg shadow-lg shadow-green-500/20 hover:shadow-green-500/30 transition-all"
                 >
                     {isSubmitting ? (
@@ -46,7 +49,7 @@ export default function ActivityHeader({
                     ) : (
                         <CheckCircle className="w-3.5 h-3.5" />
                     )}
-                    <span>Submit</span>
+                    <span>{isEnded ? "Ended" : isUpcoming ? "Upcoming" : "Submit"}</span>
                 </button>
             </div>
         </div>

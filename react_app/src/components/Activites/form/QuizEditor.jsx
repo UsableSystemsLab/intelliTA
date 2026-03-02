@@ -520,7 +520,7 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
 
   // Returns the video's current time in seconds; null when no video is loaded
   const getVideoTime = videoSrc
-    ? () => Math.floor(videoRef.current?.currentTime ?? 0)
+    ? () => Math.round(videoRef.current?.currentTime ?? 0)
     : null;
 
   if (!isOpen) return null;
