@@ -56,3 +56,14 @@ class HintGenerateRequest(BaseModel):
     checkpoint_instruction: str
     student_code: str
     file_name: str
+
+
+class TimeRange(BaseModel):
+    start_seconds: int
+    end_seconds: int
+
+
+class QuizSuggestRequest(BaseModel):
+    activity_id: int
+    time_range: Optional[TimeRange] = None        # used for "generate more"
+    existing_questions: Optional[list[str]] = None  # avoid duplicates

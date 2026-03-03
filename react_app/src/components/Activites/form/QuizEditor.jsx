@@ -15,7 +15,9 @@ import {
   Edit3,
   AlertTriangle,
   Play,
+  Sparkles,
 } from "lucide-react";
+import AISuggestedQuestions from "./AISuggestedQuestions";
 
 const markdownComponents = {
   h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2">{children}</h1>,
@@ -103,7 +105,6 @@ function createEmptyQuestion(id) {
     question: "",
     options: ["", "", "", ""],
     correctAnswer: 0,
-    // coding-specific fields
     title: "",
     instruction: "",
     fileName: "",
@@ -119,7 +120,6 @@ function formatTime(seconds) {
 }
 
 function parseTimeInput(value) {
-  // Accept MM:SS or raw seconds
   if (value.includes(":")) {
     const [m, s] = value.split(":").map(Number);
     return (m || 0) * 60 + (s || 0);
@@ -127,7 +127,6 @@ function parseTimeInput(value) {
   return parseInt(value, 10) || 0;
 }
 
-// Find the next free second that isn't already taken by another question
 function findFreeTime(desired, otherTimes) {
   if (!otherTimes) return desired;
   let t = desired;
@@ -135,8 +134,6 @@ function findFreeTime(desired, otherTimes) {
   return t;
 }
 
-// Single question editor card
-// getVideoTime: reads the video player's current time to stamp the question
 function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDuration, getVideoTime, otherTimes }) {
   const [expanded, setExpanded] = useState(true);
   const [adjustedNotice, setAdjustedNotice] = useState(null);
@@ -171,7 +168,6 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
   const removeOption = (optIdx) => {
     if (question.options.length <= 2) return;
     const newOptions = question.options.filter((_, i) => i !== optIdx);
-    // Adjust correctAnswer if needed
     let newCorrect = question.correctAnswer;
     if (optIdx === newCorrect) newCorrect = 0;
     else if (optIdx < newCorrect) newCorrect--;
@@ -180,7 +176,6 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
 
   return (
     <div className="bg-gray-900/50 border border-gray-700 rounded-xl overflow-hidden">
-      {/* Card header — click to collapse */}
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
@@ -205,7 +200,6 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
 
       {expanded && (
         <div className="px-4 pb-4 space-y-4 border-t border-gray-700/50 pt-4">
-          {/* Row: Type + Time */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium text-gray-400 mb-1 block">Type</label>
@@ -214,7 +208,6 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
                 onChange={(e) => {
                   const newType = e.target.value;
                   const updated = { ...question, type: newType };
-                  // Reset correctAnswer shape and options on type change
                   if (newType === "true_false") {
                     updated.correctAnswer = true;
                   } else if (newType === "mcq") {
@@ -259,7 +252,6 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
                   }`}
                 />
               </div>
-              {/* Shown only when a video is loaded — sets this question's time to where the video is paused */}
               {getVideoTime && (
                 <button
                   type="button"
@@ -289,7 +281,6 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
             </div>
           </div>
 
-          {/* Type-specific fields */}
           {question.type === "coding" ? (
             <CodingFields question={question} onChange={onChange} fileNames={fileNames} />
           ) : (
@@ -303,7 +294,6 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
             />
           )}
 
-          {/* Delete button — always enabled, even for the last question */}
           <div className="flex justify-end">
             <button
               type="button"
@@ -320,18 +310,15 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
   );
 }
 
-// Fields for mcq, true_false, fill_blank
 function QuizFields({ question, onChange, update, updateOption, addOption, removeOption }) {
   return (
     <>
-      {/* Question text with markdown support */}
       <MarkdownQuestionField
         value={question.question}
         onChange={(val) => update("question", val)}
         placeholder="Enter your question... (supports **markdown**)"
       />
 
-      {/* MCQ options */}
       {question.type === "mcq" && (
         <div>
           <label className="text-xs font-medium text-gray-400 mb-2 block">
@@ -383,7 +370,6 @@ function QuizFields({ question, onChange, update, updateOption, addOption, remov
         </div>
       )}
 
-      {/* True/False correct answer */}
       {question.type === "true_false" && (
         <div>
           <label className="text-xs font-medium text-gray-400 mb-2 block">Correct Answer</label>
@@ -414,7 +400,6 @@ function QuizFields({ question, onChange, update, updateOption, addOption, remov
         </div>
       )}
 
-      {/* Fill in the blank correct answer */}
       {question.type === "fill_blank" && (
         <div>
           <label className="text-xs font-medium text-gray-400 mb-1 block">Correct Answer</label>
@@ -431,7 +416,6 @@ function QuizFields({ question, onChange, update, updateOption, addOption, remov
   );
 }
 
-// Fields for coding type
 function CodingFields({ question, onChange, fileNames = [] }) {
   const update = (field, value) => onChange({ ...question, [field]: value });
 
@@ -476,17 +460,17 @@ function CodingFields({ question, onChange, fileNames = [] }) {
   );
 }
 
-// Quiz editor modal
-function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNames, videoDuration, videoFile, videoUrl }) {
+function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNames, videoDuration, videoFile, videoUrl, activityId }) {
   const [nextId, setNextId] = useState(
     () => (questions.length > 0 ? Math.max(...questions.map((q) => q.id)) + 1 : 1)
   );
   const [videoSrc, setVideoSrc] = useState(null);
-  const [leftWidth, setLeftWidth] = useState(45); // left panel width as a percentage
+  const [leftWidth, setLeftWidth] = useState(45);
   const [dragging, setDragging] = useState(false);
+  const [showAI, setShowAI] = useState(false);
   const videoRef = useRef(null);
   const containerRef = useRef(null);
-  const isDragging = useRef(false); // ref to avoid stale closure in mousemove
+  const isDragging = useRef(false);
 
   const handleDividerMouseDown = () => {
     isDragging.current = true;
@@ -497,7 +481,7 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
     if (!isDragging.current || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const newWidth = ((e.clientX - rect.left) / rect.width) * 100;
-    setLeftWidth(Math.min(Math.max(newWidth, 25), 70)); // clamp between 25% and 70%
+    setLeftWidth(Math.min(Math.max(newWidth, 25), 70));
   };
 
   const handleMouseUp = () => {
@@ -505,7 +489,6 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
     setDragging(false);
   };
 
-  // Build a playable URL from the uploaded File or fallback to the existing remote URL
   useEffect(() => {
     if (videoFile) {
       const url = URL.createObjectURL(videoFile);
@@ -518,7 +501,6 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
     }
   }, [videoFile, videoUrl]);
 
-  // Returns the video's current time in seconds; null when no video is loaded
   const getVideoTime = videoSrc
     ? () => Math.floor(videoRef.current?.currentTime ?? 0)
     : null;
@@ -538,6 +520,13 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
 
   const handleDelete = (index) => {
     onQuestionsChange(questions.filter((_, i) => i !== index));
+  };
+
+  const handleInjectSuggestions = (suggested) => {
+    let id = nextId;
+    const withIds = suggested.map((q) => ({ ...createEmptyQuestion(id++), ...q, id: id - 1 }));
+    onQuestionsChange([...questions, ...withIds]);
+    setNextId(id);
   };
 
   return (
@@ -585,7 +574,6 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
                 controls
                 className="w-full rounded-xl"
               />
-              {/* Step-by-step guide stacked vertically to fit the panel */}
               <div className="flex flex-col gap-2">
                 {[
                   { step: "1", text: "Play the video" },
@@ -603,7 +591,7 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
             </div>
           )}
 
-          {/* Draggable divider — only shown when video exists */}
+          {/* Draggable divider */}
           {videoSrc && (
             <div
               onMouseDown={handleDividerMouseDown}
@@ -617,9 +605,18 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
             </div>
           )}
 
-          {/* Right panel: question list */}
+          {/* Right panel: AI suggestions + question list */}
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-            {questions.length === 0 ? (
+            {activityId && showAI && (
+              <AISuggestedQuestions
+                activityId={activityId}
+                videoUrl={videoUrl}
+                videoDuration={videoDuration}
+                onInjectQuestions={handleInjectSuggestions}
+              />
+            )}
+
+            {questions.length === 0 && !showAI ? (
               <div className="flex flex-col items-center justify-center py-16 text-gray-500">
                 <HelpCircle className="w-12 h-12 mb-3 opacity-30" />
                 <p className="text-sm">No questions yet. Add your first question below.</p>
@@ -644,14 +641,30 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
 
         {/* Footer */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-700 bg-gray-900/50 shrink-0">
-          <button
-            type="button"
-            onClick={handleAdd}
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Question
-          </button>
+          <div className="flex items-center gap-2">
+            {activityId && (
+              <button
+                type="button"
+                onClick={() => setShowAI((v) => !v)}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  showAI
+                    ? "bg-purple-600/30 text-purple-300 border border-purple-500/40"
+                    : "bg-purple-600/10 text-purple-400 border border-purple-500/20 hover:bg-purple-600/20"
+                }`}
+              >
+                <Sparkles className="w-4 h-4" />
+                Suggest with AI
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleAdd}
+              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Add Question
+            </button>
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -665,7 +678,7 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
   );
 }
 
-export default function QuizEditor({ questions, onQuestionsChange, fileNames = [], videoDuration = 0, videoFile = null, videoUrl = null }) {
+export default function QuizEditor({ questions, onQuestionsChange, fileNames = [], videoDuration = 0, videoFile = null, videoUrl = null, activityId = null }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const typeLabel = (type) => QUIZ_TYPES.find((t) => t.value === type)?.label || type;
@@ -693,7 +706,7 @@ export default function QuizEditor({ questions, onQuestionsChange, fileNames = [
                 {questions.length} question{questions.length !== 1 ? "s" : ""}
               </p>
               <p className="text-xs text-gray-500 truncate">
-                {questions.map((q, i) => `${formatTime(q.time)} - ${typeLabel(q.type)}`).join(", ")}
+                {questions.map((q) => `${formatTime(q.time)} - ${typeLabel(q.type)}`).join(", ")}
               </p>
             </div>
           </div>
@@ -715,6 +728,7 @@ export default function QuizEditor({ questions, onQuestionsChange, fileNames = [
         fileNames={fileNames}
         videoDuration={videoDuration}
         videoFile={videoFile}
+        activityId={activityId}
         videoUrl={videoUrl}
       />
     </div>
