@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import {
   HelpCircle,
@@ -14,6 +14,7 @@ import {
   Eye,
   Edit3,
   AlertTriangle,
+  Play,
 } from "lucide-react";
 
 const markdownComponents = {
@@ -126,13 +127,32 @@ function parseTimeInput(value) {
   return parseInt(value, 10) || 0;
 }
 
-// --- Single question editor card ---
-// Select question type and put the question 
+// Find the next free second that isn't already taken by another question
+function findFreeTime(desired, otherTimes) {
+  if (!otherTimes) return desired;
+  let t = desired;
+  while (otherTimes.has(t)) t++;
+  return t;
+}
 
-function QuestionCard({ question, index, onChange, onDelete, totalQuestions, fileNames, videoDuration }) {
+// Single question editor card
+// getVideoTime: reads the video player's current time to stamp the question
+function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDuration, getVideoTime, otherTimes }) {
   const [expanded, setExpanded] = useState(true);
+  const [adjustedNotice, setAdjustedNotice] = useState(null);
+  const noticeTimer = useRef(null);
   const typeConfig = QUIZ_TYPES.find((t) => t.value === question.type);
   const TypeIcon = typeConfig?.icon || HelpCircle;
+
+  const setTimeWithNudge = (parsed) => {
+    const free = findFreeTime(parsed, otherTimes);
+    if (free !== parsed) {
+      if (noticeTimer.current) clearTimeout(noticeTimer.current);
+      setAdjustedNotice(formatTime(free));
+      noticeTimer.current = setTimeout(() => setAdjustedNotice(null), 3000);
+    }
+    update("time", free);
+  };
 
   const update = (field, value) => {
     onChange({ ...question, [field]: value });
@@ -230,23 +250,40 @@ function QuestionCard({ question, index, onChange, onDelete, totalQuestions, fil
                   value={formatTime(question.time)}
                   onChange={(e) => {
                     let parsed = parseTimeInput(e.target.value);
-                    if (videoDuration > 0 && parsed > videoDuration) {
-                      parsed = videoDuration;
-                    }
-                    update("time", parsed);
+                    if (videoDuration > 0 && parsed > videoDuration) parsed = videoDuration;
+                    setTimeWithNudge(parsed);
                   }}
                   placeholder="00:00"
                   className={`w-full pl-9 pr-3 py-2 bg-gray-800 border rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 ${
-                    videoDuration > 0 && question.time > videoDuration
-                      ? "border-red-500"
-                      : "border-gray-600"
+                    videoDuration > 0 && question.time > videoDuration ? "border-red-500" : "border-gray-600"
                   }`}
                 />
               </div>
+              {/* Shown only when a video is loaded — sets this question's time to where the video is paused */}
+              {getVideoTime && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    let t = getVideoTime();
+                    if (videoDuration > 0 && t > videoDuration) t = videoDuration;
+                    setTimeWithNudge(t);
+                  }}
+                  className="mt-1.5 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-blue-400 hover:text-blue-300 rounded-lg text-xs font-medium transition-all"
+                >
+                  <Play className="w-3 h-3" />
+                  Use current video time
+                </button>
+              )}
               {videoDuration > 0 && question.time > videoDuration && (
                 <p className="flex items-center gap-1 text-[10px] text-red-400 mt-0.5">
                   <AlertTriangle className="w-3 h-3" />
                   Exceeds video duration ({formatTime(videoDuration)})
+                </p>
+              )}
+              {adjustedNotice && (
+                <p className="flex items-center gap-1 text-[10px] text-blue-400 mt-0.5">
+                  <Clock className="w-3 h-3" />
+                  Adjusted to {adjustedNotice} to avoid conflict
                 </p>
               )}
             </div>
@@ -266,13 +303,12 @@ function QuestionCard({ question, index, onChange, onDelete, totalQuestions, fil
             />
           )}
 
-          {/* Delete button */}
+          {/* Delete button — always enabled, even for the last question */}
           <div className="flex justify-end">
             <button
               type="button"
               onClick={onDelete}
-              disabled={totalQuestions <= 1}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-red-400 hover:bg-red-500/10 rounded-lg text-xs font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-red-400 hover:bg-red-500/10 rounded-lg text-xs font-medium transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
               Remove
@@ -440,12 +476,52 @@ function CodingFields({ question, onChange, fileNames = [] }) {
   );
 }
 
-// --- Rendering the create quiz screen ---
-
-function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNames, videoDuration }) {
+// Quiz editor modal
+function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNames, videoDuration, videoFile, videoUrl }) {
   const [nextId, setNextId] = useState(
     () => (questions.length > 0 ? Math.max(...questions.map((q) => q.id)) + 1 : 1)
   );
+  const [videoSrc, setVideoSrc] = useState(null);
+  const [leftWidth, setLeftWidth] = useState(45); // left panel width as a percentage
+  const [dragging, setDragging] = useState(false);
+  const videoRef = useRef(null);
+  const containerRef = useRef(null);
+  const isDragging = useRef(false); // ref to avoid stale closure in mousemove
+
+  const handleDividerMouseDown = () => {
+    isDragging.current = true;
+    setDragging(true);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const newWidth = ((e.clientX - rect.left) / rect.width) * 100;
+    setLeftWidth(Math.min(Math.max(newWidth, 25), 70)); // clamp between 25% and 70%
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    setDragging(false);
+  };
+
+  // Build a playable URL from the uploaded File or fallback to the existing remote URL
+  useEffect(() => {
+    if (videoFile) {
+      const url = URL.createObjectURL(videoFile);
+      setVideoSrc(url);
+      return () => URL.revokeObjectURL(url);
+    } else if (videoUrl) {
+      setVideoSrc(videoUrl);
+    } else {
+      setVideoSrc(null);
+    }
+  }, [videoFile, videoUrl]);
+
+  // Returns the video's current time in seconds; null when no video is loaded
+  const getVideoTime = videoSrc
+    ? () => Math.floor(videoRef.current?.currentTime ?? 0)
+    : null;
 
   if (!isOpen) return null;
 
@@ -466,7 +542,7 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-      <div className="relative bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-3xl h-[90vh] shadow-2xl flex flex-col overflow-hidden">
+      <div className="relative bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-7xl h-[95vh] shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 shrink-0">
           <div className="flex items-center gap-3">
@@ -489,27 +565,81 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
           </button>
         </div>
 
-        {/* Question list */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-          {questions.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-              <HelpCircle className="w-12 h-12 mb-3 opacity-30" />
-              <p className="text-sm">No questions yet. Add your first question below.</p>
-            </div>
-          ) : (
-            questions.map((q, idx) => (
-              <QuestionCard
-                key={q.id}
-                question={q}
-                index={idx}
-                onChange={(updated) => handleChange(idx, updated)}
-                onDelete={() => handleDelete(idx)}
-                totalQuestions={questions.length}
-                fileNames={fileNames}
-                videoDuration={videoDuration}
+        {/* Body: resizable split — video left, questions right */}
+        <div
+          ref={containerRef}
+          className={`flex flex-1 overflow-hidden ${dragging ? "cursor-col-resize select-none" : ""}`}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          {/* Left panel: video + step guide */}
+          {videoSrc && (
+            <div
+              style={{ width: `${leftWidth}%` }}
+              className="shrink-0 flex flex-col gap-4 bg-black/30 p-5 overflow-hidden"
+            >
+              <video
+                ref={videoRef}
+                src={videoSrc}
+                controls
+                className="w-full rounded-xl"
               />
-            ))
+              {/* Step-by-step guide stacked vertically to fit the panel */}
+              <div className="flex flex-col gap-2">
+                {[
+                  { step: "1", text: "Play the video" },
+                  { step: "2", text: "Pause at the right moment" },
+                  { step: "3", text: 'Click "Use current video time"' },
+                ].map(({ step, text }) => (
+                  <div key={step} className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5">
+                    <span className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold flex items-center justify-center shrink-0">
+                      {step}
+                    </span>
+                    <span className="text-sm text-gray-300">{text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
+
+          {/* Draggable divider — only shown when video exists */}
+          {videoSrc && (
+            <div
+              onMouseDown={handleDividerMouseDown}
+              className={`w-3 shrink-0 cursor-col-resize flex items-center justify-center group transition-colors ${
+                dragging ? "bg-blue-500/40" : "bg-gray-600/60 hover:bg-blue-500/40"
+              }`}
+            >
+              <div className={`w-1 h-12 rounded-full transition-all ${
+                dragging ? "bg-blue-400 opacity-100" : "bg-gray-400 opacity-60 group-hover:bg-blue-400 group-hover:opacity-100"
+              }`} />
+            </div>
+          )}
+
+          {/* Right panel: question list */}
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+            {questions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+                <HelpCircle className="w-12 h-12 mb-3 opacity-30" />
+                <p className="text-sm">No questions yet. Add your first question below.</p>
+              </div>
+            ) : (
+              questions.map((q, idx) => (
+                <QuestionCard
+                  key={q.id}
+                  question={q}
+                  index={idx}
+                  onChange={(updated) => handleChange(idx, updated)}
+                  onDelete={() => handleDelete(idx)}
+                  fileNames={fileNames}
+                  videoDuration={videoDuration}
+                  getVideoTime={getVideoTime}
+                  otherTimes={new Set(questions.filter((_, i) => i !== idx).map((x) => x.time))}
+                />
+              ))
+            )}
+          </div>
         </div>
 
         {/* Footer */}
@@ -535,7 +665,7 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
   );
 }
 
-export default function QuizEditor({ questions, onQuestionsChange, fileNames = [], videoDuration = 0 }) {
+export default function QuizEditor({ questions, onQuestionsChange, fileNames = [], videoDuration = 0, videoFile = null, videoUrl = null }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const typeLabel = (type) => QUIZ_TYPES.find((t) => t.value === type)?.label || type;
@@ -584,6 +714,8 @@ export default function QuizEditor({ questions, onQuestionsChange, fileNames = [
         onQuestionsChange={onQuestionsChange}
         fileNames={fileNames}
         videoDuration={videoDuration}
+        videoFile={videoFile}
+        videoUrl={videoUrl}
       />
     </div>
   );

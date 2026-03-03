@@ -88,3 +88,67 @@ CREATE TABLE video_transcripts (
 );
 
 CREATE INDEX idx_video_transcripts_status ON video_transcripts(status);
+-- Adding missing ACTIVITIES and SUBMISSIONS tables, because they were missing (they were auto created in POSTGRE automatically by sequlize)
+-- ACTIVITIES Table
+CREATE TABLE activities (
+  activity_id      SERIAL PRIMARY KEY,
+  course_id        INT NOT NULL REFERENCES courses(course_id) ON DELETE CASCADE,
+  title            VARCHAR(255) NOT NULL,
+  start_date       TIMESTAMP NOT NULL,
+  end_date         TIMESTAMP NOT NULL,
+  video_url        VARCHAR(500),
+  md_file_url      VARCHAR(500),
+  starter_code_url VARCHAR(500),
+  quiz_url         VARCHAR(500),
+  created_at       TIMESTAMP DEFAULT NOW()
+);
+
+-- SUBMISSIONS Table
+CREATE TABLE submissions (
+  submission_id SERIAL PRIMARY KEY,
+  user_id       INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  activity_id   INT NOT NULL REFERENCES activities(activity_id) ON DELETE CASCADE,
+  score         INT DEFAULT 0,
+  created_at    TIMESTAMP DEFAULT NOW(),
+  updated_at    TIMESTAMP DEFAULT NOW()
+);
+
+-- QUIZ_QUESTIONS Table
+CREATE TABLE quiz_questions (
+  id             SERIAL PRIMARY KEY,
+  activity_id    INT NOT NULL REFERENCES activities(activity_id) ON DELETE CASCADE,
+  time_seconds   INT NOT NULL,
+  type           VARCHAR(20) NOT NULL CHECK (type IN ('mcq', 'true_false', 'fill_blank', 'coding')),
+  question       TEXT,
+  title          VARCHAR(255),
+  instruction    TEXT,
+  file_name      VARCHAR(255),
+  check_regex    TEXT,
+  options        JSONB,
+  correct_answer JSONB,
+  created_at     TIMESTAMP DEFAULT NOW()
+);
+
+-- VIDEO_PROGRESS Table
+CREATE TABLE video_progress (
+  id                   SERIAL PRIMARY KEY,
+  user_id              INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  activity_id          INT NOT NULL REFERENCES activities(activity_id) ON DELETE CASCADE,
+  last_watched_seconds INT NOT NULL DEFAULT 0,
+  updated_at           TIMESTAMP DEFAULT NOW(),
+  UNIQUE(user_id, activity_id)
+);
+
+-- STUDENT_ANSWERS Table
+CREATE TABLE student_answers (
+  id          SERIAL PRIMARY KEY,
+  user_id     INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+  question_id INT NOT NULL REFERENCES quiz_questions(id) ON DELETE CASCADE,
+  activity_id INT NOT NULL REFERENCES activities(activity_id) ON DELETE CASCADE,
+  answer      JSONB NOT NULL,
+  is_correct  BOOLEAN NOT NULL,
+  answered_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_quiz_questions_activity  ON quiz_questions(activity_id);
+CREATE INDEX idx_student_answers_activity ON student_answers(activity_id, user_id);
