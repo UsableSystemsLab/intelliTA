@@ -186,7 +186,7 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
           <TypeIcon className="w-4 h-4" />
         </div>
         <div className="flex-1 text-left min-w-0">
-          <span className="text-sm text-white font-medium truncate block">
+          <span className="text-sm text-white font-medium line-clamp-2 block">
             {question.question || question.title || `Question ${index + 1}`}
           </span>
           <span className="text-xs text-gray-500">

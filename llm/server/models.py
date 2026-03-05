@@ -65,5 +65,5 @@ class TimeRange(BaseModel):
 
 class QuizSuggestRequest(BaseModel):
     activity_id: int
-    time_range: Optional[TimeRange] = None        # used for "generate more"
-    existing_questions: Optional[list[str]] = None  # avoid duplicates
+    time_range: Optional[TimeRange] = None
+    interval_minutes: Optional[int] = 5            # minutes per question bucket
