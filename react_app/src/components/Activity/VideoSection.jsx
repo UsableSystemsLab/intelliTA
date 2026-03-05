@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, RotateCcw, Video, Maximize, Minimize, Volume2, VolumeX, ChevronUp } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, RotateCcw, Video, Maximize, Minimize, Volume2, VolumeX, ChevronUp, Subtitles } from 'lucide-react';
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -19,7 +19,10 @@ export default function VideoSection({
     onNext,
     onPrev,
     onRetryCheckpoint,
-    CheckpointOverlay
+    CheckpointOverlay,
+    captionSegments = [],
+    captionsEnabled,
+    onToggleCaptions
 }) {
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [showSpeedMenu, setShowSpeedMenu] = useState(false);
@@ -63,6 +66,16 @@ export default function VideoSection({
             case 'completed': return 'bg-blue-500';
             default: return 'bg-yellow-400';
         }
+    };
+
+    const getCurrentCaption = () => {
+        if (!captionSegments.length) return null;
+        for (const seg of captionSegments) {
+            if (currentTime >= seg.start && currentTime < seg.end) {
+                return seg.text;
+            }
+        }
+        return null;
     };
 
     // --- Playback speed ---
@@ -140,6 +153,11 @@ export default function VideoSection({
                     e.preventDefault();
                     toggleMute();
                     break;
+                case 'c':
+                case 'C':
+                    e.preventDefault();
+                    if (onToggleCaptions) onToggleCaptions();
+                    break;
             }
         };
         window.addEventListener('keydown', handleKeyDown);
@@ -213,6 +231,14 @@ export default function VideoSection({
                     >
                         <Play className="w-8 h-8 text-white fill-current" />
                     </button>
+                )}
+
+                {captionsEnabled && !activeCheckpoint && getCurrentCaption() && (
+                    <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-10 px-4 py-2 bg-black/80 rounded-lg max-w-[90%] text-center pointer-events-none">
+                        <span className="text-white text-sm font-medium leading-relaxed">
+                            {getCurrentCaption()}
+                        </span>
+                    </div>
                 )}
 
                 {activeCheckpoint && <CheckpointOverlay />}
@@ -347,6 +373,21 @@ export default function VideoSection({
 
                     {/* Right: Speed, Fullscreen, Checkpoints */}
                     <div className="flex items-center gap-2">
+                        {/* CC Toggle */}
+                        {captionSegments.length > 0 && (
+                            <button
+                                onClick={onToggleCaptions}
+                                className={`p-2 rounded-lg transition-all ${
+                                    captionsEnabled
+                                        ? 'text-blue-400 bg-blue-500/20 hover:bg-blue-500/30'
+                                        : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                                }`}
+                                title={`Captions ${captionsEnabled ? 'On' : 'Off'} (C)`}
+                            >
+                                <Subtitles className="w-4 h-4" />
+                            </button>
+                        )}
+
                         {/* Speed Control */}
                         <div className="relative" ref={speedMenuRef}>
                             <button

@@ -155,6 +155,8 @@ export default function Maincontent({ user }) {
     const [isLoadingCheckpointHint, setIsLoadingCheckpointHint] = useState(false);
     const [quizQuestions, setQuizQuestions] = useState([]);
     const [answeredQuestions, setAnsweredQuestions] = useState([]);
+    const [captionSegments, setCaptionSegments] = useState([]);
+    const [captionsEnabled, setCaptionsEnabled] = useState(false);
 
     const handleAskAI = useCallback((text) => {
         setSelectedCodeForChat(text);
@@ -323,6 +325,29 @@ export default function Maincontent({ user }) {
                         }
                     } catch (quizErr) {
                         console.error("Failed to fetch quiz data:", quizErr);
+                    }
+
+                    // Load transcript for captions
+                    try {
+                        const transcriptRes = await fetch(
+                            `http://localhost:4000/api/transcripts/activities/${activityId}`,
+                            { headers: { "Authorization": "Bearer 1111" } }
+                        );
+                        if (transcriptRes.ok) {
+                            const transcriptData = await transcriptRes.json();
+                            if (transcriptData.status === 'completed' && transcriptData.transcript_id) {
+                                const contentRes = await fetch(
+                                    `http://localhost:4000/api/transcripts/${transcriptData.transcript_id}/content`,
+                                    { headers: { "Authorization": "Bearer 1111" } }
+                                );
+                                if (contentRes.ok) {
+                                    const contentData = await contentRes.json();
+                                    setCaptionSegments(contentData.segments || []);
+                                }
+                            }
+                        }
+                    } catch (transcriptErr) {
+                        console.error("Failed to fetch transcript:", transcriptErr);
                     }
 
                     // Load student's previous answers
@@ -618,6 +643,9 @@ export default function Maincontent({ user }) {
                     duration={duration}
                     checkpoints={checkpoints}
                     activeCheckpoint={activeCheckpoint}
+                    captionSegments={captionSegments}
+                    captionsEnabled={captionsEnabled}
+                    onToggleCaptions={() => setCaptionsEnabled(prev => !prev)}
                     onTimeUpdate={handleTimeUpdate}
                     onDurationChange={(d) => {
                         setDuration(d);
