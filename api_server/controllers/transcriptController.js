@@ -20,10 +20,11 @@ const TranscriptController = {
     }
   },
 
-  // Get full transcript content from S3
+  // Get full transcript content from S3 (supports ?lang=ar for Arabic)
   async getTranscriptContent(req, res) {
     try {
       const { transcriptId } = req.params;
+      const lang = req.query.lang || "en";
       const transcript = await VideoTranscript.findByPk(transcriptId);
 
       if (!transcript) {
@@ -33,8 +34,13 @@ const TranscriptController = {
         return res.status(400).json({ message: "Transcript not ready", status: transcript.status });
       }
 
+      const transcriptUrl = lang === "ar" ? transcript.transcript_url_ar : transcript.transcript_url;
+      if (!transcriptUrl) {
+        return res.status(404).json({ message: `No ${lang} transcript available` });
+      }
+
       // Fetch from S3
-      const url = new URL(transcript.transcript_url);
+      const url = new URL(transcriptUrl);
       const key = url.pathname.replace(`/${S3_BUCKET}/`, "");
       const response = await s3.send(new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }));
       const content = await response.Body.transformToString();

@@ -21,8 +21,11 @@ export default function VideoSection({
     onRetryCheckpoint,
     CheckpointOverlay,
     captionSegments = [],
+    hasArabicCaptions = false,
     captionsEnabled,
-    onToggleCaptions
+    onToggleCaptions,
+    captionLang = 'en',
+    onToggleCaptionLang
 }) {
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [showSpeedMenu, setShowSpeedMenu] = useState(false);
@@ -234,7 +237,10 @@ export default function VideoSection({
                 )}
 
                 {captionsEnabled && !activeCheckpoint && getCurrentCaption() && (
-                    <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-10 px-4 py-2 bg-black/80 rounded-lg max-w-[90%] text-center pointer-events-none">
+                    <div
+                        className="absolute bottom-14 left-1/2 -translate-x-1/2 z-10 px-4 py-2 bg-black/80 rounded-lg max-w-[90%] text-center pointer-events-none"
+                        dir={captionLang === 'ar' ? 'rtl' : 'ltr'}
+                    >
                         <span className="text-white text-sm font-medium leading-relaxed">
                             {getCurrentCaption()}
                         </span>
@@ -385,6 +391,17 @@ export default function VideoSection({
                                 title={`Captions ${captionsEnabled ? 'On' : 'Off'} (C)`}
                             >
                                 <Subtitles className="w-4 h-4" />
+                            </button>
+                        )}
+
+                        {/* EN/AR Language Toggle */}
+                        {captionsEnabled && hasArabicCaptions && (
+                            <button
+                                onClick={onToggleCaptionLang}
+                                className="px-2 py-1.5 text-xs font-bold rounded-lg transition-all text-gray-300 hover:text-white hover:bg-gray-800 border border-gray-700"
+                                title={`Switch to ${captionLang === 'en' ? 'Arabic' : 'English'} captions`}
+                            >
+                                {captionLang === 'en' ? 'AR' : 'EN'}
                             </button>
                         )}
 

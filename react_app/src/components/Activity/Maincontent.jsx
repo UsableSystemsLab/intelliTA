@@ -155,8 +155,10 @@ export default function Maincontent({ user }) {
     const [isLoadingCheckpointHint, setIsLoadingCheckpointHint] = useState(false);
     const [quizQuestions, setQuizQuestions] = useState([]);
     const [answeredQuestions, setAnsweredQuestions] = useState([]);
-    const [captionSegments, setCaptionSegments] = useState([]);
+    const [captionSegmentsEn, setCaptionSegmentsEn] = useState([]);
+    const [captionSegmentsAr, setCaptionSegmentsAr] = useState([]);
     const [captionsEnabled, setCaptionsEnabled] = useState(false);
+    const [captionLang, setCaptionLang] = useState('en');
 
     const handleAskAI = useCallback((text) => {
         setSelectedCodeForChat(text);
@@ -327,7 +329,7 @@ export default function Maincontent({ user }) {
                         console.error("Failed to fetch quiz data:", quizErr);
                     }
 
-                    // Load transcript for captions
+                    // Load transcript for captions (EN + AR)
                     try {
                         const transcriptRes = await fetch(
                             `http://localhost:4000/api/transcripts/activities/${activityId}`,
@@ -336,13 +338,26 @@ export default function Maincontent({ user }) {
                         if (transcriptRes.ok) {
                             const transcriptData = await transcriptRes.json();
                             if (transcriptData.status === 'completed' && transcriptData.transcript_id) {
-                                const contentRes = await fetch(
+                                // Fetch English transcript
+                                const enRes = await fetch(
                                     `http://localhost:4000/api/transcripts/${transcriptData.transcript_id}/content`,
                                     { headers: { "Authorization": "Bearer 1111" } }
                                 );
-                                if (contentRes.ok) {
-                                    const contentData = await contentRes.json();
-                                    setCaptionSegments(contentData.segments || []);
+                                if (enRes.ok) {
+                                    const enData = await enRes.json();
+                                    setCaptionSegmentsEn(enData.segments || []);
+                                }
+
+                                // Fetch Arabic transcript (may not exist)
+                                if (transcriptData.transcript_url_ar) {
+                                    const arRes = await fetch(
+                                        `http://localhost:4000/api/transcripts/${transcriptData.transcript_id}/content?lang=ar`,
+                                        { headers: { "Authorization": "Bearer 1111" } }
+                                    );
+                                    if (arRes.ok) {
+                                        const arData = await arRes.json();
+                                        setCaptionSegmentsAr(arData.segments || []);
+                                    }
                                 }
                             }
                         }
@@ -643,9 +658,12 @@ export default function Maincontent({ user }) {
                     duration={duration}
                     checkpoints={checkpoints}
                     activeCheckpoint={activeCheckpoint}
-                    captionSegments={captionSegments}
+                    captionSegments={captionLang === 'ar' && captionSegmentsAr.length > 0 ? captionSegmentsAr : captionSegmentsEn}
+                    hasArabicCaptions={captionSegmentsAr.length > 0}
                     captionsEnabled={captionsEnabled}
                     onToggleCaptions={() => setCaptionsEnabled(prev => !prev)}
+                    captionLang={captionLang}
+                    onToggleCaptionLang={() => setCaptionLang(prev => prev === 'en' ? 'ar' : 'en')}
                     onTimeUpdate={handleTimeUpdate}
                     onDurationChange={(d) => {
                         setDuration(d);
