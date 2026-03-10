@@ -52,10 +52,20 @@ export default function MemberCard({ member, onKick }) {
                 {/* Avatar & Info */}
                 <div className="flex items-center gap-4 min-w-0 flex-1">
                     {/* Avatar */}
-                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <span className="text-white font-semibold text-lg">
-                            {getInitials(member.first_name, member.last_name)}
-                        </span>
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden">
+                        {member.photo_url ? (
+                            <img
+                                src={member.photo_url}
+                                alt={`${member.first_name} ${member.last_name}`}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                                <span className="text-white font-semibold text-lg">
+                                    {getInitials(member.first_name, member.last_name)}
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Name & Email */}

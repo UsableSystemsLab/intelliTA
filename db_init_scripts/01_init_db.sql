@@ -8,6 +8,8 @@ CREATE TABLE users (
   fName VARCHAR(15) NOT NULL,
   lName VARCHAR(15) NOT NULL,
   email VARCHAR(50) UNIQUE NOT NULL,
+  bio TEXT,
+  photo_url TEXT,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );

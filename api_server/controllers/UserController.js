@@ -1,4 +1,5 @@
 import { User } from "../models/index.js";
+import { S3_PUBLIC_URL, S3_BUCKET } from "../configs/s3.js";
 
 const UserController = {
   /**
@@ -204,6 +205,65 @@ const UserController = {
       res
         .status(500)
         .json({ message: "Error deleting user", error: error.message });
+    }
+  },
+
+  async uploadAvatar(req, res) {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    const photoURL = S3_PUBLIC_URL
+      ? `${S3_PUBLIC_URL}/${S3_BUCKET}/${req.file.key}`
+      : req.file.location;
+
+    await User.update(
+      { photo_url: photoURL },
+      { where: { firebaseId: req.params.firebaseUid } }
+    );
+
+    res.status(200).json({ photoURL });
+  },
+
+  async getProfile(req, res) {
+    try {
+      const user = await User.findOne({
+        where: { firebaseId: req.params.firebaseUid },
+        attributes: ["bio", "first_name", "last_name", "email"],
+      });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.status(200).json(user);
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Error fetching profile", error: error.message });
+    }
+  },
+
+  async updateProfile(req, res) {
+    try {
+      const { bio, first_name, last_name } = req.body;
+      const updateData = {};
+      if (bio !== undefined) updateData.bio = bio;
+      if (first_name !== undefined) updateData.first_name = first_name;
+      if (last_name !== undefined) updateData.last_name = last_name;
+
+      const [updated] = await User.update(updateData, {
+        where: { firebaseId: req.params.firebaseUid },
+      });
+      if (!updated) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const updatedUser = await User.findOne({
+        where: { firebaseId: req.params.firebaseUid },
+        attributes: ["bio", "first_name", "last_name", "email"],
+      });
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      res
+        .status(400)
+        .json({ message: "Error updating profile", error: error.message });
     }
   },
 };
