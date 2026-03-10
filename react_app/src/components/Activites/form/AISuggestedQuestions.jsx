@@ -1,9 +1,34 @@
 import { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import {
   Sparkles, RefreshCw, Check, X, ChevronDown, ChevronUp,
   AlertTriangle, Loader, Clock, HelpCircle, ToggleLeft, PenLine,
   FileVideo, RotateCcw, Timer, Minus, Plus, Info,
 } from "lucide-react";
+
+const markdownComponents = {
+  h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-base font-semibold text-white mb-2">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-sm font-semibold text-white mb-1">{children}</h3>,
+  p: ({ children }) => <p className="text-gray-300 leading-relaxed text-sm">{children}</p>,
+  ul: ({ children }) => <ul className="list-disc list-inside text-gray-300 mb-1 space-y-0.5 text-sm">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal list-inside text-gray-300 mb-1 space-y-0.5 text-sm">{children}</ol>,
+  li: ({ children }) => <li className="text-gray-300">{children}</li>,
+  strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
+  em: ({ children }) => <em className="italic text-gray-200">{children}</em>,
+  code: ({ children, className }) => {
+    const isBlock = className?.includes("language-");
+    if (isBlock) return <code className="text-blue-300 text-xs font-mono">{children}</code>;
+    return <code className="bg-gray-800 px-1 py-0.5 rounded text-blue-400 text-xs font-mono">{children}</code>;
+  },
+  pre: ({ children }) => (
+    <pre className="bg-gray-800 p-3 rounded-lg overflow-x-auto mb-2 border border-gray-700 text-xs">{children}</pre>
+  ),
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-4 border-blue-500 pl-3 italic text-gray-400 mb-2 bg-gray-800/50 py-1 rounded-r text-sm">{children}</blockquote>
+  ),
+  hr: () => <hr className="border-gray-700 my-3" />,
+};
 
 // Server endpoints
 const LLM_SERVER  = "http://localhost:8000";
@@ -156,9 +181,11 @@ function SuggestionCard({ suggestion, onAccept, onReject, onRegenerate, onUpdate
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-white font-medium line-clamp-2">
-            {suggestion.question || "…"}
-          </p>
+          <div className="text-sm text-white font-medium line-clamp-2">
+            {suggestion.question ? (
+              <ReactMarkdown components={markdownComponents}>{suggestion.question}</ReactMarkdown>
+            ) : "…"}
+          </div>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs text-gray-500">{meta.label}</span>
             <span className="text-gray-600">·</span>
@@ -230,8 +257,8 @@ function SuggestionCard({ suggestion, onAccept, onReject, onRegenerate, onUpdate
               }`}
             >
               <span className="font-bold w-4">{String.fromCharCode(65 + idx)}</span>
-              <span>{opt}</span>
-              {suggestion.correctAnswer === idx && <Check className="w-3 h-3 ml-auto" />}
+              <span className="flex-1"><ReactMarkdown components={markdownComponents}>{opt}</ReactMarkdown></span>
+              {suggestion.correctAnswer === idx && <Check className="w-3 h-3 ml-auto shrink-0" />}
             </div>
           ))}
         </div>

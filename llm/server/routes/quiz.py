@@ -40,6 +40,8 @@ Requirements:
 - true_false: correctAnswer = boolean (true or false)
 - fill_blank: correctAnswer = a single word (no spaces, no punctuation)
 - Base the answer strictly on the transcript content
+- Use Markdown formatting in the question text (e.g. **bold**, `code`, lists, etc.) when it improves clarity
+- MCQ options may also use inline Markdown like `code` or **bold** where appropriate
 
 Return ONLY this JSON object, nothing else:
 {{
