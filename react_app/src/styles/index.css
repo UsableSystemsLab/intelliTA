@@ -7,3 +7,119 @@
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 }
+
+/* ── High-Contrast Mode ── */
+.high-contrast {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+/* Backgrounds */
+.high-contrast .bg-gray-900,
+.high-contrast .bg-gray-800,
+.high-contrast .bg-gray-800\/50,
+.high-contrast .bg-gray-800\/30,
+.high-contrast .bg-gray-700,
+.high-contrast .bg-gray-700\/50 {
+  background-color: #000000 !important;
+}
+
+.high-contrast .bg-gray-900\/95,
+.high-contrast .bg-gray-900\/80,
+.high-contrast .bg-gray-900\/50 {
+  background-color: #000000 !important;
+}
+
+/* Text */
+.high-contrast .text-gray-300,
+.high-contrast .text-gray-400,
+.high-contrast .text-gray-500,
+.high-contrast .text-gray-600 {
+  color: #E5E5E5 !important;
+}
+
+.high-contrast .text-gray-200,
+.high-contrast .text-gray-100 {
+  color: #FFFFFF !important;
+}
+
+/* Borders */
+.high-contrast .border-gray-700,
+.high-contrast .border-gray-700\/50,
+.high-contrast .border-gray-600,
+.high-contrast .border-gray-800 {
+  border-color: #FFFFFF !important;
+}
+
+/* Cards */
+.high-contrast .bg-blue-600\/20,
+.high-contrast .bg-blue-900\/20 {
+  background-color: #001a4d !important;
+}
+
+.high-contrast .border-blue-500\/50 {
+  border-color: #60A5FA !important;
+}
+
+/* Buttons */
+.high-contrast .bg-blue-600 {
+  background-color: #2563EB !important;
+}
+
+.high-contrast .bg-blue-600:hover {
+  background-color: #1D4ED8 !important;
+}
+
+/* Focus  */
+.high-contrast *:focus-visible {
+  outline: 3px solid #FFFFFF !important;
+  outline-offset: 2px !important;
+}
+
+/* Placeholders */
+.high-contrast input::placeholder,
+.high-contrast textarea::placeholder {
+  color: #A0A0A0 !important;
+}
+
+/* Input fields */
+.high-contrast input,
+.high-contrast textarea,
+.high-contrast select {
+  background-color: #111111 !important;
+  color: #FFFFFF !important;
+  border-color: #FFFFFF !important;
+}
+
+
+.high-contrast button,
+.high-contrast a.rounded-xl {
+  border: 1px solid #666666 !important;
+}
+
+.high-contrast button:hover,
+.high-contrast a.rounded-xl:hover {
+  border-color: #FFFFFF !important;
+  background-color: #1a1a1a !important;
+}
+
+/* Sidebar */
+.high-contrast aside {
+  border-right-color: #FFFFFF !important;
+}
+
+.high-contrast .border-gray-800\/50 {
+  border-color: #666666 !important;
+}
+
+
+.high-contrast .bg-blue-600\/10 {
+  background-color: #001a4d !important;
+  border-color: #60A5FA !important;
+}
+
+
+.high-contrast .hover\:bg-gray-800:hover,
+.high-contrast .hover\:bg-gray-700\/50:hover {
+  background-color: #1a1a1a !important;
+}

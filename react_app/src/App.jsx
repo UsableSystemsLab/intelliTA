@@ -15,7 +15,7 @@ import CreateCourse from "@/pages/CreateCourse.jsx";
 import Settings from "@/pages/Settings.jsx";
 import Activity from './pages/Activity' // Added from incoming branch
 import '@/styles/App.css'
-import { applySize, FONT_SIZE_KEY } from '@/components/Settings/AccessibilitySettings'
+import { applySize, FONT_SIZE_KEY, applyHighContrast, HIGH_CONTRAST_KEY } from '@/components/Settings/AccessibilitySettings'
 import ProtectedRoutes from '@/utils/ProtectedRoutes'
 
 function App() {
@@ -55,6 +55,7 @@ function App() {
 
   useEffect(() => {
     applySize(localStorage.getItem(FONT_SIZE_KEY) || 'md');
+    applyHighContrast(localStorage.getItem(HIGH_CONTRAST_KEY) === 'true');
   }, []);
 
   useEffect(() => {

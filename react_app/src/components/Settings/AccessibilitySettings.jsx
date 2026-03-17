@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ALargeSmall } from 'lucide-react';
+import { ALargeSmall, Contrast } from 'lucide-react';
 
 const FONT_SIZE_KEY = 'intelliTA-font-size';
+const HIGH_CONTRAST_KEY = 'intelliTA-high-contrast';
 
 const sizes = [
   { id: 'sm',  label: 'Small',       px: 14, preview: 'text-xs' },
@@ -20,16 +21,70 @@ function applySize(id) {
   localStorage.setItem(FONT_SIZE_KEY, id);
 }
 
+function getHighContrast() {
+  return localStorage.getItem(HIGH_CONTRAST_KEY) === 'true';
+}
+
+function applyHighContrast(enabled) {
+  if (enabled) {
+    document.documentElement.classList.add('high-contrast');
+  } else {
+    document.documentElement.classList.remove('high-contrast');
+  }
+  localStorage.setItem(HIGH_CONTRAST_KEY, String(enabled));
+}
+
 const AccessibilitySettings = () => {
   const [selected, setSelected] = useState(getSavedSize);
+  const [highContrast, setHighContrast] = useState(getHighContrast);
 
   const handleSelect = (id) => {
     setSelected(id);
     applySize(id);
   };
 
+  const handleContrastToggle = () => {
+    const next = !highContrast;
+    setHighContrast(next);
+    applyHighContrast(next);
+  };
+
   return (
-    <div className="space-y-6 max-w-3xl">
+    <div className="space-y-8 max-w-3xl">
+      {/* High Contrast Toggle */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+          <Contrast className="w-4 h-4" />
+          High Contrast Mode
+        </label>
+        <p className="text-xs text-gray-500">
+          Increases color contrast across the interface for better visibility.
+        </p>
+
+        <button
+          onClick={handleContrastToggle}
+          className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200
+            ${highContrast
+              ? 'bg-blue-600'
+              : 'bg-gray-600'
+            }`}
+        >
+          <span
+            className={`inline-block h-5 w-5 rounded-full bg-white transition-transform duration-200
+              ${highContrast ? 'translate-x-6' : 'translate-x-1'}`}
+          />
+        </button>
+
+        {highContrast && (
+          <div className="mt-2 p-3 rounded-xl bg-gray-800/30 border border-gray-700/50">
+            <p className="text-gray-300 text-sm">
+              High contrast mode is <span className="font-semibold text-blue-400">enabled</span>. Colors have been adjusted for better readability.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Font Size */}
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
           <ALargeSmall className="w-4 h-4" />
@@ -78,5 +133,5 @@ const AccessibilitySettings = () => {
   );
 };
 
-export { applySize, FONT_SIZE_KEY };
+export { applySize, FONT_SIZE_KEY, applyHighContrast, HIGH_CONTRAST_KEY };
 export default AccessibilitySettings;
