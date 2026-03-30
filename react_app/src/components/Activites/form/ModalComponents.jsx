@@ -29,11 +29,11 @@ export function ErrorAlert({ message }) {
 }
 
 
-export function CloseButton({ onClick }) {
+export function CloseButton({ onClick, absolute = true }) {
   return (
     <button
       onClick={onClick}
-      className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors z-10"
+      className={`${absolute ? "absolute top-[16px] right-[16px]" : ""} p-[8px] text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors z-10 shrink-0`}
     >
       <X size={20} />
     </button>
