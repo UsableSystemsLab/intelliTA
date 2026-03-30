@@ -72,6 +72,7 @@ VideoTranscript.belongsTo(Activity, { foreignKey: "activity_id", as: "activity" 
 import QuizQuestion from "./QuizQuestion.js";
 import VideoProgress from "./VideoProgress.js";
 import StudentAnswer from "./StudentAnswer.js";
+import VideoChapter from "./VideoChapter.js";
 
 Activity.hasMany(QuizQuestion, { foreignKey: "activity_id", as: "quizQuestions", onDelete: "CASCADE" });
 QuizQuestion.belongsTo(Activity, { foreignKey: "activity_id", as: "activity" });
@@ -88,6 +89,10 @@ StudentAnswer.belongsTo(QuizQuestion, { foreignKey: "question_id", as: "question
 Activity.hasMany(StudentAnswer, { foreignKey: "activity_id", as: "studentAnswers" });
 StudentAnswer.belongsTo(Activity, { foreignKey: "activity_id", as: "activity" });
 
+// VIDEO CHAPTERS
+Activity.hasMany(VideoChapter, { foreignKey: "activity_id", as: "chapters", onDelete: "CASCADE" });
+VideoChapter.belongsTo(Activity, { foreignKey: "activity_id", as: "activity" });
+
 export {
   User,
   Course,
@@ -100,4 +105,5 @@ export {
   QuizQuestion,
   VideoProgress,
   StudentAnswer,
+  VideoChapter,
 };

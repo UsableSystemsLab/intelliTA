@@ -6,6 +6,7 @@ import FileUploadZone from "./form/FileUploadZone";
 import SubmitButton from "./form/SubmitButton";
 import StarterCodeEditor from "./form/StarterCodeEditor";
 import QuizEditor from "./form/QuizEditor";
+import ChaptersEditor from "./form/ChaptersEditor";
 import MarkdownEditor from "./form/MarkdownEditor";
 import { ModalHeader, ErrorAlert, CloseButton } from "./form/ModalComponents";
 
@@ -50,6 +51,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
   const [videoFile, setVideoFile] = useState(null);
   const [videoDuration, setVideoDuration] = useState(0);
   const [quizQuestions, setQuizQuestions] = useState([]);
+  const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingContent, setLoadingContent] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -126,11 +128,28 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
       } catch {
         setQuizQuestions([]);
       }
+
+      // Fetch video chapters from DB
+      try {
+        const chaptersResponse = await fetch(
+          `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}/chapters`,
+          { headers: { Authorization: "Bearer 1111" } }
+        );
+        if (chaptersResponse.ok) {
+          const chaptersData = await chaptersResponse.json();
+          setChapters(chaptersData.chapters || []);
+        } else {
+          setChapters([]);
+        }
+      } catch {
+        setChapters([]);
+      }
     } catch (err) {
       console.error("Failed to fetch content:", err);
       setMdContent("");
       setStarterFiles([]);
       setQuizQuestions([]);
+      setChapters([]);
     } finally {
       setLoadingContent(false);
     }
@@ -256,6 +275,22 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
           body: JSON.stringify(quizPayload),
+        }
+      );
+
+      // Save video chapters to DB via API
+      const chaptersPayload = {
+        chapters: (chapters || []).map(({ title, start_time_seconds }) => ({
+          title,
+          start_time_seconds,
+        })),
+      };
+      await fetch(
+        `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}/chapters`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
+          body: JSON.stringify(chaptersPayload),
         }
       );
 
@@ -404,6 +439,34 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                 </div>
               </div>
             )}
+
+            {/* Chapters Preview */}
+            {chapters && chapters.length > 0 && (
+              <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Eye className="w-5 h-5 text-blue-400" />
+                  Video Chapters
+                  <span className="text-sm font-normal text-gray-500">
+                    ({chapters.length} chapter{chapters.length !== 1 ? "s" : ""})
+                  </span>
+                </h3>
+                <div className="space-y-2">
+                  {[...chapters]
+                    .sort((a, b) => a.start_time_seconds - b.start_time_seconds)
+                    .map((chapter, idx) => {
+                      const mins = Math.floor(chapter.start_time_seconds / 60);
+                      const secs = chapter.start_time_seconds % 60;
+                      const timeStr = `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+                      return (
+                        <div key={chapter.id || idx} className="flex items-center gap-3 px-3 py-2 bg-gray-800/50 rounded-lg border border-gray-700/50">
+                          <span className="text-xs font-mono text-blue-400 bg-blue-500/10 px-2 py-1 rounded">{timeStr}</span>
+                          <span className="text-sm text-gray-300 truncate">{chapter.title || `Chapter ${idx + 1}`}</span>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer */}
@@ -544,6 +607,15 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                 fileNames={starterFiles.map(f => f.name)}
                 videoDuration={videoDuration}
                 activityId={activity?.activity_id ?? null}
+                videoUrl={activity?.video_url ?? null}
+              />
+
+              {/* Video Chapters */}
+              <ChaptersEditor
+                chapters={chapters}
+                onChaptersChange={setChapters}
+                videoDuration={videoDuration}
+                videoFile={videoFile}
                 videoUrl={activity?.video_url ?? null}
               />
 
