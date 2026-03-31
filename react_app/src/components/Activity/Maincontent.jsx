@@ -632,6 +632,8 @@ export default function Maincontent({ user }) {
                 onBack={() => navigate(`/courses`)}
                 onSubmit={handleSubmit}
                 isSubmitting={isSubmitting}
+                isEnded={activity.end_date && new Date() > new Date(activity.end_date)}
+                isUpcoming={activity.start_date && new Date() < new Date(activity.start_date)}
                 onHintClick={() => setIsHintOpen(prev => !prev)}
                 isHintOpen={isHintOpen}
             />

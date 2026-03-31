@@ -542,7 +542,7 @@ const CourseController = {
           {
             model: User,
             as: "user",
-            attributes: ["id", "first_name", "last_name", "email", "firebaseId"]
+            attributes: ["id", "first_name", "last_name", "email", "firebaseId", "photo_url"]
           }
         ],
         order: [["enrollment_date", "DESC"]]
@@ -555,6 +555,7 @@ const CourseController = {
         first_name: enrollment.user.first_name,
         last_name: enrollment.user.last_name,
         email: enrollment.user.email,
+        photo_url: enrollment.user.photo_url || null,
         enrolled_name: enrollment.enrolled_name,
         enrollment_date: enrollment.enrollment_date,
         status: enrollment.status,

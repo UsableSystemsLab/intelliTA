@@ -52,6 +52,16 @@ const User = sequelize.define(
       field: "email",
       allowNull: false,
     },
+    bio: {
+      type: DataTypes.TEXT,
+      field: "bio",
+      allowNull: true,
+    },
+    photo_url: {
+      type: DataTypes.TEXT,
+      field: "photo_url",
+      allowNull: true,
+    },
   },
   {
     tableName: "users",

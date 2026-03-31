@@ -15,6 +15,7 @@ import CreateCourse from "@/pages/CreateCourse.jsx";
 import Settings from "@/pages/Settings.jsx";
 import Activity from './pages/Activity' // Added from incoming branch
 import '@/styles/App.css'
+import { applySize, FONT_SIZE_KEY, applyHighContrast, HIGH_CONTRAST_KEY } from '@/components/Settings/AccessibilitySettings'
 import ProtectedRoutes from '@/utils/ProtectedRoutes'
 
 function App() {
@@ -53,6 +54,11 @@ function App() {
   }, []);
 
   useEffect(() => {
+    applySize(localStorage.getItem(FONT_SIZE_KEY) || 'md');
+    applyHighContrast(localStorage.getItem(HIGH_CONTRAST_KEY) === 'true');
+  }, []);
+
+  useEffect(() => {
     document.documentElement.lang = i18n.language
     document.documentElement.dir = isArabic ? 'rtl' : 'ltr'
   }, [i18n.language, isArabic])
@@ -78,7 +84,7 @@ function App() {
           <Route path="/courses" element={<Courses user={user} />} />
           <Route path="/courses/:courseId" element={<CourseLabs user={user} />} />
           <Route path="/courses/create" element={<CreateCourse user={user} />} />
-          <Route path="/settings" element={<Settings user={user} />} />
+          <Route path="/settings" element={<Settings user={user} setUser={setUser} />} />
           {/* Resolved: Added Activity route from incoming branch */}
           <Route path="/courses/:courseId/activities/:activityId" element={<Activity user={user} />} />
         </Route>

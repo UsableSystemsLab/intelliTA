@@ -502,7 +502,7 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
   }, [videoFile, videoUrl]);
 
   const getVideoTime = videoSrc
-    ? () => Math.floor(videoRef.current?.currentTime ?? 0)
+    ? () => Math.round(videoRef.current?.currentTime ?? 0)
     : null;
 
   if (!isOpen) return null;

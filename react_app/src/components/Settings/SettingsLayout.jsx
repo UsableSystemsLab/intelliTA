@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { User, Shield, PersonStanding , Award, LogOut, Bot } from 'lucide-react';
 import ProfileSettings from './ProfileSettings';
 import AIIntegrationSettings from './AIIntegrationSettings';
+import AccessibilitySettings from './AccessibilitySettings';
 // a placeholder for possible settings we would have settings
 const SecuritySettings = () => <div className="text-gray-400">Didnt do it yet</div>;
-const AccessibilitySettings = () => <div className="text-gray-400">Didnt do it yet</div>;
 const ProgressSettings = () => <div className="text-gray-400">Didnt do it yet</div>;
 
 import { useTranslation } from 'react-i18next';
 
-const SettingsLayout = ({ user }) => {
+const SettingsLayout = ({ user, setUser }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('profile');
   // define menu items so if we want to add new tab we can do it easily
@@ -65,7 +65,7 @@ const SettingsLayout = ({ user }) => {
           key={activeTab}
           className="bg-gray-800/50 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-6 md:p-8"
         >
-          <ActiveComponent user={user} />
+          <ActiveComponent user={user} setUser={setUser} />
         </div>
       </main>
     </div>

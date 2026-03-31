@@ -203,7 +203,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               title="Review & Publish"
               subtitle="Review your activity before publishing"
             />
-            <CloseButton onClick={handleClose} />
+            <CloseButton onClick={handleClose} absolute={false} />
           </div>
 
           {/* Scrollable Content */}
@@ -348,10 +348,10 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
   // Step 1: Form
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="relative bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-lg w-full shadow-2xl text-white overflow-hidden">
+      <div className="relative bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-lg w-full max-h-[90vh] shadow-2xl text-white overflow-y-auto">
         {/* Decorative glow */}
-        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-green-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-24 h-24 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-green-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-24 h-24 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <CloseButton onClick={handleClose} />
 
