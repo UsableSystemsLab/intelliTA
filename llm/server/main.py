@@ -5,7 +5,7 @@ import asyncio
 import os
 import logging
 from config import OLLAMA_BASE_URL, HINT_MODEL
-from routes import health, chat, hint
+from routes import health, chat, hint, quiz
 
 logger = logging.getLogger("uvicorn")
 
@@ -22,6 +22,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(chat.router)
 app.include_router(hint.router)
+app.include_router(quiz.router)
 
 
 # Warmup: pre-load the model into memory on startup

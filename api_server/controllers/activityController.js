@@ -1,6 +1,7 @@
 import Activity from "../models/Activity.js";
 import Submission from "../models/Submission.js";
 import User from "../models/User.js";
+import transcriptionService from "../services/transcriptionService.js";
 
 const ActivityController = {
   async getActivityById(req, res) {
@@ -60,6 +61,12 @@ const ActivityController = {
         starter_code_url: starter_code_url || null,
         quiz_url: quiz_url || null,
       });
+
+      // Queue transcription if video was uploaded
+      if (newActivity.video_url) {
+        transcriptionService.queueTranscription(newActivity.activity_id, newActivity.video_url)
+          .catch(err => console.error("Failed to queue transcription:", err.message));
+      }
 
       res.status(201).json(newActivity);
     } catch (error) {

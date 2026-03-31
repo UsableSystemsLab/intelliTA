@@ -62,6 +62,12 @@ const User = sequelize.define(
       field: "photo_url",
       allowNull: true,
     },
+    deleted_at: {
+      type: DataTypes.DATE,
+      field: "deleted_at",
+      allowNull: true,
+      defaultValue: null,
+    },
   },
   {
     tableName: "users",

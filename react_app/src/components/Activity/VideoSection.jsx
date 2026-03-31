@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Play, Pause, SkipBack, SkipForward, RotateCcw, Video, Maximize, Minimize, Volume2, VolumeX, ChevronUp } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, RotateCcw, Video, Maximize, Minimize, Volume2, VolumeX, ChevronUp, Subtitles, List } from 'lucide-react';
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -11,6 +11,7 @@ export default function VideoSection({
     duration,
     checkpoints,
     activeCheckpoint,
+    chapters = [],
     onTimeUpdate,
     onDurationChange,
     onPlay,
@@ -19,20 +20,29 @@ export default function VideoSection({
     onNext,
     onPrev,
     onRetryCheckpoint,
-    CheckpointOverlay
+    CheckpointOverlay,
+    captionSegments = [],
+    hasArabicCaptions = false,
+    captionsEnabled,
+    onToggleCaptions,
+    captionLang = 'en',
+    onToggleCaptionLang
 }) {
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+    const [showChaptersMenu, setShowChaptersMenu] = useState(false);
     const [volume, setVolume] = useState(1);
     const [isMuted, setIsMuted] = useState(false);
     const [prevVolume, setPrevVolume] = useState(1);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [hoverTime, setHoverTime] = useState(null);
     const [hoverX, setHoverX] = useState(0);
+    const [hoveredChapter, setHoveredChapter] = useState(null);
 
     const containerRef = useRef(null);
     const timelineRef = useRef(null);
     const speedMenuRef = useRef(null);
+    const chaptersMenuRef = useRef(null);
 
     const isYouTube = activity?.video_url && (activity.video_url.includes('youtube.com') || activity.video_url.includes('youtu.be'));
 
@@ -63,6 +73,26 @@ export default function VideoSection({
             case 'completed': return 'bg-blue-500';
             default: return 'bg-yellow-400';
         }
+    };
+
+    const getCurrentCaption = () => {
+        if (!captionSegments.length) return null;
+        for (const seg of captionSegments) {
+            if (currentTime >= seg.start && currentTime < seg.end) {
+                return seg.text;
+            }
+        }
+        return null;
+    };
+
+    const getCurrentChapter = () => {
+        if (!chapters.length) return null;
+        for (let i = chapters.length - 1; i >= 0; i--) {
+            if (currentTime >= chapters[i].start_time_seconds) {
+                return chapters[i];
+            }
+        }
+        return chapters[0];
     };
 
     // --- Playback speed ---
@@ -140,6 +170,11 @@ export default function VideoSection({
                     e.preventDefault();
                     toggleMute();
                     break;
+                case 'c':
+                case 'C':
+                    e.preventDefault();
+                    if (onToggleCaptions) onToggleCaptions();
+                    break;
             }
         };
         window.addEventListener('keydown', handleKeyDown);
@@ -168,6 +203,18 @@ export default function VideoSection({
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, [showSpeedMenu]);
+
+    // Close chapters menu on outside click
+    useEffect(() => {
+        if (!showChaptersMenu) return;
+        const handler = (e) => {
+            if (chaptersMenuRef.current && !chaptersMenuRef.current.contains(e.target)) {
+                setShowChaptersMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, [showChaptersMenu]);
 
     return (
         <div
@@ -215,11 +262,29 @@ export default function VideoSection({
                     </button>
                 )}
 
+                {captionsEnabled && !activeCheckpoint && getCurrentCaption() && (
+                    <div
+                        className="absolute bottom-14 left-1/2 -translate-x-1/2 z-10 px-4 py-2 bg-black/80 rounded-lg max-w-[90%] text-center pointer-events-none"
+                        dir={captionLang === 'ar' ? 'rtl' : 'ltr'}
+                    >
+                        <span className="text-white text-sm font-medium leading-relaxed">
+                            {getCurrentCaption()}
+                        </span>
+                    </div>
+                )}
+
                 {activeCheckpoint && <CheckpointOverlay />}
             </div>
 
             {/* Video Controls */}
             <div className="bg-gray-900 border-t border-gray-800 flex flex-col shrink-0">
+                {/* Current Chapter Display */}
+                {chapters.length > 0 && getCurrentChapter() && (
+                    <div className="px-4 pt-2 flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Chapter:</span>
+                        <span className="text-xs font-medium text-white">{getCurrentChapter().title}</span>
+                    </div>
+                )}
                 {/* Timeline */}
                 <div className="px-4 py-3 flex items-center gap-4">
                     <span className="text-xs font-mono text-gray-500 w-12 text-right">
@@ -249,7 +314,7 @@ export default function VideoSection({
                             style={{ left: `calc(${duration ? (currentTime / duration) * 100 : 0}% - 8px)` }}
                         />
                         {/* Hover time preview */}
-                        {hoverTime !== null && (
+                        {hoverTime !== null && !hoveredChapter && (
                             <div
                                 className="absolute -top-9 -translate-x-1/2 px-2 py-1 bg-gray-700 text-white text-xs font-mono rounded-md shadow-lg pointer-events-none border border-gray-600 z-20"
                                 style={{ left: `${hoverX}px` }}
@@ -257,6 +322,33 @@ export default function VideoSection({
                                 {formatTime(hoverTime)}
                             </div>
                         )}
+                        {/* Chapter markers */}
+                        {chapters.map((chapter, idx) => {
+                            const leftPercent = duration ? (chapter.start_time_seconds / duration) * 100 : 0;
+                            const isHovered = hoveredChapter?.id === chapter.id || hoveredChapter?.start_time_seconds === chapter.start_time_seconds;
+                            return (
+                                <div
+                                    key={`chapter-${chapter.id || idx}`}
+                                    className="absolute top-0 w-1 h-full bg-white/60 hover:bg-white hover:w-1.5 cursor-pointer z-[5] transition-all"
+                                    style={{ left: `${leftPercent}%` }}
+                                    onMouseEnter={() => setHoveredChapter(chapter)}
+                                    onMouseLeave={() => setHoveredChapter(null)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (!activeCheckpoint) {
+                                            onSeek(chapter.start_time_seconds);
+                                        }
+                                    }}
+                                >
+                                    {isHovered && (
+                                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded-lg shadow-xl pointer-events-none border border-gray-600 z-30 whitespace-nowrap">
+                                            <div className="font-medium">{chapter.title}</div>
+                                            <div className="text-gray-400 text-[10px] font-mono">{formatTime(chapter.start_time_seconds)}</div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                         {/* Checkpoint markers */}
                         {checkpoints.map(cp => (
                             <div
@@ -347,6 +439,75 @@ export default function VideoSection({
 
                     {/* Right: Speed, Fullscreen, Checkpoints */}
                     <div className="flex items-center gap-2">
+                        {/* CC Toggle */}
+                        {captionSegments.length > 0 && (
+                            <button
+                                onClick={onToggleCaptions}
+                                className={`p-2 rounded-lg transition-all ${
+                                    captionsEnabled
+                                        ? 'text-blue-400 bg-blue-500/20 hover:bg-blue-500/30'
+                                        : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                                }`}
+                                title={`Captions ${captionsEnabled ? 'On' : 'Off'} (C)`}
+                            >
+                                <Subtitles className="w-4 h-4" />
+                            </button>
+                        )}
+
+                        {/* EN/AR Language Toggle */}
+                        {captionsEnabled && hasArabicCaptions && (
+                            <button
+                                onClick={onToggleCaptionLang}
+                                className="px-2 py-1.5 text-xs font-bold rounded-lg transition-all text-gray-300 hover:text-white hover:bg-gray-800 border border-gray-700"
+                                title={`Switch to ${captionLang === 'en' ? 'Arabic' : 'English'} captions`}
+                            >
+                                {captionLang === 'en' ? 'AR' : 'EN'}
+                            </button>
+                        )}
+
+                        {/* Chapters Menu */}
+                        {chapters.length > 0 && (
+                            <div className="relative" ref={chaptersMenuRef}>
+                                <button
+                                    onClick={() => setShowChaptersMenu(!showChaptersMenu)}
+                                    className={`p-2 rounded-lg transition-all ${
+                                        showChaptersMenu
+                                            ? 'text-blue-400 bg-blue-500/20'
+                                            : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                                    }`}
+                                    title="Chapters"
+                                >
+                                    <List className="w-4 h-4" />
+                                </button>
+                                {showChaptersMenu && (
+                                    <div className="absolute bottom-full mb-2 right-0 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl py-1.5 min-w-[200px] max-h-[300px] overflow-y-auto z-30">
+                                        {chapters.map((chapter, idx) => {
+                                            const isCurrent = getCurrentChapter()?.id === chapter.id;
+                                            return (
+                                                <button
+                                                    key={chapter.id || idx}
+                                                    onClick={() => {
+                                                        if (!activeCheckpoint) {
+                                                            onSeek(chapter.start_time_seconds);
+                                                        }
+                                                        setShowChaptersMenu(false);
+                                                    }}
+                                                    className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-700 transition-colors flex items-center gap-3 ${
+                                                        isCurrent ? 'text-blue-400 font-semibold bg-blue-500/10' : 'text-gray-300'
+                                                    }`}
+                                                >
+                                                    <span className="text-xs text-gray-500 font-mono w-10">
+                                                        {formatTime(chapter.start_time_seconds)}
+                                                    </span>
+                                                    <span className="truncate">{chapter.title}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* Speed Control */}
                         <div className="relative" ref={speedMenuRef}>
                             <button

@@ -3,13 +3,34 @@ import ReactMarkdown from "react-markdown";
 import {
   FileText, X, Edit3, Eye, Bold, Italic, List, ListOrdered,
   Link, Code, Quote, Heading1, Heading2, Heading3, ChevronDown,
-  Image, Minus, HelpCircle
+  Image, Minus, HelpCircle, GripVertical
 } from "lucide-react";
 
 function MarkdownModal({ isOpen, onClose, value, onChange }) {
   const textareaRef = useRef(null);
+  const containerRef = useRef(null);
+  const isDragging = useRef(false);
   const [showHeadingMenu, setShowHeadingMenu] = useState(false);
   const [showListMenu, setShowListMenu] = useState(false);
+  const [leftWidth, setLeftWidth] = useState(50);
+  const [dragging, setDragging] = useState(false);
+
+  const handleDividerMouseDown = () => {
+    isDragging.current = true;
+    setDragging(true);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current || !containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const newWidth = ((e.clientX - rect.left) / rect.width) * 100;
+    setLeftWidth(Math.min(Math.max(newWidth, 20), 80));
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+    setDragging(false);
+  };
 
   const insertFormatting = (before, after = "", placeholder = "") => {
     const textarea = textareaRef.current;
@@ -117,9 +138,15 @@ function MarkdownModal({ isOpen, onClose, value, onChange }) {
         </div>
 
         {/* Content - Side by Side */}
-        <div className="flex-1 flex overflow-hidden">
+        <div
+          ref={containerRef}
+          className={`flex-1 flex overflow-hidden ${dragging ? "cursor-col-resize select-none" : ""}`}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
           {/* Write Section */}
-          <div className="flex-1 flex flex-col border-r border-gray-700">
+          <div className="flex flex-col overflow-hidden" style={{ width: `${leftWidth}%` }}>
             <div className="flex items-center gap-2 px-4 py-3 bg-gray-900/50 border-b border-gray-700">
               <Edit3 className="w-4 h-4 text-blue-400" />
               <span className="text-sm font-medium text-gray-300">Write</span>
@@ -220,13 +247,25 @@ code block
             />
           </div>
 
+          {/* Draggable divider */}
+          <div
+            onMouseDown={handleDividerMouseDown}
+            className={`w-3 shrink-0 cursor-col-resize flex items-center justify-center group transition-colors ${
+              dragging ? "bg-blue-500/40" : "bg-gray-600/60 hover:bg-blue-500/40"
+            }`}
+          >
+            <div className={`w-1 h-12 rounded-full transition-all ${
+              dragging ? "bg-blue-400 opacity-100" : "bg-gray-400 opacity-60 group-hover:bg-blue-400 group-hover:opacity-100"
+            }`} />
+          </div>
+
           {/* Preview Section */}
-          <div className={`flex-1 flex flex-col ${value ? '' : 'overflow-hidden'}`}>
+          <div className="flex flex-col overflow-hidden" style={{ width: `${100 - leftWidth}%` }}>
             <div className="flex items-center gap-2 px-4 py-3 bg-gray-900/50 border-b border-gray-700">
               <Eye className="w-4 h-4 text-green-400" />
               <span className="text-sm font-medium text-gray-300">Preview</span>
             </div>
-            <div className={`flex-1 px-6 py-4 bg-gray-900/30 ${value ? 'overflow-y-auto' : 'overflow-hidden'}`}>
+            <div className="flex-1 px-6 py-4 bg-gray-900/30 overflow-y-auto">
               {value ? (
                 <ReactMarkdown
                   components={{
