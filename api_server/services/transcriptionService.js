@@ -11,6 +11,11 @@ const WHISPER_HOST = process.env.WHISPER_HOST || "whisper_server_container";
 const WHISPER_PORT = process.env.WHISPER_PORT || "8001";
 const WHISPER_URL = `http://${WHISPER_HOST}:${WHISPER_PORT}`;
 
+// Azure Translator configuration
+const AZURE_TRANSLATOR_KEY = process.env.AZURE_TRANSLATOR_KEY;
+const AZURE_TRANSLATOR_REGION = process.env.AZURE_TRANSLATOR_REGION;
+const AZURE_TRANSLATOR_URL = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&from=en&to=ar";
+
 class TranscriptionService {
   /**
    * Download video from S3
@@ -120,13 +125,69 @@ class TranscriptionService {
   }
 
   /**
+   * Translate an array of text strings from English to Arabic using Azure Translator.
+   * Handles batching to stay within Azure limits (max 100 elements, 10,000 chars per request).
+   * @param {string[]} texts - Array of English text strings
+   * @returns {Promise<string[]>} - Array of Arabic translations (same order)
+   */
+  async translateSegments(texts) {
+    if (!AZURE_TRANSLATOR_KEY || !AZURE_TRANSLATOR_REGION) {
+      throw new Error("Azure Translator credentials not configured");
+    }
+
+    const results = [];
+
+    // Chunk texts to respect Azure limits: max 100 elements AND 10,000 total chars per request
+    const batches = [];
+    let currentBatch = [];
+    let currentCharCount = 0;
+
+    for (const text of texts) {
+      const textLen = text.length;
+      if (currentBatch.length >= 100 || (currentCharCount + textLen > 10000 && currentBatch.length > 0)) {
+        batches.push(currentBatch);
+        currentBatch = [];
+        currentCharCount = 0;
+      }
+      currentBatch.push({ Text: text });
+      currentCharCount += textLen;
+    }
+    if (currentBatch.length > 0) batches.push(currentBatch);
+
+    for (const batch of batches) {
+      const response = await fetch(AZURE_TRANSLATOR_URL, {
+        method: "POST",
+        headers: {
+          "Ocp-Apim-Subscription-Key": AZURE_TRANSLATOR_KEY,
+          "Ocp-Apim-Subscription-Region": AZURE_TRANSLATOR_REGION,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(batch),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`Azure Translator error (${response.status}): ${error}`);
+      }
+
+      const data = await response.json();
+      for (const item of data) {
+        results.push(item.translations[0].text);
+      }
+    }
+
+    return results;
+  }
+
+  /**
    * Upload transcript to S3
    * @param {Object} transcript - Transcription result
    * @param {number} activityId - Activity ID
+   * @param {string} suffix - File suffix (e.g. 'en' or 'ar')
    * @returns {Promise<string>} - Public URL of the transcript
    */
-  async uploadTranscript(transcript, activityId) {
-    const key = `transcripts/activity/${activityId}/${Date.now()}.json`;
+  async uploadTranscript(transcript, activityId, suffix = "en") {
+    const key = `transcripts/activity/${activityId}/${Date.now()}_${suffix}.json`;
 
     await s3.send(
       new PutObjectCommand({
@@ -169,14 +230,40 @@ class TranscriptionService {
       console.log(`[Transcription] Transcribing with Whisper...`);
       const transcription = await this.transcribeAudio(audioBuffer);
 
-      // Step 4: Upload transcript to S3
-      console.log(`[Transcription] Uploading transcript...`);
-      const transcriptUrl = await this.uploadTranscript(transcription, record.activity_id);
+      // Step 4: Upload English transcript to S3
+      console.log(`[Transcription] Uploading English transcript...`);
+      const transcriptUrl = await this.uploadTranscript(transcription, record.activity_id, "en");
+
+      // Step 4.5: Translate and upload Arabic transcript to S3
+      let transcriptUrlAr = null;
+      try {
+        console.log(`[Transcription] Translating to Arabic...`);
+        const englishTexts = transcription.segments.map((seg) => seg.text);
+        const allTexts = [transcription.text, ...englishTexts];
+        const arabicTexts = await this.translateSegments(allTexts);
+
+        const arabicTranscript = {
+          text: arabicTexts[0],
+          language: "ar",
+          duration: transcription.duration,
+          segments: transcription.segments.map((seg, i) => ({
+            start: seg.start,
+            end: seg.end,
+            text: arabicTexts[i + 1] || "",
+          })),
+        };
+
+        transcriptUrlAr = await this.uploadTranscript(arabicTranscript, record.activity_id, "ar");
+        console.log(`[Transcription] Arabic translation completed.`);
+      } catch (translationError) {
+        console.warn(`[Transcription] Arabic translation failed, saving English-only:`, translationError.message);
+      }
 
       // Step 5: Update record with results
       await record.update({
         status: "completed",
         transcript_url: transcriptUrl,
+        transcript_url_ar: transcriptUrlAr,
         duration_seconds: Math.round(transcription.duration),
         word_count: transcription.text.split(/\s+/).filter(Boolean).length,
         language: transcription.language,
@@ -220,6 +307,7 @@ class TranscriptionService {
         status: "pending",
         error_message: null,
         transcript_url: null,
+        transcript_url_ar: null,
         started_at: null,
         completed_at: null,
       });

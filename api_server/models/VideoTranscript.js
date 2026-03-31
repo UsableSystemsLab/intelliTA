@@ -26,6 +26,10 @@ const VideoTranscript = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    transcript_url_ar: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
     status: {
       type: DataTypes.ENUM("pending", "processing", "completed", "failed"),
       allowNull: false,
