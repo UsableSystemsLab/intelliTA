@@ -159,6 +159,7 @@ export default function Maincontent({ user }) {
     const [captionSegmentsAr, setCaptionSegmentsAr] = useState([]);
     const [captionsEnabled, setCaptionsEnabled] = useState(false);
     const [captionLang, setCaptionLang] = useState('en');
+    const [chapters, setChapters] = useState([]);
 
     const handleAskAI = useCallback((text) => {
         setSelectedCodeForChat(text);
@@ -327,6 +328,20 @@ export default function Maincontent({ user }) {
                         }
                     } catch (quizErr) {
                         console.error("Failed to fetch quiz data:", quizErr);
+                    }
+
+                    // Load video chapters
+                    try {
+                        const chaptersRes = await fetch(
+                            `http://localhost:4000/api/courses/${courseId}/activities/${activityId}/chapters`,
+                            { headers: { "Authorization": "Bearer 1111" } }
+                        );
+                        if (chaptersRes.ok) {
+                            const chaptersData = await chaptersRes.json();
+                            setChapters(chaptersData.chapters || []);
+                        }
+                    } catch (chaptersErr) {
+                        console.error("Failed to fetch video chapters:", chaptersErr);
                     }
 
                     // Load transcript for captions (EN + AR)
@@ -660,6 +675,7 @@ export default function Maincontent({ user }) {
                     duration={duration}
                     checkpoints={checkpoints}
                     activeCheckpoint={activeCheckpoint}
+                    chapters={chapters}
                     captionSegments={captionLang === 'ar' && captionSegmentsAr.length > 0 ? captionSegmentsAr : captionSegmentsEn}
                     hasArabicCaptions={captionSegmentsAr.length > 0}
                     captionsEnabled={captionsEnabled}
