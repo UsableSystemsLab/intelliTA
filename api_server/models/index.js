@@ -4,6 +4,7 @@ import Enrollment from "./Enrollment.js";
 import Lab from "./Lab.js";
 import Activity from "./Activity.js";
 import UserApiKey from "./UserApiKey.js";
+import VideoTranscript from "./VideoTranscript.js";
 
 // USER -> COURSE (Creator/Instructor)
 User.hasMany(Course, { foreignKey: "instructor_id", as: "taughtCourses" });
@@ -64,6 +65,9 @@ Submission.belongsTo(Activity, { foreignKey: "activity_id", as: "activity" });
 User.hasMany(UserApiKey, { foreignKey: "user_id", as: "apiKeys" });
 UserApiKey.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
+// ACTIVITY -> VIDEO TRANSCRIPT
+Activity.hasOne(VideoTranscript, { foreignKey: "activity_id", as: "transcript" });
+VideoTranscript.belongsTo(Activity, { foreignKey: "activity_id", as: "activity" });
 // QUIZ QUESTIONS
 import QuizQuestion from "./QuizQuestion.js";
 import VideoProgress from "./VideoProgress.js";
@@ -92,6 +96,7 @@ export {
   Activity,
   Submission,
   UserApiKey,
+  VideoTranscript,
   QuizQuestion,
   VideoProgress,
   StudentAnswer,

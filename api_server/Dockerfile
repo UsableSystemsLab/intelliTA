@@ -1,4 +1,5 @@
 FROM node:25-alpine3.22
+RUN apk add --no-cache ffmpeg
 WORKDIR /app
 COPY package*.json ./
 ENV NODE_ENV development
