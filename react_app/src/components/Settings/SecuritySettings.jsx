@@ -149,7 +149,7 @@ const SecuritySettings = ({ user, setUser }) => {
         method: 'PATCH',
         headers: AUTH_HEADER,
       });
-      if (!deactivateRes.ok) {
+      if (!deactivateRes.ok && deactivateRes.status !== 404) {
         const data = await deactivateRes.json().catch(() => ({}));
         throw new Error(data.message || 'Failed to deactivate account on server.');
       }
