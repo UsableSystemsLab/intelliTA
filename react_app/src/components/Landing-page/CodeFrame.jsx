@@ -2,7 +2,7 @@ import { Typewriter } from "react-simple-typewriter";
 
 export default function CodeFrame() {
   return (
-    <div className="bg-gray-900 text-green-400 font-mono p-6 rounded-2xl shadow-lg max-w-2xl h-[300px] mt-10 text-left overflow-hidden">
+    <div className="bg-gray-900 text-green-400 font-mono p-6 max-w-2xl h-[300px] text-left overflow-hidden">
       <pre className="text-lg">
         <code>
           <span>
