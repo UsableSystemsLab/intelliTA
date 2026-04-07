@@ -24,6 +24,7 @@ router.get("/", UserController.getAllUsers);
 router.post("/:firebaseUid/profile/avatar", upload.single("avatar"), UserController.uploadAvatar);
 router.get("/:firebaseUid/profile", UserController.getProfile);
 router.put("/:firebaseUid/profile", UserController.updateProfile);
+router.patch("/:firebaseUid/deactivate", UserController.deactivateAccount);
 router.get("/:id", UserController.getUserById);
 router.put("/:id", UserController.updateUser);
 router.delete("/:id", UserController.deleteUser);

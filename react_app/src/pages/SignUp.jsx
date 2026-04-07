@@ -10,6 +10,9 @@ import { updateProfile } from 'firebase/auth';
 import { useTranslation } from "react-i18next";
 import { doc, setDoc,getDoc  } from "firebase/firestore";
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const AUTH_HEADER = { 'Content-Type': 'application/json', Authorization: 'Bearer 1111' };
+
 const SignUp = () => {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
@@ -65,6 +68,18 @@ const SignUp = () => {
         createdAt: new Date()
       });
 
+      // Sync user to PostgreSQL
+      await fetch(`${API_BASE}/users`, {
+        method: 'POST',
+        headers: AUTH_HEADER,
+        body: JSON.stringify({
+          firebaseId: userCredential.user.uid,
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+        }),
+      });
+
       navigate('/');
     } catch (err) {
       console.error('Sign up error:', err);
@@ -95,6 +110,19 @@ const SignUp = () => {
         displayName: user.displayName || "",
         provider: "google",
         createdAt: new Date(),
+      });
+
+      // Sync user to PostgreSQL
+      const nameParts = (user.displayName || '').split(' ');
+      await fetch(`${API_BASE}/users`, {
+        method: 'POST',
+        headers: AUTH_HEADER,
+        body: JSON.stringify({
+          firebaseId: user.uid,
+          first_name: nameParts[0] || 'Unknown',
+          last_name: nameParts.slice(1).join(' ') || 'Unknown',
+          email: user.email,
+        }),
       });
     }
 

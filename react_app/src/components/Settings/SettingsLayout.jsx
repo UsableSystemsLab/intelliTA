@@ -3,8 +3,7 @@ import { User, Shield, PersonStanding , Award, LogOut, Bot } from 'lucide-react'
 import ProfileSettings from './ProfileSettings';
 import AIIntegrationSettings from './AIIntegrationSettings';
 import AccessibilitySettings from './AccessibilitySettings';
-// a placeholder for possible settings we would have settings
-const SecuritySettings = () => <div className="text-gray-400">Didnt do it yet</div>;
+import SecuritySettings from './SecuritySettings';
 const ProgressSettings = () => <div className="text-gray-400">Didnt do it yet</div>;
 
 import { useTranslation } from 'react-i18next';

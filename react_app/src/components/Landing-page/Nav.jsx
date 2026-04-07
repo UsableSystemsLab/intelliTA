@@ -2,17 +2,24 @@ import Shuffle from "@/components/lib/Shuffle";
 import { Link } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "@/utils/firebase";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 export default function Nav({ user }) {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
-  //This function change the language when u click on the change langauage button
+  const [scrolled, setScrolled] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   function changeLanguage() {
     i18n.changeLanguage(i18n.language === "en" ? "ar" : "en");
   }
-  const [showDropdown, setShowDropdown] = useState(false);
 
   const getUserInitials = () => {
     if (user?.displayName) {
@@ -22,7 +29,6 @@ export default function Nav({ user }) {
       }
       return names[0].charAt(0).toUpperCase() + names[0].slice(1).toLowerCase();
     }
-
     return "No user name found";
   };
 
@@ -34,167 +40,137 @@ export default function Nav({ user }) {
       console.error("Error signing out:", error);
     }
   };
+
   return (
-    <>
-      {/* This needs to be modifeid for internatialization, profile photo must go left and logo go right */}
-      <header className="sticky top-0 z-50 bg-black/50 backdrop-blur-lg">
-        <nav
-          aria-label="Global"
-          className="flex items-center justify-between p-6 lg:px-8"
-        >
-          <div className="flex lg:flex-1" >
-            {/* Make this anchor ltr to correct the logo bug */}
-            <a href="#" className="-m-1.5 p-1.5" dir="ltr">
-              <span className="sr-only">IntelliTA</span>
-              <a href="">
-                <Shuffle
-                  className="shuffle-text"
-                  text="IntelliTA"
-                  shuffleDirection="right"
-                  duration={0.35}
-                  animationMode="evenodd"
-                  shuffleTimes={1}
-                  ease="power3.out"
-                  stagger={0.03}
-                  threshold={0.1}
-                  triggerOnce={true}
-                  triggerOnHover={true}
-                  respectReducedMotion={true}
-                  style={{ fontSize: "1.5rem", fontWeight: "bold" }}
-                />
-              </a>
-            </a>
-          </div>
-          <div className="hidden lg:flex lg:gap-x-12">
-            <a
-              href="#"
-              className="relative text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300
-             after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
-             after:bg-white hover:after:w-full after:transition-all after:duration-300"
-            >
-              {t("about")}
-            </a>
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-gray-900/80 backdrop-blur-xl border-b border-gray-800"
+          : "bg-transparent"
+      }`}
+    >
+      <nav
+        aria-label="Global"
+        className="flex items-center justify-between px-6 py-4 lg:px-8"
+      >
+        {/* Logo */}
+        <div className="flex shrink-0">
+          <a href="#" className="-m-1.5 p-1.5 flex items-center gap-2" dir="ltr">
+            <span className="sr-only">IntelliTA</span>
+            <Shuffle
+              className="shuffle-text"
+              text="IntelliTA"
+              shuffleDirection="right"
+              duration={0.35}
+              animationMode="evenodd"
+              shuffleTimes={1}
+              ease="power3.out"
+              stagger={0.03}
+              threshold={0.1}
+              triggerOnce={true}
+              triggerOnHover={true}
+              respectReducedMotion={true}
+              style={{ fontSize: "1.25rem", fontWeight: "bold" }}
+            />
+          </a>
+        </div>
 
-            <Link
-              to="/courses"
-              className="relative text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300
-             after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
-             after:bg-white hover:after:w-full after:transition-all after:duration-300"
-            >
-              {t("courses")}
-            </Link>
-            <a
-              href="#"
-              className="relative text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300
-             after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
-             after:bg-white hover:after:w-full after:transition-all after:duration-300"
-            >
-              {t("contact")}
-            </a>
-          </div>
+        {/* Nav Links */}
+        <div className="hidden lg:flex lg:gap-x-10">
+          <Link
+            to="/courses"
+            className="text-lg font-semibold text-gray-300 hover:text-white transition-colors duration-200"
+          >
+            {t("courses")}
+          </Link>
+          <a
+            href="#comparison"
+            className="text-lg font-semibold text-gray-300 hover:text-white transition-colors duration-200"
+          >
+            {t("about")}
+          </a>
+        </div>
 
-          <div className="hidden lg:flex lg:flex-1 lg:justify-end gap-6.5">
-            <button
-              onClick={changeLanguage}
-              type="button"
-              className="inline-flex items-center justify-center px-3 py-0 text-sm font-medium 
-                          text-gray-900 bg-white border border-gray-300 rounded-lg 
-                          transition-all duration-300 ease-in-out 
-                          hover:bg-gray-200 hover:border-gray-400 
-                          focus:outline-none focus:ring-2 focus:ring-gray-300 
-                          dark:text-white dark:bg-gray-800 dark:border-gray-600 
-                          dark:hover:bg-gray-700 dark:hover:border-gray-500 hover:cursor-pointer"
-            >
-              <p>{i18n.language === "en" ? "عربي" : "English"}</p>
+        {/* Right Side */}
+        <div className="hidden lg:flex lg:items-center gap-4 shrink-0">
+          <button
+            onClick={changeLanguage}
+            type="button"
+            className="px-3 py-1.5 text-xs font-medium text-gray-300 border border-gray-600/50 rounded-full
+                       hover:bg-gray-700/50 hover:text-white transition-all duration-200 cursor-pointer"
+          >
+            {i18n.language === "en" ? "عربي" : "English"}
+          </button>
 
-              <span className="sr-only">Change language</span>
-            </button>
-            {user ? (
-              <div className="relative">
-                {/* Avatar Button */}
-                <button
-                  onClick={() => setShowDropdown(!showDropdown)}
-                  className="relative inline-flex items-center justify-center w-10 h-10 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600 cursor-pointer hover:ring-2 hover:ring-white transition-all"
-                >
-                  {user.photoURL ? (
-                    <img
-                      src={user.photoURL}
-                      alt="User profile"
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  ) : (
-                    <span className="font-medium text-gray-600 dark:text-gray-300"></span>
-                  )}
-                </button>
-
-                {/* Dropdown menu */}
-                {showDropdown && (
-                  // this has been modified due to an error that made the dropdown menu shows out of the screen
-                  <div className={`absolute ${isArabic ? "left-0" : "right-0"} mt-2 z-10 bg-gray-900 divide-y divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 dark:divide-gray-600`}>
-                    <div className="px-4 py-3 text-sm text-gray-100 dark:text-white">
-                      <div>{getUserInitials() || "User"}</div>
-
-                    </div>
-                    <ul
-                      className="py-2 text-sm text-gray-100 dark:text-gray-200"
-                    >
-                      <li>
-                        <Link
-                          to="/dashboard"
-                          className="block px-4 py-2 hover:bg-gray-700 dark:hover:bg-gray-600 dark:hover:text-white"
-                          onClick={() => setShowDropdown(false)}
-                        >
-                          {t("dashboard")}
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/settings"
-                          className="block px-4 py-2 hover:bg-gray-700 dark:hover:bg-gray-600 dark:hover:text-white"
-                          onClick={() => setShowDropdown(false)}
-                        >
-                          {t("settings")}
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/earnings"
-                          className="block px-4 py-2 hover:bg-gray-700 dark:hover:bg-gray-600 dark:hover:text-white"
-                          onClick={() => setShowDropdown(false)}
-                        >
-                          {t("earnings")}
-                        </Link>
-                      </li>
-                    </ul>
-                    <div className="py-1">
-                      <button
-                        onClick={handleLogout}
-                        className="cursor-pointer block w-full  px-4 py-2 text-sm text-gray-100 hover:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
-                      >
-                        {t("logout")}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link
-                to="/login"
-                className="relative text-2xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300"
+          {user ? (
+            <div className="relative">
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="relative inline-flex items-center justify-center w-9 h-9 overflow-hidden rounded-full
+                           bg-gray-600 cursor-pointer
+                           hover:ring-2 hover:ring-white transition-all"
               >
-                <span
-                  className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px]
-     after:bg-white hover:after:w-full after:transition-all after:duration-300"
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt="User profile"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
+                  <span className="font-medium text-white text-sm">
+                    {user.displayName?.charAt(0) || "U"}
+                  </span>
+                )}
+              </button>
+
+              {showDropdown && (
+                <div
+                  className={`absolute ${isArabic ? "left-0" : "right-0"} mt-2 z-10
+                    bg-gray-900/95 backdrop-blur-xl border border-gray-800 rounded-xl shadow-2xl w-48 overflow-hidden`}
                 >
-                  {t("login")}{" "}
-                </span>{" "}
-                <span aria-hidden="true">&rarr;</span>
-              </Link>
-            )}
-          </div>
-        </nav>
-      </header>
-    </>
+                  <div className="px-4 py-3 border-b border-gray-800">
+                    <p className="text-sm font-medium text-white">{getUserInitials() || "User"}</p>
+                  </div>
+                  <ul className="py-1">
+                    {[
+                      { to: "/settings", label: t("settings") },
+                    ].map((item) => (
+                      <li key={item.to}>
+                        <Link
+                          to={item.to}
+                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                          onClick={() => setShowDropdown(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="border-t border-gray-800 py-1">
+                    <button
+                      onClick={handleLogout}
+                      className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-800 hover:text-red-300 transition-colors"
+                    >
+                      {t("logout")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="px-5 py-2 text-sm font-semibold text-white rounded-full
+                         bg-blue-600 hover:bg-blue-700
+                         hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5
+                         transition-all duration-200"
+            >
+              {t("login")}
+            </Link>
+          )}
+        </div>
+      </nav>
+    </header>
   );
 }

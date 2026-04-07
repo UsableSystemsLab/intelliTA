@@ -208,6 +208,46 @@ const UserController = {
     }
   },
 
+  /**
+   * @swagger
+   * /users/{firebaseUid}/deactivate:
+   *   patch:
+   *     security:
+   *       - bearerAuth: []
+   *     summary: Soft delete (deactivate) a user account
+   *     description: Sets deleted_at timestamp on the user record instead of permanently deleting it.
+   *     tags: [Users]
+   *     parameters:
+   *       - in: path
+   *         name: firebaseUid
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The Firebase UID of the user
+   *     responses:
+   *       200:
+   *         description: Account deactivated successfully
+   *       404:
+   *         description: User not found
+   */
+  async deactivateAccount(req, res) {
+    try {
+      const [updated] = await User.update(
+        { deleted_at: new Date() },
+        { where: { firebaseId: req.params.firebaseUid, deleted_at: null } },
+      );
+      if (updated) {
+        res.status(200).json({ message: "Account deactivated successfully" });
+      } else {
+        res.status(404).json({ message: "User not found or already deactivated" });
+      }
+    } catch (error) {
+      res
+        .status(500)
+        .json({ message: "Error deactivating account", error: error.message });
+    }
+  },
+
   async uploadAvatar(req, res) {
     if (!req.file) {
       return res.status(400).json({ message: "No file uploaded" });

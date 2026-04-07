@@ -397,19 +397,22 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
   // Step 1: Form
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="relative bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-lg w-full max-h-[90vh] shadow-2xl text-white overflow-y-auto">
+      <div className="relative bg-gray-800 rounded-2xl border border-gray-700 max-w-lg w-full max-h-[90vh] shadow-2xl text-white flex flex-col overflow-hidden">
         {/* Decorative glow */}
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-green-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-24 h-24 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <CloseButton onClick={handleClose} />
-
-        <div className="relative z-10">
+        {/* Header */}
+        <div className="flex items-center justify-between px-8 pt-8 pb-4 shrink-0">
           <ModalHeader
             title="Create Activity"
             subtitle="Add a new interactive lesson"
           />
+          <CloseButton onClick={handleClose} absolute={false} />
+        </div>
 
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-8 pb-8 relative z-10">
           <ErrorAlert message={errorMsg} />
 
           <form onSubmit={handleGoToPreview} className="space-y-5">

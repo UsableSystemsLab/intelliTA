@@ -2,15 +2,21 @@ import Shuffle from "@/components/lib/Shuffle";
 import { Link } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "@/utils/firebase";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 export default function Nav({ user }) {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
+  const [scrolled, setScrolled] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // Changes the language between English and Arabic
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   function changeLanguage() {
     i18n.changeLanguage(i18n.language === "en" ? "ar" : "en");
   }
@@ -23,7 +29,7 @@ export default function Nav({ user }) {
       }
       return names[0].charAt(0).toUpperCase() + names[0].slice(1).toLowerCase();
     }
-    return "User";
+    return "No user name found";
   };
 
   const handleLogout = async () => {
@@ -37,135 +43,124 @@ export default function Nav({ user }) {
 
   return (
     <>
-      <header className="top-0 z-50 bg-black/50 backdrop-blur-lg relative">
-
-        <nav
-          aria-label="Global"
-          className="flex items-center justify-between p-6 lg:px-8"
-        >
-          <div className="flex lg:flex-1">
-            <div className="-m-1.5 p-1.5" dir="ltr">
-              <span className="sr-only">IntelliTA</span>
-              <Link to="/">
-                <Shuffle
-                  className="shuffle-text"
-                  text="IntelliTA"
-                  shuffleDirection="right"
-                  duration={0.35}
-                  animationMode="evenodd"
-                  shuffleTimes={1}
-                  ease="power3.out"
-                  stagger={0.03}
-                  threshold={0.1}
-                  triggerOnce={true}
-                  triggerOnHover={true}
-                  respectReducedMotion={true}
-                  style={{ fontSize: "1.5rem", fontWeight: "bold" }}
-                />
-              </Link>
-            </div>
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-gray-900/80 backdrop-blur-xl border-b border-gray-800"
+          : "bg-transparent"
+      }`}
+    >
+      <nav
+        aria-label="Global"
+        className="flex items-center justify-between px-6 py-4 lg:px-8"
+      >
+        {/* Logo */}
+        <div className="flex shrink-0">
+          <div className="-m-1.5 p-1.5 flex items-center gap-2" dir="ltr">
+            <span className="sr-only">IntelliTA</span>
+            <Link to="/">
+              <Shuffle
+                className="shuffle-text"
+                text="IntelliTA"
+                shuffleDirection="right"
+                duration={0.35}
+                animationMode="evenodd"
+                shuffleTimes={1}
+                ease="power3.out"
+                stagger={0.03}
+                threshold={0.1}
+                triggerOnce={true}
+                triggerOnHover={true}
+                respectReducedMotion={true}
+                style={{ fontSize: "1.25rem", fontWeight: "bold" }}
+              />
+            </Link>
           </div>
+        </div>
 
-          <div className="hidden lg:flex lg:flex-1 lg:justify-end gap-x-6">
-            {/* Language Toggle */}
-            <button
-              onClick={changeLanguage}
-              type="button"
-              className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium 
-                         text-gray-900 bg-white border border-gray-300 rounded-lg 
-                         transition-all duration-300 ease-in-out 
-                         hover:bg-gray-200 hover:border-gray-400 
-                         dark:text-white dark:bg-gray-800 dark:border-gray-600 
-                         dark:hover:bg-gray-700 hover:cursor-pointer"
-            >
-              {i18n.language === "en" ? "عربي" : "English"}
-            </button>
+        {/* Right Side */}
+        <div className="hidden lg:flex lg:items-center gap-4 shrink-0">
+          <button
+            onClick={changeLanguage}
+            type="button"
+            className="px-3 py-1.5 text-xs font-medium text-gray-300 border border-gray-600/50 rounded-full
+                       hover:bg-gray-700/50 hover:text-white transition-all duration-200 cursor-pointer"
+          >
+            {i18n.language === "en" ? "عربي" : "English"}
+          </button>
 
-            {user ? (
-              <div className="relative">
-                {/* Avatar Button */}
-                <button
-                  onClick={() => setShowDropdown(!showDropdown)}
-                  className="relative inline-flex items-center justify-center w-10 h-10 overflow-hidden bg-gray-100 rounded-full dark:bg-gray-600 cursor-pointer hover:ring-2 hover:ring-white transition-all"
-                >
-                  {user.photoURL ? (
-                    <img
-                      src={user.photoURL}
-                      alt="User profile"
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover rounded-full"
-                    />
-                  ) : (
-                    <span className="font-medium text-gray-600 dark:text-gray-300 text-xs">
-                      {getUserInitials().split(' ').map(n => n[0]).join('')}
-                    </span>
-                  )}
-                </button>
-
-                {/* Dropdown menu */}
-                {showDropdown && (
-                  <div
-                    className={`absolute ${
-                      isArabic ? "left-0" : "right-0"
-                    } mt-2 z-50 bg-gray-900 divide-y divide-gray-100 rounded-lg shadow-xl w-44 border border-gray-800`}
-                  >
-                    <div className="px-4 py-3 text-sm text-gray-100">
-                      <div className="font-bold truncate">{getUserInitials()}</div>
-                    </div>
-                    <ul className="py-2 text-sm text-gray-200">
-                      <li>
-                        <Link
-                          to="/dashboard"
-                          className="block px-4 py-2 hover:bg-gray-800 transition-colors"
-                          onClick={() => setShowDropdown(false)}
-                        >
-                          {t("dashboard")}
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/settings"
-                          className="block px-4 py-2 hover:bg-gray-800 transition-colors"
-                          onClick={() => setShowDropdown(false)}
-                        >
-                          {t("settings")}
-                        </Link>
-                      </li>
-                      <li>
-                        <Link
-                          to="/earnings"
-                          className="block px-4 py-2 hover:bg-gray-800 transition-colors"
-                          onClick={() => setShowDropdown(false)}
-                        >
-                          {t("earnings")}
-                        </Link>
-                      </li>
-                    </ul>
-                    <div className="py-1">
-                      <button
-                        onClick={handleLogout}
-                        className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-800 transition-colors"
-                      >
-                        {t("logout")}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link
-                to="/login"
-                className="relative text-xl font-semibold text-white hover:text-neutral-400 transition-colors duration-300 flex items-center"
+          {user ? (
+            <div className="relative">
+              <button
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="relative inline-flex items-center justify-center w-9 h-9 overflow-hidden rounded-full
+                           bg-gray-600 cursor-pointer
+                           hover:ring-2 hover:ring-white transition-all"
               >
-                <span className="relative after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-white hover:after:w-full after:transition-all after:duration-300">
-                  {t("login")}
-                </span>
-                <span className={`ml-2 ${isArabic ? 'rotate-180' : ''}`} aria-hidden="true">&rarr;</span>
-              </Link>
-            )}
-          </div>
-        </nav>
-      </header>
+                {user.photoURL ? (
+                  <img
+                    src={user.photoURL}
+                    alt="User profile"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover rounded-full"
+                  />
+                ) : (
+                  <span className="font-medium text-white text-sm">
+                    {user.displayName?.charAt(0) || "U"}
+                  </span>
+                )}
+              </button>
+
+              {showDropdown && (
+                <div
+                  className={`absolute ${isArabic ? "left-0" : "right-0"} mt-2 z-10
+                    bg-gray-900/95 backdrop-blur-xl border border-gray-800 rounded-xl shadow-2xl w-48 overflow-hidden`}
+                >
+                  <div className="px-4 py-3 border-b border-gray-800">
+                    <p className="text-sm font-medium text-white">{getUserInitials() || "User"}</p>
+                  </div>
+                  <ul className="py-1">
+                    {[
+                      { to: "/settings", label: t("settings") },
+                    ].map((item) => (
+                      <li key={item.to}>
+                        <Link
+                          to={item.to}
+                          className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                          onClick={() => setShowDropdown(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="border-t border-gray-800 py-1">
+                    <button
+                      onClick={handleLogout}
+                      className="cursor-pointer block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-800 hover:text-red-300 transition-colors"
+                    >
+                      {t("logout")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="px-5 py-2 text-sm font-semibold text-white rounded-full
+                         bg-blue-600 hover:bg-blue-700
+                         hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5
+                         transition-all duration-200"
+            >
+              {t("login")}
+            </Link>
+          )}
+        </div>
+      </nav>
+    </header>
+    {/* Spacer for fixed header */}
+    <div className="h-16" />
     </>
   );
 }
