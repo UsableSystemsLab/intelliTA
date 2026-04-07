@@ -23,7 +23,8 @@ import {
     Eye,
     EyeOff,
     Pencil,
-    Users
+    Users,
+    Github
 } from "lucide-react";
 
 
@@ -81,7 +82,7 @@ const StatusBadge = ({ status }) => {
 };
 
 
-const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navigate }) => {
+const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navigate, t }) => {
     const status = getActivityStatus(activity.start_date, activity.end_date);
 
     const formatDate = (dateString) => {
@@ -149,6 +150,20 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navi
                         <span>End: {formatDate(activity.end_date)}</span>
                     </div>
                 </div>
+
+                {/* GitHub Classroom Button */}
+                {activity.github_classroom_url && (
+                    <a
+                        href={activity.github_classroom_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center justify-center w-full px-4 py-3 mb-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-all duration-300"
+                    >
+                        <Github className="w-5 h-5 mr-2" />
+                        <span>{t("githubClassroom")}</span>
+                    </a>
+                )}
 
                 {/* Action Button */}
                 <button
@@ -513,6 +528,7 @@ export default function Maincontent({ user }) {
                                 onDelete={handleDeleteActivity}
                                 onEdit={handleEditActivity}
                                 navigate={navigate}
+                                t={t}
                             />
                         ))
                     )}

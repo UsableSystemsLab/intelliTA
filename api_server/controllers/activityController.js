@@ -45,6 +45,7 @@ const ActivityController = {
       const md_file_url = req.body.md_file_url;
       const starter_code_url = req.body.starter_code_url;
       const quiz_url = req.body.quiz_url;
+      const github_classroom_url = req.body.github_classroom_url;
 
       // Basic validation
       if (!title || !start_date || !end_date) {
@@ -60,6 +61,7 @@ const ActivityController = {
         md_file_url: md_file_url || null,
         starter_code_url: starter_code_url || null,
         quiz_url: quiz_url || null,
+        github_classroom_url: github_classroom_url || null,
       });
 
       // Queue transcription if video was uploaded
@@ -92,7 +94,7 @@ const ActivityController = {
   async updateActivity(req, res) {
     try {
       const { activityId } = req.params;
-      const { title, start_date, end_date, video_url, md_file_url, starter_code_url, quiz_url } = req.body;
+      const { title, start_date, end_date, video_url, md_file_url, starter_code_url, quiz_url, github_classroom_url } = req.body;
 
       const activity = await Activity.findOne({
         where: { activity_id: activityId }
@@ -110,6 +112,7 @@ const ActivityController = {
       if (md_file_url !== undefined) activity.md_file_url = md_file_url;
       if (starter_code_url !== undefined) activity.starter_code_url = starter_code_url;
       if (quiz_url !== undefined) activity.quiz_url = quiz_url;
+      if (github_classroom_url !== undefined) activity.github_classroom_url = github_classroom_url;
 
       await activity.save();
 

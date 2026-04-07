@@ -46,6 +46,10 @@ const Activity = sequelize.define(
       type: DataTypes.STRING(500),
       allowNull: true,
     },
+    github_classroom_url: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
   },
   {
     tableName: "activities",

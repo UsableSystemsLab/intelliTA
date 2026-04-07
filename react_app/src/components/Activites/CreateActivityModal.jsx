@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Send, Loader, HelpCircle } from "lucide-react";
+import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Send, Loader, HelpCircle, Github } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import FormInput from "./form/FormInput";
 import FileUploadZone from "./form/FileUploadZone";
@@ -52,6 +52,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
   const [starterPrompt, setStarterPrompt] = useState("");
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [chapters, setChapters] = useState([]);
+  const [githubClassroomUrl, setGithubClassroomUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -69,6 +70,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     setStarterPrompt("");
     setQuizQuestions([]);
     setChapters([]);
+    setGithubClassroomUrl("");
     setErrorMsg("");
   };
 // Extract video duration
@@ -115,6 +117,9 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     formData.append("title", title);
     formData.append("start_date", new Date(startDate).toISOString());
     formData.append("end_date", new Date(endDate).toISOString());
+    if (githubClassroomUrl.trim()) {
+      formData.append("github_classroom_url", githubClassroomUrl.trim());
+    }
 
     if (videoFile) {
       formData.append("video", videoFile);
@@ -477,6 +482,15 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               onFilesChange={setStarterFiles}
               prompt={starterPrompt}
               onPromptChange={setStarterPrompt}
+            />
+
+            {/* GitHub Classroom Link */}
+            <FormInput
+              label="GitHub Classroom Link (optional)"
+              icon={Github}
+              placeholder="https://classroom.github.com/a/..."
+              value={githubClassroomUrl}
+              onChange={setGithubClassroomUrl}
             />
 
             {/* Video Quiz */}

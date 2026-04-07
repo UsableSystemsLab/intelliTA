@@ -102,6 +102,7 @@ CREATE TABLE activities (
   md_file_url      VARCHAR(500),
   starter_code_url VARCHAR(500),
   quiz_url         VARCHAR(500),
+  github_classroom_url VARCHAR(500),
   created_at       TIMESTAMP DEFAULT NOW()
 );
 
