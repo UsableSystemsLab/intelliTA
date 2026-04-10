@@ -8,6 +8,7 @@ import { ensureBucketExists } from "./configs/s3.js";
 import "./models/index.js";
 import validateApiKey from "./middlewares/validateApiKey.js";
 import errorHandling from "./middlewares/errorHandling.js";
+import githubOAuthRoutes from "./routes/GitHubRoutes.js";
 
 const app = express();
 // middlewares
@@ -16,6 +17,9 @@ app.use(cors());
 app.use(json());
 app.use(errorHandling);
 const port = process.env.API_SERVER_PORT || 4000;
+
+// GitHub OAuth routes (browser redirects, no API key required)
+app.use("/api/github", githubOAuthRoutes);
 
 // only requests to /api/* will be sent to our router
 const router = express.Router();

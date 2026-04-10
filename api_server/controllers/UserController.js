@@ -268,7 +268,7 @@ const UserController = {
     try {
       const user = await User.findOne({
         where: { firebaseId: req.params.firebaseUid },
-        attributes: ["bio", "first_name", "last_name", "email"],
+        attributes: ["bio", "first_name", "last_name", "email", "github_username"],
       });
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -283,11 +283,12 @@ const UserController = {
 
   async updateProfile(req, res) {
     try {
-      const { bio, first_name, last_name } = req.body;
+      const { bio, first_name, last_name, github_username } = req.body;
       const updateData = {};
       if (bio !== undefined) updateData.bio = bio;
       if (first_name !== undefined) updateData.first_name = first_name;
       if (last_name !== undefined) updateData.last_name = last_name;
+      if (github_username !== undefined) updateData.github_username = github_username;
 
       const [updated] = await User.update(updateData, {
         where: { firebaseId: req.params.firebaseUid },
@@ -297,7 +298,7 @@ const UserController = {
       }
       const updatedUser = await User.findOne({
         where: { firebaseId: req.params.firebaseUid },
-        attributes: ["bio", "first_name", "last_name", "email"],
+        attributes: ["bio", "first_name", "last_name", "email", "github_username"],
       });
       res.status(200).json(updatedUser);
     } catch (error) {

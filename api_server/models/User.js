@@ -62,6 +62,12 @@ const User = sequelize.define(
       field: "photo_url",
       allowNull: true,
     },
+    github_username: {
+      type: DataTypes.STRING(39),
+      field: "github_username",
+      allowNull: true,
+      unique: true,
+    },
     deleted_at: {
       type: DataTypes.DATE,
       field: "deleted_at",

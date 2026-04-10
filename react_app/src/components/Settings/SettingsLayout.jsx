@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { User, Shield, PersonStanding , Award, LogOut, Bot } from 'lucide-react';
+import { User, Shield, PersonStanding , Award, LogOut, Bot, Github } from 'lucide-react';
 import ProfileSettings from './ProfileSettings';
 import AIIntegrationSettings from './AIIntegrationSettings';
 import AccessibilitySettings from './AccessibilitySettings';
 import SecuritySettings from './SecuritySettings';
+import GitHubSettings from './GitHubSettings';
 const ProgressSettings = () => <div className="text-gray-400">Didnt do it yet</div>;
 
 import { useTranslation } from 'react-i18next';
@@ -18,6 +19,7 @@ const SettingsLayout = ({ user, setUser }) => {
     { id: 'accessibility', label: 'Accessibility', icon: PersonStanding, component: AccessibilitySettings },
     { id: 'progress', label: 'Progress', icon: Award, component: ProgressSettings },
     { id: 'ai-integration', label: 'AI Integration', icon: Bot, component: AIIntegrationSettings },
+    { id: 'github', label: 'GitHub', icon: Github, component: GitHubSettings },
   ];
 
   const ActiveComponent = menuItems.find(item => item.id === activeTab)?.component || ProfileSettings;

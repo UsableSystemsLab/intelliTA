@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import CreateActivityModal from "./CreateActivityModal";
 import EditActivityModal from "./EditActivityModal";
+import GitHubCourseModal from "./GitHubCourseModal";
 import Breadcrumb from "../shared/Breadcrumb";
 import MembersModal from "../CourseMembers/MembersModal";
 import {
@@ -294,6 +295,7 @@ export default function Maincontent({ user }) {
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [generating, setGenerating] = useState(false);
     const [showMembersModal, setShowMembersModal] = useState(false);
+    const [showGitHubModal, setShowGitHubModal] = useState(false);
 
 
     useEffect(() => {
@@ -478,6 +480,13 @@ export default function Maincontent({ user }) {
                                     View Token
                                 </button>
                                 <button
+                                    onClick={() => setShowGitHubModal(true)}
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 hover:border-blue-500/50 rounded-xl font-medium transition-all duration-300"
+                                >
+                                    <Github className="w-4 h-4 text-blue-400" />
+                                    GitHub
+                                </button>
+                                <button
                                     onClick={handleDeleteCourse}
                                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-red-500/10 text-gray-300 hover:text-red-400 border border-gray-700 hover:border-red-500/50 rounded-xl font-medium transition-all duration-300"
                                 >
@@ -568,6 +577,13 @@ export default function Maincontent({ user }) {
                     courseId={courseId}
                     user={user}
                     onClose={() => setShowMembersModal(false)}
+                />
+            )}
+
+            {showGitHubModal && (
+                <GitHubCourseModal
+                    courseId={courseId}
+                    onClose={() => setShowGitHubModal(false)}
                 />
             )}
         </main>
