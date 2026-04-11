@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { API_BASE } from "../../config/api";
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 import { useTranslation } from "react-i18next";
 import CreateActivityModal from "./CreateActivityModal";
 import EditActivityModal from "./EditActivityModal";
@@ -287,7 +288,7 @@ export default function Maincontent({ user }) {
             try {
 
                 const courseRes = await fetch(`${API_BASE}/courses/${courseId}`, {
-                    headers: { "Authorization": "Bearer 1111" }
+                    headers: await getAuthHeaders(auth.currentUser)
                 });
 
                 if (courseRes.ok) {
@@ -297,7 +298,7 @@ export default function Maincontent({ user }) {
 
                 // Fetch Activities
                 const activitiesRes = await fetch(`${API_BASE}/courses/${courseId}/activities`, {
-                    headers: { "Authorization": "Bearer 1111" }
+                    headers: await getAuthHeaders(auth.currentUser)
                 });
 
                 if (activitiesRes.ok) {
@@ -326,7 +327,7 @@ export default function Maincontent({ user }) {
             const res = await fetch(`${API_BASE}/courses/${courseId}/code`, {
                 method: "POST",
                 headers: {
-                    "Authorization": "Bearer 1111"
+                    ...await getAuthHeaders(auth.currentUser)
                 }
             });
             if (res.ok) {
@@ -350,7 +351,7 @@ export default function Maincontent({ user }) {
             const res = await fetch(`${API_BASE}/courses/${courseId}`, {
                 method: "DELETE",
                 headers: {
-                    "Authorization": "Bearer 1111"
+                    ...await getAuthHeaders(auth.currentUser)
                 }
             });
 
@@ -373,7 +374,7 @@ export default function Maincontent({ user }) {
             const res = await fetch(`${API_BASE}/courses/${courseId}/activities/${activityId}`, {
                 method: "DELETE",
                 headers: {
-                    "Authorization": "Bearer 1111"
+                    ...await getAuthHeaders(auth.currentUser)
                 }
             });
 

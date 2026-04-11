@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Users, Search, AlertCircle } from "lucide-react";
-import { API_BASE } from "../../config/api";
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 import MemberCard from "./MemberCard";
 import KickConfirmModal from "./KickConfirmModal";
 
@@ -25,7 +26,7 @@ export default function MembersList({ courseId, user, onClose }) {
                 {
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": "Bearer 1111",
+                        ...await getAuthHeaders(auth.currentUser),
                     },
                 }
             );
@@ -55,7 +56,7 @@ export default function MembersList({ courseId, user, onClose }) {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": "Bearer 1111",
+                        ...await getAuthHeaders(auth.currentUser),
                     },
                     body: JSON.stringify({ firebaseId: user.uid }),
                 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Send, Loader, HelpCircle } from "lucide-react";
-import { API_BASE } from "../../config/api";
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 import ReactMarkdown from "react-markdown";
 import FormInput from "./form/FormInput";
 import FileUploadZone from "./form/FileUploadZone";
@@ -137,7 +138,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     try {
       const response = await fetch(`${API_BASE}/courses/${courseId}/activities`, {
         method: "POST",
-        headers: { Authorization: "Bearer 1111" },
+        headers: await getAuthHeaders(auth.currentUser),
         body: formData,
       });
 
@@ -165,7 +166,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
           `${API_BASE}/courses/${courseId}/activities/${newActivity.activity_id}/quiz`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
+            headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
             body: JSON.stringify(quizPayload),
           }
         );
@@ -183,7 +184,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
           `${API_BASE}/courses/${courseId}/activities/${newActivity.activity_id}/chapters`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
+            headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
             body: JSON.stringify(chaptersPayload),
           }
         );

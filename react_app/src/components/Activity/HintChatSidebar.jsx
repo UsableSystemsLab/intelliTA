@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Send, Bot, Loader2, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { API_BASE as NODE_API_URL, LLM_BASE as LLM_SERVER_URL } from '../../config/api';
+import { API_BASE as NODE_API_URL, LLM_BASE as LLM_SERVER_URL, getAuthHeaders } from '../../config/api';
+import { auth } from '@/utils/firebase.js';
 
 const LOCAL_MODELS = [
     { id: 'qwen2.5-coder:7b', label: 'Qwen Coder' },
@@ -94,7 +95,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
         async function loadExternalModels() {
             try {
                 const res = await fetch(`${NODE_API_URL}/users/${user.uid}/api-keys`, {
-                    headers: { 'Authorization': 'Bearer 1111' },
+                    headers: await getAuthHeaders(auth.currentUser),
                 });
                 if (res.ok) {
                     const keys = await res.json();
