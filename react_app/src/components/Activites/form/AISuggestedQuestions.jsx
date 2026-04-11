@@ -30,9 +30,9 @@ const markdownComponents = {
   hr: () => <hr className="border-gray-700 my-3" />,
 };
 
+import { API_BASE as API_SERVER, LLM_BASE as LLM_SERVER } from '../../../config/api';
+
 // Server endpoints
-const LLM_SERVER  = "http://localhost:8000";
-const API_SERVER  = "http://localhost:4000/api";
 const AUTH_HEADER = { Authorization: "Bearer 1111", "Content-Type": "application/json" };
 
 const TYPE_META = {

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Send, Loader, HelpCircle } from "lucide-react";
+import { API_BASE } from "../../config/api";
 import ReactMarkdown from "react-markdown";
 import FormInput from "./form/FormInput";
 import FileUploadZone from "./form/FileUploadZone";
@@ -134,7 +135,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     }
 
     try {
-      const response = await fetch(`http://localhost:4000/api/courses/${courseId}/activities`, {
+      const response = await fetch(`${API_BASE}/courses/${courseId}/activities`, {
         method: "POST",
         headers: { Authorization: "Bearer 1111" },
         body: formData,
@@ -161,7 +162,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
           }),
         };
         await fetch(
-          `http://localhost:4000/api/courses/${courseId}/activities/${newActivity.activity_id}/quiz`,
+          `${API_BASE}/courses/${courseId}/activities/${newActivity.activity_id}/quiz`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
@@ -179,7 +180,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
           })),
         };
         await fetch(
-          `http://localhost:4000/api/courses/${courseId}/activities/${newActivity.activity_id}/chapters`,
+          `${API_BASE}/courses/${courseId}/activities/${newActivity.activity_id}/chapters`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },

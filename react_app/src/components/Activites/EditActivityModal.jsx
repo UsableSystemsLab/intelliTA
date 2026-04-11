@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Save, Loader, HelpCircle } from "lucide-react";
+import { API_BASE } from "../../config/api";
 import ReactMarkdown from "react-markdown";
 import FormInput from "./form/FormInput";
 import FileUploadZone from "./form/FileUploadZone";
@@ -116,7 +117,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
       // Fetch quiz questions from DB
       try {
         const quizResponse = await fetch(
-          `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}/quiz`,
+          `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}/quiz`,
           { headers: { Authorization: "Bearer 1111" } }
         );
         if (quizResponse.ok) {
@@ -132,7 +133,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
       // Fetch video chapters from DB
       try {
         const chaptersResponse = await fetch(
-          `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}/chapters`,
+          `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}/chapters`,
           { headers: { Authorization: "Bearer 1111" } }
         );
         if (chaptersResponse.ok) {
@@ -241,7 +242,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
         formData.append("starter_code", starterCodeFile);
       }
       const response = await fetch(
-        `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}`,
+        `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}`,
         {
           method: "PUT",
           headers: {
@@ -270,7 +271,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
         }),
       };
       await fetch(
-        `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}/quiz`,
+        `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}/quiz`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
@@ -286,7 +287,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
         })),
       };
       await fetch(
-        `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}/chapters`,
+        `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}/chapters`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },

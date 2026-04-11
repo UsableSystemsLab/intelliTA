@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Users, Search, AlertCircle } from "lucide-react";
+import { API_BASE } from "../../config/api";
 import MemberCard from "./MemberCard";
 import KickConfirmModal from "./KickConfirmModal";
 
@@ -20,7 +21,7 @@ export default function MembersList({ courseId, user, onClose }) {
             setLoading(true);
             setError(null);
             const response = await fetch(
-                `http://localhost:4000/api/courses/${courseId}/students?firebaseId=${user.uid}`,
+                `${API_BASE}/courses/${courseId}/students?firebaseId=${user.uid}`,
                 {
                     headers: {
                         "Content-Type": "application/json",
@@ -49,7 +50,7 @@ export default function MembersList({ courseId, user, onClose }) {
         setKicking(true);
         try {
             const response = await fetch(
-                `http://localhost:4000/api/courses/${courseId}/students/${memberToKick.user_id}`,
+                `${API_BASE}/courses/${courseId}/students/${memberToKick.user_id}`,
                 {
                     method: "DELETE",
                     headers: {

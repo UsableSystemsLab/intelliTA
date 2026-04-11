@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Camera, User, FileText } from 'lucide-react';
 import { auth } from '@/utils/firebase.js';
 import { updateProfile } from 'firebase/auth';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+import { API_BASE } from '../../config/api';
 const AUTH_HEADER = { Authorization: 'Bearer 1111' };
 const MAX_BIO = 500;
 

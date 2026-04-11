@@ -1,9 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Send, Bot, Loader2, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-
-const LLM_SERVER_URL = 'http://localhost:8000';
-const NODE_API_URL = 'http://localhost:4000/api';
+import { API_BASE as NODE_API_URL, LLM_BASE as LLM_SERVER_URL } from '../../config/api';
 
 const LOCAL_MODELS = [
     { id: 'qwen2.5-coder:7b', label: 'Qwen Coder' },

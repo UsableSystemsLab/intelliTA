@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Loader2, CheckCircle, XCircle, Info, Trash2 } from 'lucide-react';
-
-const NODE_API_URL = 'http://localhost:4000/api';
-const LLM_SERVER_URL = 'http://localhost:8000';
+import { API_BASE as NODE_API_URL, LLM_BASE as LLM_SERVER_URL } from '../../config/api';
 
 const AIIntegrationSettings = ({ user }) => {
   const [baseUrl, setBaseUrl] = useState('');

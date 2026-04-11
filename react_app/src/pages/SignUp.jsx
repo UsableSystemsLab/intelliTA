@@ -9,8 +9,7 @@ import { auth,db } from '@/utils/firebase';
 import { updateProfile } from 'firebase/auth';
 import { useTranslation } from "react-i18next";
 import { doc, setDoc,getDoc  } from "firebase/firestore";
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+import { API_BASE } from '../config/api';
 const AUTH_HEADER = { 'Content-Type': 'application/json', Authorization: 'Bearer 1111' };
 
 const SignUp = () => {
