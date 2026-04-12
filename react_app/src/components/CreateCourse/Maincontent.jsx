@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Loader, Info } from "lucide-react";
 import Breadcrumb from "../shared/Breadcrumb";
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 
 export default function CreateCourseMain({ user }) {
   const [title, setTitle] = useState("");
@@ -36,11 +38,11 @@ export default function CreateCourseMain({ user }) {
         .map(s => s.trim())
         .filter(s => s.length > 0);
 
-    const createCourseRequest = () => fetch("http://localhost:4000/api/courses", {
+    const createCourseRequest = async () => fetch(`${API_BASE}/courses`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 1111",
+        ...await getAuthHeaders(auth.currentUser),
       },
       body: JSON.stringify({
         title,
@@ -62,10 +64,10 @@ export default function CreateCourseMain({ user }) {
               We need to map Firestore keys (firstName, lastName) 
               to Postgres keys (first_name, last_name).
            */
-           const syncResponse = await fetch("http://localhost:4000/api/users", {
+           const syncResponse = await fetch(`${API_BASE}/users`, {
              method: "POST",
              headers: { "Content-Type": "application/json",
-                        "Authorization": "Bearer 1111",
+                        ...await getAuthHeaders(auth.currentUser),
              },
              body: JSON.stringify({
                firebaseId: user?.uid,

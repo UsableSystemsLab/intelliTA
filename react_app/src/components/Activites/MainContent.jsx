@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 import { useTranslation } from "react-i18next";
 import CreateActivityModal from "./CreateActivityModal";
 import EditActivityModal from "./EditActivityModal";
@@ -285,8 +287,8 @@ export default function Maincontent({ user }) {
         async function fetchData() {
             try {
 
-                const courseRes = await fetch(`http://localhost:4000/api/courses/${courseId}`, {
-                    headers: { "Authorization": "Bearer 1111" }
+                const courseRes = await fetch(`${API_BASE}/courses/${courseId}`, {
+                    headers: await getAuthHeaders(auth.currentUser)
                 });
 
                 if (courseRes.ok) {
@@ -295,8 +297,8 @@ export default function Maincontent({ user }) {
                 }
 
                 // Fetch Activities
-                const activitiesRes = await fetch(`http://localhost:4000/api/courses/${courseId}/activities`, {
-                    headers: { "Authorization": "Bearer 1111" }
+                const activitiesRes = await fetch(`${API_BASE}/courses/${courseId}/activities`, {
+                    headers: await getAuthHeaders(auth.currentUser)
                 });
 
                 if (activitiesRes.ok) {
@@ -322,10 +324,10 @@ export default function Maincontent({ user }) {
         if (!window.confirm("Are you sure? Old token will stop working.")) return;
         setGenerating(true);
         try {
-            const res = await fetch(`http://localhost:4000/api/courses/${courseId}/code`, {
+            const res = await fetch(`${API_BASE}/courses/${courseId}/code`, {
                 method: "POST",
                 headers: {
-                    "Authorization": "Bearer 1111"
+                    ...await getAuthHeaders(auth.currentUser)
                 }
             });
             if (res.ok) {
@@ -346,10 +348,10 @@ export default function Maincontent({ user }) {
         if (!window.confirm("Are you sure you want to delete this course? This action cannot be undone.")) return;
 
         try {
-            const res = await fetch(`http://localhost:4000/api/courses/${courseId}`, {
+            const res = await fetch(`${API_BASE}/courses/${courseId}`, {
                 method: "DELETE",
                 headers: {
-                    "Authorization": "Bearer 1111"
+                    ...await getAuthHeaders(auth.currentUser)
                 }
             });
 
@@ -369,10 +371,10 @@ export default function Maincontent({ user }) {
         if (!window.confirm("Are you sure you want to delete this activity?")) return;
 
         try {
-            const res = await fetch(`http://localhost:4000/api/courses/${courseId}/activities/${activityId}`, {
+            const res = await fetch(`${API_BASE}/courses/${courseId}/activities/${activityId}`, {
                 method: "DELETE",
                 headers: {
-                    "Authorization": "Bearer 1111"
+                    ...await getAuthHeaders(auth.currentUser)
                 }
             });
 

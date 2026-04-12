@@ -2,9 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Camera, User, FileText } from 'lucide-react';
 import { auth } from '@/utils/firebase.js';
 import { updateProfile } from 'firebase/auth';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-const AUTH_HEADER = { Authorization: 'Bearer 1111' };
+import { API_BASE, getAuthHeaders } from '../../config/api';
 const MAX_BIO = 500;
 
 const ProfileSettings = ({ user, setUser }) => {
@@ -19,9 +17,10 @@ const ProfileSettings = ({ user, setUser }) => {
 
   useEffect(() => {
     if (!user?.uid) return;
+    getAuthHeaders(auth.currentUser).then(authHeaders =>
     fetch(`${API_BASE}/users/${user.uid}/profile`, {
-      headers: AUTH_HEADER,
-    })
+      headers: authHeaders,
+    }))
       .then((r) => r.ok ? r.json() : Promise.reject(r))
       .then((data) => setBio(data.bio || ''))
       .catch(() => {});
@@ -46,7 +45,7 @@ const ProfileSettings = ({ user, setUser }) => {
         formData.append('avatar', selectedFile);
         const uploadRes = await fetch(`${API_BASE}/users/${user.uid}/profile/avatar`, {
           method: 'POST',
-          headers: AUTH_HEADER,
+          headers: await getAuthHeaders(auth.currentUser),
           body: formData,
         });
         if (!uploadRes.ok) {
@@ -61,7 +60,7 @@ const ProfileSettings = ({ user, setUser }) => {
 
       const res = await fetch(`${API_BASE}/users/${user.uid}/profile`, {
         method: 'PUT',
-        headers: { ...AUTH_HEADER, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
         body: JSON.stringify({ bio }),
       });
       if (!res.ok) throw new Error('Failed to save bio');
