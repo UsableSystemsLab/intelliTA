@@ -194,6 +194,8 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
       }
 
       onActivityCreated(newActivity);
+      // Note: GitHub repo is created asynchronously on the server.
+      // The repo link will appear on the activity card once it's ready.
       handleClose();
     } catch (err) {
       setErrorMsg(err.message);

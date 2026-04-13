@@ -152,7 +152,21 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navi
                     </div>
                 </div>
 
-                {/* GitHub Classroom Button */}
+                {/* Starter Code Repo Button */}
+                {activity.github_repo_url && (
+                    <a
+                        href={activity.github_repo_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center justify-center w-full px-4 py-3 mb-2 bg-gray-900 hover:bg-gray-700 border border-gray-600 text-white rounded-xl font-medium transition-all duration-300"
+                    >
+                        <Github className="w-4 h-4 mr-2 text-gray-300" />
+                        <span className="text-sm">Starter Code Repo</span>
+                    </a>
+                )}
+
+                {/* GitHub Classroom Button — label differs for instructor vs student */}
                 {activity.github_classroom_url && (
                     <a
                         href={activity.github_classroom_url}
@@ -162,7 +176,11 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navi
                         className="inline-flex items-center justify-center w-full px-4 py-3 mb-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-all duration-300"
                     >
                         <Github className="w-5 h-5 mr-2" />
-                        <span>{t("githubClassroom")}</span>
+                        <span>
+                          {isInstructor
+                            ? "Create Classroom Assignment"
+                            : t("githubClassroom")}
+                        </span>
                     </a>
                 )}
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, Loader, Info } from "lucide-react";
+import { AlertCircle, Loader, Info, Github, Eye, EyeOff, Copy } from "lucide-react";
 import Breadcrumb from "../shared/Breadcrumb";
 
 export default function CreateCourseMain({ user }) {
@@ -9,17 +9,33 @@ export default function CreateCourseMain({ user }) {
   const [description, setDescription] = useState("");
   const [studentList, setStudentList] = useState("");
 
+  // GitHub credentials (required)
+  const [clientId, setClientId] = useState("");
+  const [clientSecret, setClientSecret] = useState("");
+  const [showSecret, setShowSecret] = useState(false);
+  const [copiedCallback, setCopiedCallback] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
 
   const navigate = useNavigate();
 
+  const callbackUrl = `${window.location.protocol}//${window.location.hostname}:4000/api/github/callback`;
+
+  const copyCallback = () => {
+    navigator.clipboard.writeText(callbackUrl);
+    setCopiedCallback(true);
+    setTimeout(() => setCopiedCallback(false), 2000);
+  };
+
   const handleSubmit = async () => {
     const errors = {};
     if (!title.trim()) errors.title = true;
     if (!courseCode.trim()) errors.courseCode = true;
     if (!description.trim()) errors.description = true;
+    if (!clientId.trim()) errors.clientId = true;
+    if (!clientSecret.trim()) errors.clientSecret = true;
     setFieldErrors(errors);
 
     if (Object.keys(errors).length > 0) {
@@ -30,11 +46,10 @@ export default function CreateCourseMain({ user }) {
     setLoading(true);
     setErrorMsg("");
 
-    // Parse student list
     const allowedStudents = studentList
-        .split('\n')
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
+      .split('\n')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
 
     const createCourseRequest = () => fetch("http://localhost:4000/api/courses", {
       method: "POST",
@@ -47,7 +62,7 @@ export default function CreateCourseMain({ user }) {
         course_code: courseCode,
         description,
         firebaseId: user?.uid,
-        allowed_students: allowedStudents.length > 0 ? allowedStudents : null
+        allowed_students: allowedStudents.length > 0 ? allowedStudents : null,
       }),
     });
 
@@ -57,35 +72,28 @@ export default function CreateCourseMain({ user }) {
       if (response.status === 404) {
         const data = await response.json();
         if (data.message === "User not found") {
-           // Attempt to sync user to Postgres
-           /* 
-              We need to map Firestore keys (firstName, lastName) 
-              to Postgres keys (first_name, last_name).
-           */
-           const syncResponse = await fetch("http://localhost:4000/api/users", {
-             method: "POST",
-             headers: { "Content-Type": "application/json",
-                        "Authorization": "Bearer 1111",
-             },
-             body: JSON.stringify({
-               firebaseId: user?.uid,
-               first_name: user?.firstName || user?.displayName?.split(' ')[0] || "Unknown",
-               last_name: user?.lastName || user?.displayName?.split(' ').slice(1).join(' ') || "User",
-               email: user?.email
-             })
-           });
+          const syncResponse = await fetch("http://localhost:4000/api/users", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer 1111",
+            },
+            body: JSON.stringify({
+              firebaseId: user?.uid,
+              first_name: user?.firstName || user?.displayName?.split(' ')[0] || "Unknown",
+              last_name: user?.lastName || user?.displayName?.split(' ').slice(1).join(' ') || "User",
+              email: user?.email,
+            }),
+          });
 
-           if (syncResponse.ok) {
-             // Retry course creation
-             response = await createCourseRequest();
-           } else {
-             // If sync fails, throw the original error or sync error
-             const syncData = await syncResponse.json();
-             throw new Error("Account sync failed: " + (syncData.message || syncData.error));
-           }
+          if (syncResponse.ok) {
+            response = await createCourseRequest();
+          } else {
+            const syncData = await syncResponse.json();
+            throw new Error("Account sync failed: " + (syncData.message || syncData.error));
+          }
         } else {
-           // 404 but not "User not found" (e.g. route not found?)
-           throw new Error(data.message || data.error || "Resource not found");
+          throw new Error(data.message || data.error || "Resource not found");
         }
       }
 
@@ -94,11 +102,33 @@ export default function CreateCourseMain({ user }) {
         throw new Error(data.message || data.error || "Failed to create course");
       }
 
-      // if creation success, instructor will be navigted to courses page
-      navigate("/courses");
+      const course = await response.json();
+      const courseId = course.course_id;
+
+      // Save GitHub credentials for the new course
+      const credRes = await fetch(`http://localhost:4000/api/courses/${courseId}/github`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer 1111",
+        },
+        body: JSON.stringify({
+          github_client_id: clientId.trim(),
+          github_client_secret: clientSecret.trim(),
+        }),
+      });
+
+      if (!credRes.ok) {
+        const credData = await credRes.json();
+        throw new Error("GitHub setup failed: " + (credData.message || "Unknown error"));
+      }
+
+      // Redirect browser to GitHub OAuth (must be a full page redirect)
+      const redirectBack = `${window.location.protocol}//${window.location.hostname}:3000/courses/${courseId}`;
+      window.location.href = `http://localhost:4000/api/github/auth?courseId=${courseId}&redirect=${encodeURIComponent(redirectBack)}`;
+
     } catch (err) {
       setErrorMsg(err.message);
-    } finally {
       setLoading(false);
     }
   };
@@ -116,18 +146,19 @@ export default function CreateCourseMain({ user }) {
 
         <div className="bg-blue-500/10 border border-blue-500/30 text-blue-300 p-4 rounded-xl mb-6 flex items-start gap-3">
           <Info className="w-5 h-5 shrink-0 mt-0.5" />
-          <p className="text-sm">You will be assigned as the <strong className="text-white">instructor</strong> of this course. You'll be able to create activities, manage students, and share a token for others to join.</p>
+          <p className="text-sm">You will be assigned as the <strong className="text-white">instructor</strong> of this course. A GitHub organization must be connected to enable activity repositories for students.</p>
         </div>
 
         {errorMsg && (
           <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-xl mb-6 flex items-center gap-3">
-             <AlertCircle className="w-5 h-5" />
-             {errorMsg}
+            <AlertCircle className="w-5 h-5" />
+            {errorMsg}
           </div>
         )}
 
+        {/* Course Details */}
         <div className="mb-6">
-          <label className="block mb-2 font-medium text-gray-300">Course Title</label>
+          <label className="block mb-2 font-medium text-gray-300">Course Title <span className="text-red-400">*</span></label>
           <input
             type="text"
             className={`w-full p-3 rounded-xl bg-gray-900 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${fieldErrors.title ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"}`}
@@ -138,7 +169,7 @@ export default function CreateCourseMain({ user }) {
         </div>
 
         <div className="mb-6">
-          <label className="block mb-2 font-medium text-gray-300">Course Code</label>
+          <label className="block mb-2 font-medium text-gray-300">Course Code <span className="text-red-400">*</span></label>
           <input
             type="text"
             className={`w-full p-3 rounded-xl bg-gray-900 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${fieldErrors.courseCode ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"}`}
@@ -148,19 +179,19 @@ export default function CreateCourseMain({ user }) {
           />
         </div>
 
-        <div className="mb-8">
-          <label className="block mb-2 font-medium text-gray-300">Description</label>
+        <div className="mb-6">
+          <label className="block mb-2 font-medium text-gray-300">Description <span className="text-red-400">*</span></label>
           <textarea
             rows="4"
             className={`w-full p-3 rounded-xl bg-gray-900 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all resize-none ${fieldErrors.description ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"}`}
             placeholder="Write course description"
             value={description}
             onChange={(e) => { setDescription(e.target.value); setFieldErrors(prev => ({ ...prev, description: false })); }}
-          ></textarea>
+          />
         </div>
 
         <div className="mb-6">
-          <label className="block mb-2 font-semibold">Allowed Student Names (Optional)</label>
+          <label className="block mb-2 font-semibold">Allowed Student Names <span className="text-gray-500 font-normal">(Optional)</span></label>
           <p className="text-sm text-gray-400 mb-2">Enter names separated by new lines. If provided, students must pick a name from this list to join.</p>
           <textarea
             rows="4"
@@ -168,8 +199,74 @@ export default function CreateCourseMain({ user }) {
             placeholder="Meshal Okairy&#10;Mohanad Babgi&#10;Amer Bugshan&#10;..."
             value={studentList}
             onChange={(e) => setStudentList(e.target.value)}
-          ></textarea>
+          />
         </div>
+
+        {/* GitHub Organization — Required */}
+        <div className="mb-8 p-5 rounded-xl border border-gray-600 bg-gray-900/50">
+          <h2 className="text-lg font-semibold text-white mb-1 flex items-center gap-2">
+            <Github className="w-5 h-5 text-white" />
+            GitHub Organization <span className="text-red-400 text-sm font-normal ml-1">Required</span>
+          </h2>
+          <p className="text-sm text-gray-400 mb-4">
+            A GitHub OAuth App is required to auto-create activity repositories. You will be redirected to authorize after creating the course.
+          </p>
+
+          {/* Callback URL helper */}
+          <div className="mb-4">
+            <label className="block mb-1 text-xs font-medium text-gray-400 uppercase tracking-wider">OAuth Callback URL</label>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 bg-gray-800 border border-gray-700 text-blue-300 text-xs px-3 py-2 rounded-lg font-mono truncate">
+                {callbackUrl}
+              </code>
+              <button
+                type="button"
+                onClick={copyCallback}
+                className="flex items-center gap-1.5 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs rounded-lg transition-all"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                {copiedCallback ? "Copied!" : "Copy"}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Paste this URL into the "Authorization callback URL" field of your GitHub OAuth App.</p>
+          </div>
+
+          <div className="mb-4">
+            <label className="block mb-2 text-sm font-medium text-gray-300">
+              Client ID <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              className={`w-full p-3 rounded-xl bg-gray-800 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all font-mono text-sm ${fieldErrors.clientId ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-600 focus:border-blue-500 focus:ring-blue-500"}`}
+              placeholder="Ov23li..."
+              value={clientId}
+              onChange={(e) => { setClientId(e.target.value); setFieldErrors(prev => ({ ...prev, clientId: false })); }}
+            />
+          </div>
+
+          <div>
+            <label className="block mb-2 text-sm font-medium text-gray-300">
+              Client Secret <span className="text-red-400">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type={showSecret ? "text" : "password"}
+                className={`w-full p-3 pr-10 rounded-xl bg-gray-800 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all font-mono text-sm ${fieldErrors.clientSecret ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-600 focus:border-blue-500 focus:ring-blue-500"}`}
+                placeholder="••••••••••••••••••••••••••••••••••••••••"
+                value={clientSecret}
+                onChange={(e) => { setClientSecret(e.target.value); setFieldErrors(prev => ({ ...prev, clientSecret: false })); }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowSecret(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
+              >
+                {showSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="flex justify-center">
           <button
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-lg shadow-blue-600/20 transition-all hover:shadow-blue-600/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -177,12 +274,15 @@ export default function CreateCourseMain({ user }) {
             disabled={loading}
           >
             {loading ? (
-                <>
-                 <Loader className="w-5 h-5 animate-spin" />
-                  <span>Saving...</span>
-                </>
+              <>
+                <Loader className="w-5 h-5 animate-spin" />
+                <span>Creating & connecting GitHub...</span>
+              </>
             ) : (
-                "Create Course"
+              <>
+                <Github className="w-5 h-5" />
+                Create Course & Connect GitHub
+              </>
             )}
           </button>
         </div>

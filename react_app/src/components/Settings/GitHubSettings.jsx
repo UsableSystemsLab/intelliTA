@@ -1,90 +1,81 @@
-import React, { useState, useEffect } from 'react';
-import { Github, CheckCircle, Loader2, Info } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Github, CheckCircle, Loader2, ShieldCheck, ShieldAlert, X } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 const AUTH_HEADER = { Authorization: 'Bearer 1111' };
 
 const GitHubSettings = ({ user }) => {
-  const [githubUsername, setGithubUsername] = useState('');
-  const [savedUsername, setSavedUsername] = useState('');
+  const [profile, setProfile] = useState(null);   // { github_username, github_verified }
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState('');
+  const [removing, setRemoving] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
+  // Load profile on mount
   useEffect(() => {
     if (!user?.uid) return;
-    fetch(`${API_BASE}/users/${user.uid}/profile`, {
-      headers: AUTH_HEADER,
-    })
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((data) => {
-        setGithubUsername(data.github_username || '');
-        setSavedUsername(data.github_username || '');
-      })
-      .catch(() => {})
+    fetch(`${API_BASE}/users/${user.uid}/profile`, { headers: AUTH_HEADER })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => setProfile({
+        github_username: data.github_username || null,
+        github_verified: data.github_verified || false,
+      }))
+      .catch(() => setError('Failed to load profile.'))
       .finally(() => setLoading(false));
   }, [user?.uid]);
 
-  const handleSave = async () => {
-    const trimmed = githubUsername.trim();
-    if (!trimmed) {
-      setError('Please enter your GitHub username.');
-      return;
+  // Handle OAuth callback params (?github=verified&username=...)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const result = params.get('github');
+    if (result === 'verified') {
+      const username = params.get('username');
+      setProfile({ github_username: username, github_verified: true });
+      setSuccess(`GitHub account verified: @${username}`);
+      const url = new URL(window.location);
+      url.searchParams.delete('github');
+      url.searchParams.delete('username');
+      window.history.replaceState({}, '', url);
+    } else if (result === 'error') {
+      setError(params.get('message') || 'GitHub verification failed.');
+      const url = new URL(window.location);
+      url.searchParams.delete('github');
+      url.searchParams.delete('message');
+      window.history.replaceState({}, '', url);
     }
+  }, []);
 
-    setSaving(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      const res = await fetch(`${API_BASE}/users/${user.uid}/profile`, {
-        method: 'PUT',
-        headers: { ...AUTH_HEADER, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ github_username: trimmed }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.message || 'Failed to save GitHub username');
-      }
-
-      setSavedUsername(trimmed);
-      setSuccess('GitHub username saved successfully.');
-    } catch (err) {
-      setError(err.message || 'An error occurred while saving.');
-    } finally {
-      setSaving(false);
-    }
+  const handleVerify = () => {
+    const redirectBack = window.location.href.split('?')[0];
+    window.location.href =
+      `${API_BASE.replace('/api', '')}/api/github/student-auth` +
+      `?firebaseId=${encodeURIComponent(user.uid)}` +
+      `&redirect=${encodeURIComponent(redirectBack)}`;
   };
 
   const handleRemove = async () => {
-    setSaving(true);
+    setRemoving(true);
     setError('');
     setSuccess('');
-
     try {
       const res = await fetch(`${API_BASE}/users/${user.uid}/profile`, {
         method: 'PUT',
         headers: { ...AUTH_HEADER, 'Content-Type': 'application/json' },
         body: JSON.stringify({ github_username: null }),
       });
-
-      if (!res.ok) throw new Error('Failed to remove GitHub username');
-
-      setGithubUsername('');
-      setSavedUsername('');
-      setSuccess('GitHub username removed.');
-    } catch (err) {
-      setError(err.message || 'An error occurred.');
+      if (!res.ok) throw new Error('Failed to remove');
+      setProfile({ github_username: null, github_verified: false });
+      setSuccess('GitHub account disconnected.');
+    } catch {
+      setError('Failed to remove GitHub account.');
     } finally {
-      setSaving(false);
+      setRemoving(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-gray-400 text-sm">
+      <div className="flex items-center gap-2 text-gray-400 text-sm py-8">
         <Loader2 className="w-4 h-4 animate-spin" />
         <span>Loading...</span>
       </div>
@@ -92,83 +83,92 @@ const GitHubSettings = ({ user }) => {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-lg">
       <div>
-        <h2 className="text-xl font-semibold text-gray-100 mb-1">GitHub Integration</h2>
-        <p className="text-gray-400 text-sm">Link your GitHub account for GitHub Classroom assignments.</p>
+        <h2 className="text-xl font-semibold text-gray-100 mb-1">GitHub Account</h2>
+        <p className="text-gray-400 text-sm">
+          Connect your GitHub account so your instructor can match you to your assignment repository.
+        </p>
       </div>
 
-      <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-        <Info className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
-        <div className="text-sm text-gray-300 leading-relaxed">
-          <p className="mb-1">
-            Enter your <span className="text-blue-400 font-medium">GitHub username</span> to link your account.
-            This is used to match you with your GitHub Classroom assignment repositories.
-          </p>
-          <p className="text-gray-400">
-            Make sure to use the same GitHub account that you use to accept classroom assignments.
-          </p>
-        </div>
-      </div>
-
-      {savedUsername ? (
-        <div className="flex items-center justify-between p-4 rounded-xl bg-gray-800/50 border border-gray-700">
-          <div className="flex items-center gap-3">
-            <Github className="w-5 h-5 text-gray-300" />
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-100 font-medium">{savedUsername}</span>
-                <CheckCircle className="w-4 h-4 text-green-400" />
+      {profile?.github_username ? (
+        // ── Connected state ──
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-xl bg-gray-800/50 border border-gray-700">
+            <div className="flex items-center gap-3">
+              <Github className="w-5 h-5 text-gray-300" />
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-100 font-medium">@{profile.github_username}</span>
+                  {profile.github_verified ? (
+                    <span className="flex items-center gap-1 text-xs text-green-400 bg-green-400/10 border border-green-400/20 px-2 py-0.5 rounded-full">
+                      <ShieldCheck className="w-3 h-3" />
+                      Verified
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-xs text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">
+                      <ShieldAlert className="w-3 h-3" />
+                      Not verified
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {profile.github_verified
+                    ? 'Identity confirmed via GitHub OAuth'
+                    : 'Verify ownership by connecting with GitHub'}
+                </p>
               </div>
-              <p className="text-xs text-gray-500 mt-0.5">GitHub username linked</p>
             </div>
+            <button
+              onClick={handleRemove}
+              disabled={removing}
+              className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+              title="Disconnect"
+            >
+              {removing ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+            </button>
           </div>
-          <button
-            onClick={handleRemove}
-            disabled={saving}
-            className="px-4 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-colors disabled:opacity-50"
-          >
-            {saving ? 'Removing...' : 'Remove'}
-          </button>
+
+          {!profile.github_verified && (
+            <button
+              onClick={handleVerify}
+              className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-gray-900 hover:bg-gray-950 text-white border border-gray-600 hover:border-gray-400 rounded-xl font-medium transition-all duration-300"
+            >
+              <Github className="w-5 h-5" />
+              Verify with GitHub
+            </button>
+          )}
         </div>
       ) : (
+        // ── Not connected state ──
         <div className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="github-username" className="block text-sm font-medium text-gray-300">
-              GitHub Username
-            </label>
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                <Github className="w-5 h-5" />
-              </div>
-              <input
-                id="github-username"
-                type="text"
-                value={githubUsername}
-                onChange={(e) => {
-                  setGithubUsername(e.target.value);
-                  setError('');
-                  setSuccess('');
-                }}
-                placeholder="e.g. octocat"
-                className="w-full pl-11 pr-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none transition-all duration-300"
-              />
-            </div>
+          <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-sm text-gray-300 leading-relaxed">
+            Click the button below to authorize with GitHub. We will read only your
+            <span className="text-blue-400 font-medium"> public username </span>
+            — no repositories, no write access.
           </div>
-
           <button
-            onClick={handleSave}
-            disabled={!githubUsername.trim() || saving}
-            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all duration-300 shadow-lg shadow-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            onClick={handleVerify}
+            className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-gray-900 hover:bg-gray-800 text-white border border-gray-600 hover:border-gray-400 rounded-xl font-semibold transition-all duration-300 shadow-lg"
           >
-            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-            {saving ? 'Saving...' : 'Save'}
+            <Github className="w-5 h-5" />
+            Connect GitHub Account
           </button>
         </div>
       )}
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
-      {success && <p className="text-sm text-green-400">{success}</p>}
+      {error && (
+        <div className="flex items-center gap-2 text-sm text-red-400 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+          <ShieldAlert className="w-4 h-4 shrink-0" />
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="flex items-center gap-2 text-sm text-green-400 p-3 bg-green-500/10 border border-green-500/20 rounded-xl">
+          <CheckCircle className="w-4 h-4 shrink-0" />
+          {success}
+        </div>
+      )}
     </div>
   );
 };
