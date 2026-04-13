@@ -11,6 +11,7 @@ CREATE TABLE users (
   bio TEXT,
   photo_url TEXT,
   github_username VARCHAR(39) UNIQUE,
+  github_verified BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -104,6 +105,8 @@ CREATE TABLE activities (
   starter_code_url VARCHAR(500),
   quiz_url         VARCHAR(500),
   github_classroom_url VARCHAR(500),
+  github_repo_url  VARCHAR(500),
+  github_assignment_id INT,
   created_at       TIMESTAMP DEFAULT NOW()
 );
 
@@ -179,6 +182,8 @@ CREATE TABLE github_connections (
   github_token         TEXT,
   github_username      VARCHAR(39),
   github_org           VARCHAR(100),
+  github_classroom_id   INT,
+  github_classroom_name VARCHAR(255),
   created_at           TIMESTAMP DEFAULT NOW(),
   updated_at           TIMESTAMP DEFAULT NOW()
 );

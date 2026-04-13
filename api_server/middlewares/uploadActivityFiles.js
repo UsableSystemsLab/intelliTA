@@ -37,13 +37,19 @@ export async function uploadActivityFilesToS3(req, res, next) {
         }
 
         if (req.files['md_file'] && req.files['md_file'][0]) {
-            const url = await uploadFile(req.files['md_file'][0], 'docs');
+            const file = req.files['md_file'][0];
+            const url = await uploadFile(file, 'docs');
             req.body.md_file_url = url;
+            // Keep raw content in memory for GitHub repo creation (avoids re-fetching from S3)
+            req.body._md_content = file.buffer.toString('utf-8');
         }
 
         if (req.files['starter_code'] && req.files['starter_code'][0]) {
-            const url = await uploadFile(req.files['starter_code'][0], 'starter-code');
+            const file = req.files['starter_code'][0];
+            const url = await uploadFile(file, 'starter-code');
             req.body.starter_code_url = url;
+            // Keep raw content in memory for GitHub repo creation
+            req.body._starter_code_content = file.buffer.toString('utf-8');
         }
 
         if (req.files['quiz_file'] && req.files['quiz_file'][0]) {

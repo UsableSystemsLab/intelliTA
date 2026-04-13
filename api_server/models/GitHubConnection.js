@@ -38,6 +38,14 @@ const GitHubConnection = sequelize.define(
       type: DataTypes.STRING(100),
       allowNull: true,
     },
+    github_classroom_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    github_classroom_name: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
   },
   {
     tableName: "github_connections",

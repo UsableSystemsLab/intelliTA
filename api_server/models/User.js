@@ -68,6 +68,12 @@ const User = sequelize.define(
       allowNull: true,
       unique: true,
     },
+    github_verified: {
+      type: DataTypes.BOOLEAN,
+      field: "github_verified",
+      allowNull: false,
+      defaultValue: false,
+    },
     deleted_at: {
       type: DataTypes.DATE,
       field: "deleted_at",

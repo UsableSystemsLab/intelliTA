@@ -268,7 +268,7 @@ const UserController = {
     try {
       const user = await User.findOne({
         where: { firebaseId: req.params.firebaseUid },
-        attributes: ["bio", "first_name", "last_name", "email", "github_username"],
+        attributes: ["bio", "first_name", "last_name", "email", "github_username", "github_verified"],
       });
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -288,7 +288,11 @@ const UserController = {
       if (bio !== undefined) updateData.bio = bio;
       if (first_name !== undefined) updateData.first_name = first_name;
       if (last_name !== undefined) updateData.last_name = last_name;
-      if (github_username !== undefined) updateData.github_username = github_username;
+      if (github_username !== undefined) {
+        updateData.github_username = github_username;
+        // Manual update resets verification — only OAuth flow sets verified=true
+        updateData.github_verified = false;
+      }
 
       const [updated] = await User.update(updateData, {
         where: { firebaseId: req.params.firebaseUid },
@@ -298,7 +302,7 @@ const UserController = {
       }
       const updatedUser = await User.findOne({
         where: { firebaseId: req.params.firebaseUid },
-        attributes: ["bio", "first_name", "last_name", "email", "github_username"],
+        attributes: ["bio", "first_name", "last_name", "email", "github_username", "github_verified"],
       });
       res.status(200).json(updatedUser);
     } catch (error) {
