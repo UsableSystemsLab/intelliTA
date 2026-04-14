@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Loader2, CheckCircle, XCircle, Info, Trash2 } from 'lucide-react';
-
-const NODE_API_URL = 'http://localhost:4000/api';
-const LLM_SERVER_URL = 'http://localhost:8000';
+import { API_BASE as NODE_API_URL, LLM_BASE as LLM_SERVER_URL, getAuthHeaders } from '../../config/api';
+import { auth } from '@/utils/firebase.js';
 
 const AIIntegrationSettings = ({ user }) => {
   const [baseUrl, setBaseUrl] = useState('');
@@ -23,7 +22,7 @@ const AIIntegrationSettings = ({ user }) => {
   const loadSavedKeys = async () => {
     try {
       const res = await fetch(`${NODE_API_URL}/users/${user.uid}/api-keys`, {
-        headers: { 'Authorization': 'Bearer 1111' },
+        headers: await getAuthHeaders(auth.currentUser),
       });
       if (res.ok) {
         setSavedKeys(await res.json());
@@ -63,7 +62,7 @@ const AIIntegrationSettings = ({ user }) => {
       // Step 2: Save to DB via Node API
       const saveRes = await fetch(`${NODE_API_URL}/users/${user.uid}/api-keys`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer 1111' },
+        headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
         body: JSON.stringify({
           base_url: baseUrl.trim(),
           api_key: apiKey.trim(),
@@ -90,7 +89,7 @@ const AIIntegrationSettings = ({ user }) => {
     try {
       const res = await fetch(`${NODE_API_URL}/users/${user.uid}/api-keys/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': 'Bearer 1111' },
+        headers: await getAuthHeaders(auth.currentUser),
       });
       if (res.ok) {
         setSavedKeys((prev) => prev.filter((k) => k.id !== id));

@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Loader, Info, Github, Eye, EyeOff, Copy } from "lucide-react";
 import Breadcrumb from "../shared/Breadcrumb";
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 
 export default function CreateCourseMain({ user }) {
   const [title, setTitle] = useState("");
@@ -51,11 +53,11 @@ export default function CreateCourseMain({ user }) {
       .map(s => s.trim())
       .filter(s => s.length > 0);
 
-    const createCourseRequest = () => fetch("http://localhost:4000/api/courses", {
+    const createCourseRequest = async () => fetch(`${API_BASE}/courses`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 1111",
+        ...await getAuthHeaders(auth.currentUser),
       },
       body: JSON.stringify({
         title,
@@ -72,26 +74,32 @@ export default function CreateCourseMain({ user }) {
       if (response.status === 404) {
         const data = await response.json();
         if (data.message === "User not found") {
-          const syncResponse = await fetch("http://localhost:4000/api/users", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": "Bearer 1111",
-            },
-            body: JSON.stringify({
-              firebaseId: user?.uid,
-              first_name: user?.firstName || user?.displayName?.split(' ')[0] || "Unknown",
-              last_name: user?.lastName || user?.displayName?.split(' ').slice(1).join(' ') || "User",
-              email: user?.email,
-            }),
-          });
+           // Attempt to sync user to Postgres
+           /* 
+              We need to map Firestore keys (firstName, lastName) 
+              to Postgres keys (first_name, last_name).
+           */
+           const syncResponse = await fetch(`${API_BASE}/users`, {
+             method: "POST",
+             headers: { "Content-Type": "application/json",
+                        ...await getAuthHeaders(auth.currentUser),
+             },
+             body: JSON.stringify({
+               firebaseId: user?.uid,
+               first_name: user?.firstName || user?.displayName?.split(' ')[0] || "Unknown",
+               last_name: user?.lastName || user?.displayName?.split(' ').slice(1).join(' ') || "User",
+               email: user?.email
+             })
+           });
 
-          if (syncResponse.ok) {
-            response = await createCourseRequest();
-          } else {
-            const syncData = await syncResponse.json();
-            throw new Error("Account sync failed: " + (syncData.message || syncData.error));
-          }
+           if (syncResponse.ok) {
+             // Retry course creation
+             response = await createCourseRequest();
+           } else {
+             // If sync fails, throw the original error or sync error
+             const syncData = await syncResponse.json();
+             throw new Error("Account sync failed: " + (syncData.message || syncData.error));
+           }
         } else {
           throw new Error(data.message || data.error || "Resource not found");
         }

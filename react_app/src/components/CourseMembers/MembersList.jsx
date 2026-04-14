@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Users, Search, AlertCircle } from "lucide-react";
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 import MemberCard from "./MemberCard";
 import KickConfirmModal from "./KickConfirmModal";
 
@@ -20,11 +22,11 @@ export default function MembersList({ courseId, user, onClose }) {
             setLoading(true);
             setError(null);
             const response = await fetch(
-                `http://localhost:4000/api/courses/${courseId}/students?firebaseId=${user.uid}`,
+                `${API_BASE}/courses/${courseId}/students?firebaseId=${user.uid}`,
                 {
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": "Bearer 1111",
+                        ...await getAuthHeaders(auth.currentUser),
                     },
                 }
             );
@@ -49,12 +51,12 @@ export default function MembersList({ courseId, user, onClose }) {
         setKicking(true);
         try {
             const response = await fetch(
-                `http://localhost:4000/api/courses/${courseId}/students/${memberToKick.user_id}`,
+                `${API_BASE}/courses/${courseId}/students/${memberToKick.user_id}`,
                 {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": "Bearer 1111",
+                        ...await getAuthHeaders(auth.currentUser),
                     },
                     body: JSON.stringify({ firebaseId: user.uid }),
                 }

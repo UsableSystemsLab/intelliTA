@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Card from "./CoursesCard";
 import Breadcrumb from "../shared/Breadcrumb";
 import { ChevronLeft, ChevronRight, BookOpen, Plus } from "lucide-react";
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 
 export default function Maincontent({ user }) {
   const { t, i18n } = useTranslation();
@@ -27,7 +29,7 @@ export default function Maincontent({ user }) {
   useEffect(() => {
     async function loadCourses() {
       try {
-        let url = "http://localhost:4000/api/courses";
+        let url = `${API_BASE}/courses`;
         if (user && user.uid && user.role !== "admin") {
           url += `?firebaseId=${user.uid}`;
         }
@@ -35,7 +37,7 @@ export default function Maincontent({ user }) {
         const response = await fetch(url, {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer 1111",
+            ...await getAuthHeaders(auth.currentUser),
           },
         });
 
@@ -69,11 +71,11 @@ export default function Maincontent({ user }) {
     setJoinLoading(true);
     setJoinMessage(null);
 
-    const performJoin = () => fetch("http://localhost:4000/api/courses/join", {
+    const performJoin = async () => fetch(`${API_BASE}/courses/join`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 1111"
+        ...await getAuthHeaders(auth.currentUser)
       },
       body: JSON.stringify({
         token: joinCode,
@@ -87,9 +89,9 @@ export default function Maincontent({ user }) {
       let data = await response.json();
 
       if (response.status === 404 && data.message === "User not found") {
-        const createUserRes = await fetch("http://localhost:4000/api/users", {
+        const createUserRes = await fetch(`${API_BASE}/users`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": "Bearer 1111" },
+          headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
           body: JSON.stringify({
             firebaseId: user?.uid,
             first_name: user?.firstName || user?.displayName?.split(' ')[0] || "Unknown",

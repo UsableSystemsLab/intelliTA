@@ -8,9 +8,7 @@ import {
 import { auth, db } from '@/utils/firebase';
 import { useTranslation } from "react-i18next";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-const AUTH_HEADER = { 'Content-Type': 'application/json', Authorization: 'Bearer 1111' };
+import { API_BASE, getAuthHeaders } from '../config/api';
 
 const Login = () => {
   const { t, i18n } = useTranslation();
@@ -81,7 +79,7 @@ const Login = () => {
         const nameParts = (user.displayName || '').split(' ');
         await fetch(`${API_BASE}/users`, {
           method: 'POST',
-          headers: AUTH_HEADER,
+          headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(user) },
           body: JSON.stringify({
             firebaseId: user.uid,
             first_name: nameParts[0] || 'Unknown',

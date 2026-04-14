@@ -9,9 +9,7 @@ import {
 } from 'firebase/auth';
 import { doc, deleteDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-const AUTH_HEADER = { Authorization: 'Bearer 1111' };
+import { API_BASE, getAuthHeaders } from '../../config/api';
 
 const isGoogleOnly = (user) => {
   return user?.providerData?.every((p) => p.providerId === 'google.com');
@@ -147,7 +145,7 @@ const SecuritySettings = ({ user, setUser }) => {
       // Soft delete from PostgreSQL backend 
       const deactivateRes = await fetch(`${API_BASE}/users/${uid}/deactivate`, {
         method: 'PATCH',
-        headers: AUTH_HEADER,
+        headers: await getAuthHeaders(auth.currentUser),
       });
       if (!deactivateRes.ok && deactivateRes.status !== 404) {
         const data = await deactivateRes.json().catch(() => ({}));

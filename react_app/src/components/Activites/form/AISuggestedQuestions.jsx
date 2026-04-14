@@ -30,10 +30,8 @@ const markdownComponents = {
   hr: () => <hr className="border-gray-700 my-3" />,
 };
 
-// Server endpoints
-const LLM_SERVER  = "http://localhost:8000";
-const API_SERVER  = "http://localhost:4000/api";
-const AUTH_HEADER = { Authorization: "Bearer 1111", "Content-Type": "application/json" };
+import { API_BASE as API_SERVER, LLM_BASE as LLM_SERVER, getAuthHeaders } from '../../../config/api';
+import { auth } from '@/utils/firebase.js';
 
 const TYPE_META = {
   mcq:        { label: "MCQ",           icon: HelpCircle,  color: "text-blue-400 bg-blue-500/10 border-blue-500/30" },
@@ -483,7 +481,7 @@ export default function AISuggestedQuestions({ activityId, videoUrl, videoDurati
 
     try {
       const resp = await fetch(`${API_SERVER}/transcripts/activities/${activityId}`, {
-        headers: AUTH_HEADER,
+        headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
       });
       if (resp.status === 404) { setTranscriptStatus(null); return; }
       if (!resp.ok) { setTranscriptStatus(null); return; }
@@ -513,7 +511,7 @@ export default function AISuggestedQuestions({ activityId, videoUrl, videoDurati
     try {
       const resp = await fetch(`${API_SERVER}/transcripts/trigger`, {
         method: "POST",
-        headers: AUTH_HEADER,
+        headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
         body: JSON.stringify({ activityId, videoUrl }),
       });
       if (resp.ok) {
