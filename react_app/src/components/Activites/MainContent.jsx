@@ -83,7 +83,10 @@ const StatusBadge = ({ status }) => {
 };
 
 
-const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navigate, t }) => {
+const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLinkUpdated, navigate, t }) => {
+    const [showLinkInput, setShowLinkInput] = useState(false);
+    const [linkValue, setLinkValue] = useState("");
+    const [savingLink, setSavingLink] = useState(false);
     const status = getActivityStatus(activity.start_date, activity.end_date);
 
     const formatDate = (dateString) => {
@@ -93,6 +96,31 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navi
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    const handleSaveLink = async () => {
+        if (!linkValue.trim()) return;
+        setSavingLink(true);
+        try {
+            const res = await fetch(
+                `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
+                    body: JSON.stringify({ github_classroom_url: linkValue.trim() }),
+                }
+            );
+            if (res.ok) {
+                const updated = await res.json();
+                onLinkUpdated(updated);
+                setShowLinkInput(false);
+                setLinkValue("");
+            }
+        } catch (err) {
+            console.error("Failed to save link:", err);
+        } finally {
+            setSavingLink(false);
+        }
     };
 
     return (
@@ -152,8 +180,8 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navi
                     </div>
                 </div>
 
-                {/* Starter Code Repo Button */}
-                {activity.github_repo_url && (
+                {/* Starter Code Repo Button (instructor only) */}
+                {isInstructor && activity.github_repo_url && (
                     <a
                         href={activity.github_repo_url}
                         target="_blank"
@@ -166,8 +194,8 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navi
                     </a>
                 )}
 
-                {/* GitHub Classroom Button — label differs for instructor vs student */}
-                {activity.github_classroom_url && (
+                {/* GitHub Classroom Assignment Link */}
+                {activity.github_classroom_url ? (
                     <a
                         href={activity.github_classroom_url}
                         target="_blank"
@@ -178,11 +206,47 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navi
                         <Github className="w-5 h-5 mr-2" />
                         <span>
                           {isInstructor
-                            ? "Create Classroom Assignment"
+                            ? "View Classroom Assignment"
                             : t("githubClassroom")}
                         </span>
                     </a>
+                ) : isInstructor && (
+                    <div className="mb-2" onClick={(e) => e.stopPropagation()}>
+                        {showLinkInput ? (
+                            <div className="flex gap-2">
+                                <input
+                                    type="url"
+                                    placeholder="https://classroom.github.com/a/..."
+                                    value={linkValue}
+                                    onChange={(e) => setLinkValue(e.target.value)}
+                                    className="flex-1 px-3 py-2.5 bg-gray-900 border border-gray-600 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                                />
+                                <button
+                                    onClick={handleSaveLink}
+                                    disabled={savingLink || !linkValue.trim()}
+                                    className="px-3 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+                                >
+                                    {savingLink ? "..." : "Save"}
+                                </button>
+                                <button
+                                    onClick={() => { setShowLinkInput(false); setLinkValue(""); }}
+                                    className="px-3 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl text-sm transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setShowLinkInput(true)}
+                                className="inline-flex items-center justify-center w-full px-4 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded-xl font-medium transition-all duration-300 border border-dashed border-gray-600 hover:border-gray-500"
+                            >
+                                <Plus className="w-4 h-4 mr-2" />
+                                <span className="text-sm">Add Assignment Link</span>
+                            </button>
+                        )}
+                    </div>
                 )}
+
 
                 {/* Action Button */}
                 <button
@@ -554,6 +618,7 @@ export default function Maincontent({ user }) {
                                 isInstructor={isInstructor()}
                                 onDelete={handleDeleteActivity}
                                 onEdit={handleEditActivity}
+                                onLinkUpdated={handleActivityUpdated}
                                 navigate={navigate}
                                 t={t}
                             />
@@ -604,6 +669,7 @@ export default function Maincontent({ user }) {
                     onClose={() => setShowGitHubModal(false)}
                 />
             )}
+
         </main>
     );
 }

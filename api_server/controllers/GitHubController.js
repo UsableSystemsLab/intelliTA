@@ -693,6 +693,103 @@ const GitHubController = {
   },
 
   /**
+   * Get acceptance status for an activity's GitHub Classroom assignment.
+   * Cross-references accepted assignments with enrolled students.
+   * GET /api/courses/:courseId/activities/:activityId/github-acceptances
+   */
+  async getAcceptances(req, res) {
+    try {
+      const { courseId, activityId } = req.params;
+
+      const activity = await Activity.findOne({ where: { activity_id: activityId } });
+      if (!activity) return res.status(404).json({ message: "Activity not found" });
+
+      const connection = await GitHubConnection.findOne({ where: { course_id: courseId } });
+      if (!connection?.github_token) {
+        return res.status(400).json({ message: "GitHub not connected for this course" });
+      }
+
+      const token = await decryptApiKey(connection.github_token);
+
+      // Resolve assignment if not linked
+      let assignmentId = activity.github_assignment_id;
+      if (!assignmentId && connection.github_classroom_id) {
+        assignmentId = await resolveAssignmentId(
+          token, connection.github_classroom_id, activity.github_repo_url
+        );
+        if (assignmentId) {
+          await activity.update({ github_assignment_id: assignmentId });
+        }
+      }
+
+      if (!assignmentId) {
+        return res.status(400).json({ message: "No GitHub Classroom assignment linked to this activity" });
+      }
+
+      // Fetch accepted assignments from GitHub Classroom
+      const octokit = new Octokit({ auth: token });
+      const { data: accepted } = await octokit.request(
+        "GET /assignments/{assignment_id}/accepted_assignments",
+        { assignment_id: assignmentId, per_page: 100 }
+      );
+
+      // Build a map: github_username → acceptance data
+      const acceptanceMap = {};
+      for (const a of accepted) {
+        for (const s of a.students) {
+          acceptanceMap[s.login.toLowerCase()] = {
+            repo_url: a.repository?.html_url || null,
+            commit_count: a.commit_count || 0,
+            submitted: a.submitted || false,
+            grade: a.grade || null,
+          };
+        }
+      }
+
+      // Fetch enrolled students
+      const enrollments = await Enrollment.findAll({
+        where: { course_id: courseId, status: "active" },
+        include: [{ model: User, as: "user", attributes: ["id", "fName", "lName", "email", "github_username", "github_verified"] }],
+      });
+
+      const students = enrollments.map(e => {
+        const ghUser = e.user.github_username?.toLowerCase();
+        const acceptance = ghUser ? acceptanceMap[ghUser] || null : null;
+
+        return {
+          user_id: e.user.id,
+          name: `${e.user.fName} ${e.user.lName}`,
+          email: e.user.email,
+          github_username: e.user.github_username || null,
+          github_verified: e.user.github_verified,
+          accepted: !!acceptance,
+          repo_url: acceptance?.repo_url || null,
+          commit_count: acceptance?.commit_count || 0,
+          submitted: acceptance?.submitted || false,
+          grade: acceptance?.grade || null,
+        };
+      });
+
+      // Sort: accepted first, then by name
+      students.sort((a, b) => {
+        if (a.accepted !== b.accepted) return a.accepted ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      const acceptedCount = students.filter(s => s.accepted).length;
+
+      res.json({
+        assignment_id: assignmentId,
+        total_enrolled: students.length,
+        accepted_count: acceptedCount,
+        students,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching acceptances", error: error.message });
+    }
+  },
+
+  /**
    * Push student code to their GitHub Classroom assignment repo.
    * Called internally from submitActivity — not exposed as a route.
    *

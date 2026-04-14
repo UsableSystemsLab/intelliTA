@@ -4,7 +4,7 @@ import User from "../models/User.js";
 import transcriptionService from "../services/transcriptionService.js";
 import { GitHubConnection, Enrollment } from "../models/index.js";
 import { decryptApiKey } from "../utils/encryption.js";
-import { createActivityRepo, buildClassroomAssignmentUrl, resolveAssignmentId } from "./GitHubController.js";
+import { createActivityRepo, resolveAssignmentId } from "./GitHubController.js";
 import GitHubController from "./GitHubController.js";
 
 /**
@@ -89,9 +89,6 @@ async function _createGitHubRepo(activity, courseId, title, mdContent, starterCo
     }
   }
 
-  if (connection.github_classroom_id) {
-    updates.github_classroom_url = buildClassroomAssignmentUrl(connection.github_classroom_id, repoFullName);
-  }
 
   if (Object.keys(updates).length > 0) {
     await activity.update(updates);
@@ -158,13 +155,14 @@ const ActivityController = {
           .catch(err => console.error("Failed to queue transcription:", err.message));
       }
 
-      // Auto-create GitHub repo with starter code + md content (non-blocking)
-      // Raw content is passed directly from memory to avoid re-fetching S3 URLs
-      const mdContent = req.body._md_content || null;
-      const starterCodeContent = req.body._starter_code_content || null;
-      _createGitHubRepo(newActivity, courseId, title, mdContent, starterCodeContent).catch(err =>
-        console.error("[GitHub] Repo creation failed:", err.message)
-      );
+      // Create GitHub repo only if instructor opted in
+      if (req.body.create_github_repo === "true") {
+        const mdContent = req.body._md_content || null;
+        const starterCodeContent = req.body._starter_code_content || null;
+        _createGitHubRepo(newActivity, courseId, title, mdContent, starterCodeContent).catch(err =>
+          console.error("[GitHub] Repo creation failed:", err.message)
+        );
+      }
 
       res.status(201).json(newActivity);
     } catch (error) {

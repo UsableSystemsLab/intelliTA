@@ -52,7 +52,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
   const [starterPrompt, setStarterPrompt] = useState("");
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [chapters, setChapters] = useState([]);
-  const [githubClassroomUrl, setGithubClassroomUrl] = useState("");
+  const [createGithubRepo, setCreateGithubRepo] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -70,7 +70,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     setStarterPrompt("");
     setQuizQuestions([]);
     setChapters([]);
-    setGithubClassroomUrl("");
+    setCreateGithubRepo(false);
     setErrorMsg("");
   };
 // Extract video duration
@@ -117,10 +117,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     formData.append("title", title);
     formData.append("start_date", new Date(startDate).toISOString());
     formData.append("end_date", new Date(endDate).toISOString());
-    if (githubClassroomUrl.trim()) {
-      formData.append("github_classroom_url", githubClassroomUrl.trim());
-    }
-
+    formData.append("create_github_repo", createGithubRepo ? "true" : "false");
     if (videoFile) {
       formData.append("video", videoFile);
     }
@@ -486,14 +483,33 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               onPromptChange={setStarterPrompt}
             />
 
-            {/* GitHub Classroom Link */}
-            <FormInput
-              label="GitHub Classroom Link (optional)"
-              icon={Github}
-              placeholder="https://classroom.github.com/a/..."
-              value={githubClassroomUrl}
-              onChange={setGithubClassroomUrl}
-            />
+            {/* Create GitHub Template Repo */}
+            {(mdContent.trim() || starterFiles.length > 0) && (
+              <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-xl border border-gray-700">
+                <div className="flex items-center gap-3">
+                  <Github className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm font-medium text-white">Create template repo in GitHub Org</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Pushes starter code & markdown as a repo to your connected org
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCreateGithubRepo(!createGithubRepo)}
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+                    createGithubRepo ? "bg-green-500" : "bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                      createGithubRepo ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
 
             {/* Video Quiz */}
             <QuizEditor

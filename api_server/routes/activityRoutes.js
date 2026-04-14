@@ -156,6 +156,9 @@ router.post("/:activityId/submit", ActivityController.submitActivity);
 // Link a GitHub Classroom assignment to this activity
 router.patch("/:activityId/github-assignment", GitHubController.linkAssignment);
 
+// Get acceptance tracking for this activity's GitHub Classroom assignment
+router.get("/:activityId/github-acceptances", GitHubController.getAcceptances);
+
 // Quiz questions
 router.get("/:activityId/quiz", QuizController.getQuiz);
 router.post("/:activityId/quiz", QuizController.setQuiz);
