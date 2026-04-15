@@ -105,10 +105,10 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
         setSavingLink(true);
         try {
             const res = await fetch(
-                `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}`,
+                `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}`,
                 {
                     method: "PUT",
-                    headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
+                    headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
                     body: JSON.stringify({ github_classroom_url: linkValue.trim() }),
                 }
             );

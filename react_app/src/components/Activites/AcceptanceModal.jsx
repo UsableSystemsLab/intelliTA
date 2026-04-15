@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, CheckCircle2, XCircle, GitBranch, Loader, AlertCircle, ExternalLink, ShieldCheck, ShieldAlert } from "lucide-react";
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 
 export default function AcceptanceModal({ courseId, activityId, activityTitle, onClose }) {
   const [data, setData] = useState(null);
@@ -10,8 +12,8 @@ export default function AcceptanceModal({ courseId, activityId, activityTitle, o
     async function fetchAcceptances() {
       try {
         const res = await fetch(
-          `http://localhost:4000/api/courses/${courseId}/activities/${activityId}/github-acceptances`,
-          { headers: { Authorization: "Bearer 1111" } }
+          `${API_BASE}/courses/${courseId}/activities/${activityId}/github-acceptances`,
+          { headers: await getAuthHeaders(auth.currentUser) }
         );
         if (!res.ok) {
           const err = await res.json();

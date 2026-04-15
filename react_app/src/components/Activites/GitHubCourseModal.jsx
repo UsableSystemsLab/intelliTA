@@ -12,9 +12,8 @@ import {
   ChevronDown,
   BookOpen,
 } from "lucide-react";
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000/api";
-const AUTH_HEADER = { Authorization: "Bearer 1111" };
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 
 const GitHubCourseModal = ({ courseId, onClose }) => {
   const [clientId, setClientId] = useState("");
@@ -58,7 +57,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
   const fetchStatus = async () => {
     try {
       const res = await fetch(`${API_BASE}/courses/${courseId}/github`, {
-        headers: AUTH_HEADER,
+        headers: await getAuthHeaders(auth.currentUser),
       });
       if (res.ok) {
         const data = await res.json();
@@ -77,7 +76,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
     setError("");
     try {
       const res = await fetch(`${API_BASE}/courses/${courseId}/github/classrooms`, {
-        headers: AUTH_HEADER,
+        headers: await getAuthHeaders(auth.currentUser),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -99,7 +98,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
     try {
       const res = await fetch(`${API_BASE}/courses/${courseId}/github/classroom`, {
         method: "PATCH",
-        headers: { ...AUTH_HEADER, "Content-Type": "application/json" },
+        headers: { ...await getAuthHeaders(auth.currentUser), "Content-Type": "application/json" },
         body: JSON.stringify({
           classroom_id: classroom.id,
           classroom_name: classroom.name,
@@ -131,7 +130,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
     try {
       const res = await fetch(`${API_BASE}/courses/${courseId}/github`, {
         method: "POST",
-        headers: { ...AUTH_HEADER, "Content-Type": "application/json" },
+        headers: { ...await getAuthHeaders(auth.currentUser), "Content-Type": "application/json" },
         body: JSON.stringify({
           github_client_id: clientId.trim(),
           github_client_secret: clientSecret.trim(),
@@ -162,7 +161,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
       setError("");
       const res = await fetch(`${API_BASE}/courses/${courseId}/github/token`, {
         method: "DELETE",
-        headers: AUTH_HEADER,
+        headers: await getAuthHeaders(auth.currentUser),
       });
       if (!res.ok) throw new Error("Failed to disconnect");
       setSuccess("GitHub disconnected.");
@@ -178,7 +177,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
       setError("");
       const res = await fetch(`${API_BASE}/courses/${courseId}/github`, {
         method: "DELETE",
-        headers: AUTH_HEADER,
+        headers: await getAuthHeaders(auth.currentUser),
       });
       if (res.status !== 204) throw new Error("Failed to delete credentials");
       setClientId("");
@@ -378,8 +377,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
                   <p className="text-gray-400 mt-1">
                     Set the callback URL to:{" "}
                     <code className="text-xs bg-gray-700 px-1.5 py-0.5 rounded">
-                      {window.location.origin.replace(`:${window.location.port}`, ":4000")}
-                      /api/github/callback
+                      {`${API_BASE}/github/callback`}
                     </code>
                   </p>
                 </div>

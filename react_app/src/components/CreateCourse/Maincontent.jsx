@@ -23,7 +23,7 @@ export default function CreateCourseMain({ user }) {
 
   const navigate = useNavigate();
 
-  const callbackUrl = `${window.location.protocol}//${window.location.hostname}:4000/api/github/callback`;
+  const callbackUrl = `${API_BASE}/github/callback`;
 
   const copyCallback = () => {
     navigator.clipboard.writeText(callbackUrl);
@@ -114,11 +114,11 @@ export default function CreateCourseMain({ user }) {
       const courseId = course.course_id;
 
       // Save GitHub credentials for the new course
-      const credRes = await fetch(`http://localhost:4000/api/courses/${courseId}/github`, {
+      const credRes = await fetch(`${API_BASE}/courses/${courseId}/github`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer 1111",
+          ...await getAuthHeaders(auth.currentUser),
         },
         body: JSON.stringify({
           github_client_id: clientId.trim(),
@@ -132,8 +132,8 @@ export default function CreateCourseMain({ user }) {
       }
 
       // Redirect browser to GitHub OAuth (must be a full page redirect)
-      const redirectBack = `${window.location.protocol}//${window.location.hostname}:3000/courses/${courseId}`;
-      window.location.href = `http://localhost:4000/api/github/auth?courseId=${courseId}&redirect=${encodeURIComponent(redirectBack)}`;
+      const redirectBack = `${window.location.origin}/courses/${courseId}`;
+      window.location.href = `${API_BASE}/github/auth?courseId=${courseId}&redirect=${encodeURIComponent(redirectBack)}`;
 
     } catch (err) {
       setErrorMsg(err.message);

@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Github, CheckCircle, Loader2, ShieldCheck, ShieldAlert, X } from 'lucide-react';
-
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-const AUTH_HEADER = { Authorization: 'Bearer 1111' };
+import { API_BASE, getAuthHeaders } from '../../config/api';
+import { auth } from '@/utils/firebase.js';
 
 const GitHubSettings = ({ user }) => {
   const [profile, setProfile] = useState(null);   // { github_username, github_verified }
@@ -14,7 +13,8 @@ const GitHubSettings = ({ user }) => {
   // Load profile on mount
   useEffect(() => {
     if (!user?.uid) return;
-    fetch(`${API_BASE}/users/${user.uid}/profile`, { headers: AUTH_HEADER })
+    getAuthHeaders(auth.currentUser)
+      .then(headers => fetch(`${API_BASE}/users/${user.uid}/profile`, { headers }))
       .then(r => r.ok ? r.json() : Promise.reject())
       .then(data => setProfile({
         github_username: data.github_username || null,
@@ -48,7 +48,7 @@ const GitHubSettings = ({ user }) => {
   const handleVerify = () => {
     const redirectBack = window.location.href.split('?')[0];
     window.location.href =
-      `${API_BASE.replace('/api', '')}/api/github/student-auth` +
+      `${API_BASE}/github/student-auth` +
       `?firebaseId=${encodeURIComponent(user.uid)}` +
       `&redirect=${encodeURIComponent(redirectBack)}`;
   };
@@ -60,7 +60,7 @@ const GitHubSettings = ({ user }) => {
     try {
       const res = await fetch(`${API_BASE}/users/${user.uid}/profile`, {
         method: 'PUT',
-        headers: { ...AUTH_HEADER, 'Content-Type': 'application/json' },
+        headers: { ...await getAuthHeaders(auth.currentUser), 'Content-Type': 'application/json' },
         body: JSON.stringify({ github_username: null }),
       });
       if (!res.ok) throw new Error('Failed to remove');
