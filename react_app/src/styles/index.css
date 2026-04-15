@@ -32,6 +32,116 @@
   background-color: #111827;
 }
 
+/* ── Light Theme ── */
+.light-theme {
+  background-color: #f9fafb !important;
+  color: #111827 !important;
+}
+
+/* Backgrounds */
+.light-theme .bg-gray-900 {
+  background-color: #ffffff !important;
+}
+
+.light-theme .bg-gray-800,
+.light-theme .bg-gray-800\/50,
+.light-theme .bg-gray-800\/30,
+.light-theme .bg-gray-800\/80 {
+  background-color: #f3f4f6 !important;
+}
+
+.light-theme .bg-gray-700,
+.light-theme .bg-gray-700\/50 {
+  background-color: #e5e7eb !important;
+}
+
+.light-theme .bg-gray-900\/95,
+.light-theme .bg-gray-900\/80,
+.light-theme .bg-gray-900\/50 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Text */
+.light-theme .text-gray-100,
+.light-theme .text-gray-200 {
+  color: #111827 !important;
+}
+
+.light-theme .text-gray-300 {
+  color: #1f2937 !important;
+}
+
+.light-theme .text-gray-400 {
+  color: #4b5563 !important;
+}
+
+.light-theme .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+.light-theme .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.light-theme .text-white {
+  color: #111827 !important;
+}
+
+/* Borders */
+.light-theme .border-gray-700,
+.light-theme .border-gray-700\/50,
+.light-theme .border-gray-800,
+.light-theme .border-gray-800\/50 {
+  border-color: #e5e7eb !important;
+}
+
+.light-theme .border-gray-600 {
+  border-color: #d1d5db !important;
+}
+
+/* Cards & selected states */
+.light-theme .bg-blue-600\/20,
+.light-theme .bg-blue-600\/10,
+.light-theme .bg-blue-900\/20 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+/* Hover states */
+.light-theme .hover\:bg-gray-800:hover,
+.light-theme .hover\:bg-gray-700\/50:hover {
+  background-color: #e5e7eb !important;
+}
+
+/* Input fields */
+.light-theme input,
+.light-theme textarea,
+.light-theme select {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border-color: #d1d5db !important;
+}
+
+.light-theme input::placeholder,
+.light-theme textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Sidebar */
+.light-theme aside {
+  background-color: #ffffff !important;
+  border-right-color: #e5e7eb !important;
+}
+
+/* Gradient buttons — keep but soften */
+.light-theme .bg-gradient-to-r {
+  opacity: 0.9;
+}
+
+/* Shadows — lighter for light theme */
+.light-theme .shadow-lg {
+  --tw-shadow-color: rgba(0, 0, 0, 0.1) !important;
+}
+
 /* ── High-Contrast Mode ── */
 .high-contrast {
   background-color: #000000 !important;

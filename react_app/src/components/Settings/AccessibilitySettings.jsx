@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ALargeSmall, Contrast } from 'lucide-react';
+import { ALargeSmall, Contrast, Sun, Moon } from 'lucide-react';
 
 const FONT_SIZE_KEY = 'intelliTA-font-size';
 const HIGH_CONTRAST_KEY = 'intelliTA-high-contrast';
+const THEME_KEY = 'intelliTA-theme';
 
 const sizes = [
   { id: 'sm',  label: 'Small',       px: 14, preview: 'text-xs' },
@@ -34,13 +35,32 @@ function applyHighContrast(enabled) {
   localStorage.setItem(HIGH_CONTRAST_KEY, String(enabled));
 }
 
+function getTheme() {
+  return localStorage.getItem(THEME_KEY) || 'dark';
+}
+
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.documentElement.classList.add('light-theme');
+  } else {
+    document.documentElement.classList.remove('light-theme');
+  }
+  localStorage.setItem(THEME_KEY, theme);
+}
+
 const AccessibilitySettings = () => {
   const [selected, setSelected] = useState(getSavedSize);
   const [highContrast, setHighContrast] = useState(getHighContrast);
+  const [theme, setTheme] = useState(getTheme);
 
   const handleSelect = (id) => {
     setSelected(id);
     applySize(id);
+  };
+
+  const handleThemeSelect = (t) => {
+    setTheme(t);
+    applyTheme(t);
   };
 
   const handleContrastToggle = () => {
@@ -51,6 +71,43 @@ const AccessibilitySettings = () => {
 
   return (
     <div className="space-y-8 max-w-3xl">
+      {/* Theme Toggle */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+          {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          Theme
+        </label>
+        <p className="text-xs text-gray-500">
+          Switch between light and dark appearance.
+        </p>
+
+        <div className="grid grid-cols-2 gap-3 max-w-xs">
+          {[
+            { id: 'dark', label: 'Dark', icon: Moon },
+            { id: 'light', label: 'Light', icon: Sun },
+          ].map(({ id, label, icon: Icon }) => {
+            const isActive = theme === id;
+            return (
+              <button
+                key={id}
+                onClick={() => handleThemeSelect(id)}
+                className={`flex flex-col items-center justify-center gap-2 px-4 py-5 rounded-xl border transition-all duration-200
+                  ${isActive
+                    ? 'bg-blue-600/20 border-blue-500/50 text-blue-400 shadow-lg shadow-blue-900/20'
+                    : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700/50 hover:text-gray-200 hover:border-gray-600'
+                  }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="text-xs font-medium">{label}</span>
+                {isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* High Contrast Toggle */}
       <div className="space-y-3">
         <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
@@ -133,5 +190,5 @@ const AccessibilitySettings = () => {
   );
 };
 
-export { applySize, FONT_SIZE_KEY, applyHighContrast, HIGH_CONTRAST_KEY };
+export { applySize, FONT_SIZE_KEY, applyHighContrast, HIGH_CONTRAST_KEY, applyTheme, THEME_KEY };
 export default AccessibilitySettings;
