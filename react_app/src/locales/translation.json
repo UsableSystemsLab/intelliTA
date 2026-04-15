@@ -85,7 +85,10 @@
     "feature5Title": "إدارة الدورات",
     "feature5Desc": "أدوات شاملة للأساتذة لإنشاء وإدارة الدورات والأنشطة والطلاب بسهولة.",
     "feature6Title": "تحليلات وتقارير",
-    "feature6Desc": "تتبع تقدم الطلاب واحصل على تقارير مفصّلة حول الأداء لتحسين العملية التعليمية."
+    "feature6Desc": "تتبع تقدم الطلاب واحصل على تقارير مفصّلة حول الأداء لتحسين العملية التعليمية.",
+    "kauModalTitle": "بريد جامعة الملك عبدالعزيز مطلوب",
+    "kauModalMessage": "الوصول متاح حاليًا لطلاب ومحاضري جامعة الملك عبدالعزيز فقط. يرجى استخدام بريدك @stu.kau.edu.sa أو @kau.edu.sa.",
+    "ok": "حسنًا"
   },
 
   
@@ -176,6 +179,9 @@
     "feature5Title": "Course Management",
     "feature5Desc": "Comprehensive tools for instructors - such as a markdown editor and many more - to help them create and manage courses, activities, and students with ease.",
     "feature6Title": "Analytics & Insights",
-    "feature6Desc": "Track student progress and gain detailed performance insights to improve learning outcomes."
+    "feature6Desc": "Track student progress and gain detailed performance insights to improve learning outcomes.",
+    "kauModalTitle": "KAU email required",
+    "kauModalMessage": "Access is currently limited to KAU students and instructors only. Please use your @stu.kau.edu.sa or @kau.edu.sa email.",
+    "ok": "OK"
   }
 }
