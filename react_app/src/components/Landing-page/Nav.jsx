@@ -29,7 +29,7 @@ export default function Nav({ user }) {
       }
       return names[0].charAt(0).toUpperCase() + names[0].slice(1).toLowerCase();
     }
-    return "No user name found";
+    return t("noUserNameFound");
   };
 
   const handleLogout = async () => {
@@ -130,7 +130,7 @@ export default function Nav({ user }) {
                     bg-gray-900/95 backdrop-blur-xl border border-gray-800 rounded-xl shadow-2xl w-48 overflow-hidden`}
                 >
                   <div className="px-4 py-3 border-b border-gray-800">
-                    <p className="text-sm font-medium text-white">{getUserInitials() || "User"}</p>
+                    <p className="text-sm font-medium text-white">{getUserInitials() || t("userFallback")}</p>
                   </div>
                   <ul className="py-1">
                     {[

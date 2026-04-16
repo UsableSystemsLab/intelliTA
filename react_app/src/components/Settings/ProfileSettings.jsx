@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Camera, User, FileText } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { auth } from '@/utils/firebase.js';
 import { updateProfile } from 'firebase/auth';
 import { API_BASE, getAuthHeaders } from '../../config/api';
 const MAX_BIO = 500;
 
 const ProfileSettings = ({ user, setUser }) => {
+  const { t } = useTranslation();
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [bio, setBio] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
@@ -68,9 +70,9 @@ const ProfileSettings = ({ user, setUser }) => {
       setUser((prev) => ({ ...prev, displayName, photoURL }));
       setSelectedFile(null);
       setPreviewUrl(photoURL || null);
-      setSuccess('Changes saved successfully.');
+      setSuccess(t('changesSaved'));
     } catch (err) {
-      setError(err.message || 'An error occurred while saving.');
+      setError(err.message || t('saveError'));
     } finally {
       setLoading(false);
     }
@@ -100,8 +102,8 @@ const ProfileSettings = ({ user, setUser }) => {
           </div>
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-gray-100">Profile Picture</h2>
-          <p className="text-sm text-gray-400 mt-1">PNG, JPG</p>
+          <h2 className="text-xl font-semibold text-gray-100">{t('profilePicture')}</h2>
+          <p className="text-sm text-gray-400 mt-1">{t('imageFormatsHint')}</p>
         </div>
         <input
           ref={fileInputRef}
@@ -117,14 +119,14 @@ const ProfileSettings = ({ user, setUser }) => {
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
             <User className="w-4 h-4" />
-            Display Name
+            {t('displayName')}
           </label>
           <input
             type="text"
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder-gray-500"
-            placeholder="Enter your name"
+            placeholder={t('enterYourName')}
           />
         </div>
 
@@ -132,7 +134,7 @@ const ProfileSettings = ({ user, setUser }) => {
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            Bio
+            {t('bio')}
           </label>
           <textarea
             rows="4"
@@ -140,7 +142,7 @@ const ProfileSettings = ({ user, setUser }) => {
             maxLength={MAX_BIO}
             onChange={(e) => setBio(e.target.value)}
             className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder-gray-500 resize-none"
-            placeholder="Tell us a little bit about yourself..."
+            placeholder={t('bioPlaceholder')}
           />
           <p className={`text-xs text-right ${bio.length >= MAX_BIO ? 'text-red-400' : 'text-gray-500'}`}>
             {bio.length} / {MAX_BIO}
@@ -158,7 +160,7 @@ const ProfileSettings = ({ user, setUser }) => {
           disabled={loading}
           className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors shadow-lg shadow-blue-900/20"
         >
-          {loading ? 'Saving...' : 'Save Changes'}
+          {loading ? t('saving') : t('saveChanges')}
         </button>
       </div>
     </div>

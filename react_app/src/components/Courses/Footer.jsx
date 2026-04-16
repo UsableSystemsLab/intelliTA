@@ -48,7 +48,7 @@ export default function HomeFooter() {
 
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
             <span className="text-center md:text-left">
-              © 2025 <span className="text-gray-300 font-medium">IntelliTA</span>. {t("rights")}
+              © {new Date().getFullYear()} <span className="text-gray-300 font-medium">IntelliTA</span>. {t("rights")}
             </span>
             
             {/* Social Icons */}

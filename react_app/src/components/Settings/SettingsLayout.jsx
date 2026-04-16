@@ -5,21 +5,20 @@ import AIIntegrationSettings from './AIIntegrationSettings';
 import AccessibilitySettings from './AccessibilitySettings';
 import SecuritySettings from './SecuritySettings';
 import GitHubSettings from './GitHubSettings';
-const ProgressSettings = () => <div className="text-gray-400">Didnt do it yet</div>;
-
 import { useTranslation } from 'react-i18next';
 
 const SettingsLayout = ({ user, setUser }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('profile');
+  const ProgressSettings = () => <div className="text-gray-400">{t('settingsComingSoon')}</div>;
   // define menu items so if we want to add new tab we can do it easily
   const menuItems = [
-    { id: 'profile', label: 'Profile', icon: User, component: ProfileSettings },
-    { id: 'security', label: 'Security', icon: Shield, component: SecuritySettings },
-    { id: 'accessibility', label: 'Accessibility', icon: PersonStanding, component: AccessibilitySettings },
-    { id: 'progress', label: 'Progress', icon: Award, component: ProgressSettings },
-    { id: 'ai-integration', label: 'AI Integration', icon: Bot, component: AIIntegrationSettings },
-    { id: 'github', label: 'GitHub', icon: Github, component: GitHubSettings },
+    { id: 'profile', label: t('tabProfile'), icon: User, component: ProfileSettings },
+    { id: 'security', label: t('tabSecurity'), icon: Shield, component: SecuritySettings },
+    { id: 'accessibility', label: t('tabAccessibility'), icon: PersonStanding, component: AccessibilitySettings },
+    { id: 'progress', label: t('tabProgress'), icon: Award, component: ProgressSettings },
+    { id: 'ai-integration', label: t('tabAIIntegration'), icon: Bot, component: AIIntegrationSettings },
+    { id: 'github', label: t('tabGitHub'), icon: Github, component: GitHubSettings },
   ];
 
   const ActiveComponent = menuItems.find(item => item.id === activeTab)?.component || ProfileSettings;
@@ -57,9 +56,9 @@ const SettingsLayout = ({ user, setUser }) => {
       <main className="flex-1">
         <div className="mb-8">
             <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
-              Settings
+              {t('settingsTitle')}
             </h1>
-           <p className="text-gray-400 mt-2">Manage your account preferences and view your progress.</p>
+           <p className="text-gray-400 mt-2">{t('settingsSubtitle')}</p>
         </div>
         
         <div
