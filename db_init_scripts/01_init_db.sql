@@ -10,6 +10,8 @@ CREATE TABLE users (
   email VARCHAR(50) UNIQUE NOT NULL,
   bio TEXT,
   photo_url TEXT,
+  github_username VARCHAR(39) UNIQUE,
+  github_verified BOOLEAN NOT NULL DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -102,6 +104,9 @@ CREATE TABLE activities (
   md_file_url      VARCHAR(500),
   starter_code_url VARCHAR(500),
   quiz_url         VARCHAR(500),
+  github_classroom_url VARCHAR(500),
+  github_repo_url  VARCHAR(500),
+  github_assignment_id INT,
   created_at       TIMESTAMP DEFAULT NOW()
 );
 
@@ -166,4 +171,19 @@ CREATE TABLE user_api_keys (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(user_id, base_url)
+);
+
+-- GITHUB_CONNECTIONS Table (course-level GitHub OAuth)
+CREATE TABLE github_connections (
+  id                   SERIAL PRIMARY KEY,
+  course_id            INT NOT NULL UNIQUE REFERENCES courses(course_id) ON DELETE CASCADE,
+  github_client_id     VARCHAR(100) NOT NULL,
+  github_client_secret TEXT NOT NULL,
+  github_token         TEXT,
+  github_username      VARCHAR(39),
+  github_org           VARCHAR(100),
+  github_classroom_id   INT,
+  github_classroom_name VARCHAR(255),
+  created_at           TIMESTAMP DEFAULT NOW(),
+  updated_at           TIMESTAMP DEFAULT NOW()
 );

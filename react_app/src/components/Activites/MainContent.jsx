@@ -5,6 +5,7 @@ import { auth } from "@/utils/firebase.js";
 import { useTranslation } from "react-i18next";
 import CreateActivityModal from "./CreateActivityModal";
 import EditActivityModal from "./EditActivityModal";
+import GitHubCourseModal from "./GitHubCourseModal";
 import Breadcrumb from "../shared/Breadcrumb";
 import MembersModal from "../CourseMembers/MembersModal";
 import {
@@ -25,7 +26,8 @@ import {
     Eye,
     EyeOff,
     Pencil,
-    Users
+    Users,
+    Github
 } from "lucide-react";
 
 
@@ -83,7 +85,10 @@ const StatusBadge = ({ status }) => {
 };
 
 
-const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navigate }) => {
+const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLinkUpdated, navigate, t }) => {
+    const [showLinkInput, setShowLinkInput] = useState(false);
+    const [linkValue, setLinkValue] = useState("");
+    const [savingLink, setSavingLink] = useState(false);
     const status = getActivityStatus(activity.start_date, activity.end_date);
 
     const formatDate = (dateString) => {
@@ -93,6 +98,31 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navi
             hour: '2-digit',
             minute: '2-digit'
         });
+    };
+
+    const handleSaveLink = async () => {
+        if (!linkValue.trim()) return;
+        setSavingLink(true);
+        try {
+            const res = await fetch(
+                `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
+                    body: JSON.stringify({ github_classroom_url: linkValue.trim() }),
+                }
+            );
+            if (res.ok) {
+                const updated = await res.json();
+                onLinkUpdated(updated);
+                setShowLinkInput(false);
+                setLinkValue("");
+            }
+        } catch (err) {
+            console.error("Failed to save link:", err);
+        } finally {
+            setSavingLink(false);
+        }
     };
 
     return (
@@ -151,6 +181,74 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, navi
                         <span>End: {formatDate(activity.end_date)}</span>
                     </div>
                 </div>
+
+                {/* Starter Code Repo Button (instructor only) */}
+                {isInstructor && activity.github_repo_url && (
+                    <a
+                        href={activity.github_repo_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center justify-center w-full px-4 py-3 mb-2 bg-gray-900 hover:bg-gray-700 border border-gray-600 text-white rounded-xl font-medium transition-all duration-300"
+                    >
+                        <Github className="w-4 h-4 mr-2 text-gray-300" />
+                        <span className="text-sm">Starter Code Repo</span>
+                    </a>
+                )}
+
+                {/* GitHub Classroom Assignment Link */}
+                {activity.github_classroom_url ? (
+                    <a
+                        href={activity.github_classroom_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center justify-center w-full px-4 py-3 mb-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-all duration-300"
+                    >
+                        <Github className="w-5 h-5 mr-2" />
+                        <span>
+                          {isInstructor
+                            ? "View Classroom Assignment"
+                            : t("githubClassroom")}
+                        </span>
+                    </a>
+                ) : isInstructor && (
+                    <div className="mb-2" onClick={(e) => e.stopPropagation()}>
+                        {showLinkInput ? (
+                            <div className="flex gap-2">
+                                <input
+                                    type="url"
+                                    placeholder="https://classroom.github.com/a/..."
+                                    value={linkValue}
+                                    onChange={(e) => setLinkValue(e.target.value)}
+                                    className="flex-1 px-3 py-2.5 bg-gray-900 border border-gray-600 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                                />
+                                <button
+                                    onClick={handleSaveLink}
+                                    disabled={savingLink || !linkValue.trim()}
+                                    className="px-3 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+                                >
+                                    {savingLink ? "..." : "Save"}
+                                </button>
+                                <button
+                                    onClick={() => { setShowLinkInput(false); setLinkValue(""); }}
+                                    className="px-3 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl text-sm transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setShowLinkInput(true)}
+                                className="inline-flex items-center justify-center w-full px-4 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded-xl font-medium transition-all duration-300 border border-dashed border-gray-600 hover:border-gray-500"
+                            >
+                                <Plus className="w-4 h-4 mr-2" />
+                                <span className="text-sm">Add Assignment Link</span>
+                            </button>
+                        )}
+                    </div>
+                )}
+
 
                 {/* Action Button */}
                 <button
@@ -281,6 +379,7 @@ export default function Maincontent({ user }) {
     const [selectedActivity, setSelectedActivity] = useState(null);
     const [generating, setGenerating] = useState(false);
     const [showMembersModal, setShowMembersModal] = useState(false);
+    const [showGitHubModal, setShowGitHubModal] = useState(false);
 
 
     useEffect(() => {
@@ -465,6 +564,13 @@ export default function Maincontent({ user }) {
                                     View Token
                                 </button>
                                 <button
+                                    onClick={() => setShowGitHubModal(true)}
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 hover:border-blue-500/50 rounded-xl font-medium transition-all duration-300"
+                                >
+                                    <Github className="w-4 h-4 text-blue-400" />
+                                    GitHub
+                                </button>
+                                <button
                                     onClick={handleDeleteCourse}
                                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-red-500/10 text-gray-300 hover:text-red-400 border border-gray-700 hover:border-red-500/50 rounded-xl font-medium transition-all duration-300"
                                 >
@@ -514,7 +620,9 @@ export default function Maincontent({ user }) {
                                 isInstructor={isInstructor()}
                                 onDelete={handleDeleteActivity}
                                 onEdit={handleEditActivity}
+                                onLinkUpdated={handleActivityUpdated}
                                 navigate={navigate}
+                                t={t}
                             />
                         ))
                     )}
@@ -556,6 +664,14 @@ export default function Maincontent({ user }) {
                     onClose={() => setShowMembersModal(false)}
                 />
             )}
+
+            {showGitHubModal && (
+                <GitHubCourseModal
+                    courseId={courseId}
+                    onClose={() => setShowGitHubModal(false)}
+                />
+            )}
+
         </main>
     );
 }

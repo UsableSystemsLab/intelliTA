@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Send, Bot, Loader2, Square } from 'lucide-react';
+import { X, Send, Bot, Loader2, Square, Volume2, VolumeX } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { API_BASE as NODE_API_URL, LLM_BASE as LLM_SERVER_URL, getAuthHeaders } from '../../config/api';
 import { auth } from '@/utils/firebase.js';
+import useTTS, { TTS_ENABLED_KEY } from '@/utils/useTTS.js';
 
 const LOCAL_MODELS = [
     { id: 'qwen2.5-coder:7b', label: 'Qwen Coder' },
@@ -75,6 +76,35 @@ const userMarkdownComponents = {
         <a href={href} className="text-blue-100 underline hover:text-white text-base" target="_blank" rel="noopener noreferrer">{children}</a>
     ),
 };
+
+function TTSButton({ text, onSpeakStart }) {
+    const { speak, stop, isSpeaking, isSupported } = useTTS(text);
+    const ttsEnabled = localStorage.getItem(TTS_ENABLED_KEY) !== 'false';
+
+    if (!isSupported || !ttsEnabled) return null;
+
+    const handleClick = () => {
+        if (isSpeaking) {
+            stop();
+        } else {
+            onSpeakStart?.();
+            speak();
+        }
+    };
+
+    return (
+        <button
+            onClick={handleClick}
+            className="mt-1 p-1 rounded hover:bg-gray-700/50 text-gray-500 hover:text-gray-300 transition-colors"
+            title={isSpeaking ? 'Stop speaking' : 'Read aloud'}
+        >
+            {isSpeaking
+                ? <VolumeX className="w-3.5 h-3.5" />
+                : <Volume2 className="w-3.5 h-3.5" />
+            }
+        </button>
+    );
+}
 
 export default function HintChatSidebar({ isOpen, onClose, initialInput, onInitialInputConsumed, user, activityId, activityContext }) {
     const [messages, setMessages] = useState([WELCOME_MESSAGE]);
@@ -334,22 +364,30 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
                                 key={i}
                                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                             >
-                                <div
-                                    className={`max-w-[85%] rounded-xl px-4 py-3 ${
-                                        msg.role === 'user'
-                                            ? 'bg-blue-600 text-white rounded-br-sm'
-                                            : 'bg-gray-800 border border-gray-700 rounded-bl-sm'
-                                    }`}
-                                >
-                                    {msg.isStreaming && !msg.content ? (
-                                        <div className="flex items-center gap-2">
-                                            <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
-                                            <span className="text-base text-gray-400">Thinking...</span>
-                                        </div>
-                                    ) : (
-                                        <ReactMarkdown components={msg.role === 'assistant' ? markdownComponents : userMarkdownComponents}>
-                                            {msg.content}
-                                        </ReactMarkdown>
+                                <div className="max-w-[85%]">
+                                    <div
+                                        className={`rounded-xl px-4 py-3 ${
+                                            msg.role === 'user'
+                                                ? 'bg-blue-600 text-white rounded-br-sm'
+                                                : 'bg-gray-800 border border-gray-700 rounded-bl-sm'
+                                        }`}
+                                    >
+                                        {msg.isStreaming && !msg.content ? (
+                                            <div className="flex items-center gap-2">
+                                                <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                                                <span className="text-base text-gray-400">Thinking...</span>
+                                            </div>
+                                        ) : (
+                                            <ReactMarkdown components={msg.role === 'assistant' ? markdownComponents : userMarkdownComponents}>
+                                                {msg.content}
+                                            </ReactMarkdown>
+                                        )}
+                                    </div>
+                                    {msg.role === 'assistant' && !msg.isStreaming && msg.content && (
+                                        <TTSButton
+                                            text={msg.content}
+                                            onSpeakStart={() => window.speechSynthesis.cancel()}
+                                        />
                                     )}
                                 </div>
                             </div>

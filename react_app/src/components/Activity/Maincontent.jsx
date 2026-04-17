@@ -507,15 +507,26 @@ export default function Maincontent({ user }) {
                     "Content-Type": "application/json",
                     ...await getAuthHeaders(auth.currentUser)
                 },
-                body: JSON.stringify({ firebaseId: user.uid, score: calculatedScore })
+                body: JSON.stringify({
+                    firebaseId: user.uid,
+                    score: calculatedScore,
+                    files: files.map(f => ({ name: f.name, content: f.content })),
+                })
             });
+
+            const data = await res.json();
 
             if (res.ok) {
                 setSubmissionScore(calculatedScore);
                 setShowResultOverlay(true);
-                setFeedback({ type: 'success', message: `Submission successful!` });
+                const ghMsg = data.github?.commitUrl
+                    ? ` Code pushed to GitHub.`
+                    : data.github?.error
+                        ? ` (GitHub push failed: ${data.github.error})`
+                        : "";
+                setFeedback({ type: 'success', message: `Submission successful!${ghMsg}` });
             } else {
-                setFeedback({ type: 'error', message: "Submission failed. Please try again." });
+                setFeedback({ type: 'error', message: data.message || "Submission failed. Please try again." });
             }
         } catch (error) {
             setFeedback({ type: 'error', message: "Network error during submission." });

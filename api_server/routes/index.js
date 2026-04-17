@@ -4,6 +4,7 @@ import CourseRoutes from "./course.routes.js";
 import ActivityRoutes from "./activityRoutes.js";
 import UserApiKeyRoutes from "./UserApiKeyRoutes.js";
 import TranscriptRoutes from "./transcript.routes.js";
+import GitHubCourseRoutes from "./GitHubCourseRoutes.js";
 
 const apiRoutes = (router) => {
   /**
@@ -39,6 +40,9 @@ const apiRoutes = (router) => {
 
   // Lab routes 
   router.use("/courses/:courseId/labs", LabRoutes);
+
+  // GitHub integration routes (per course)
+  router.use("/courses/:courseId/github", GitHubCourseRoutes);
 
   // Course routes
   router.use("/courses", CourseRoutes);

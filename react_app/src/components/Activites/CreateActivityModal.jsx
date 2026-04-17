@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Send, Loader, HelpCircle } from "lucide-react";
+import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Send, Loader, HelpCircle, Github } from "lucide-react";
 import { API_BASE, getAuthHeaders } from "../../config/api";
 import { auth } from "@/utils/firebase.js";
 import ReactMarkdown from "react-markdown";
@@ -54,6 +54,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
   const [starterPrompt, setStarterPrompt] = useState("");
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [chapters, setChapters] = useState([]);
+  const [createGithubRepo, setCreateGithubRepo] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -71,6 +72,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     setStarterPrompt("");
     setQuizQuestions([]);
     setChapters([]);
+    setCreateGithubRepo(false);
     setErrorMsg("");
   };
 // Extract video duration
@@ -117,7 +119,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     formData.append("title", title);
     formData.append("start_date", new Date(startDate).toISOString());
     formData.append("end_date", new Date(endDate).toISOString());
-
+    formData.append("create_github_repo", createGithubRepo ? "true" : "false");
     if (videoFile) {
       formData.append("video", videoFile);
     }
@@ -191,6 +193,8 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
       }
 
       onActivityCreated(newActivity);
+      // Note: GitHub repo is created asynchronously on the server.
+      // The repo link will appear on the activity card once it's ready.
       handleClose();
     } catch (err) {
       setErrorMsg(err.message);
@@ -480,6 +484,34 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               prompt={starterPrompt}
               onPromptChange={setStarterPrompt}
             />
+
+            {/* Create GitHub Template Repo */}
+            {(mdContent.trim() || starterFiles.length > 0) && (
+              <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-xl border border-gray-700">
+                <div className="flex items-center gap-3">
+                  <Github className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm font-medium text-white">Create template repo in GitHub Org</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Pushes starter code & markdown as a repo to your connected org
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCreateGithubRepo(!createGithubRepo)}
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+                    createGithubRepo ? "bg-green-500" : "bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                      createGithubRepo ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
 
             {/* Video Quiz */}
             <QuizEditor
