@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Send, Loader, HelpCircle, Github } from "lucide-react";
 import { API_BASE, getAuthHeaders } from "../../config/api";
 import { auth } from "@/utils/firebase.js";
@@ -42,6 +43,7 @@ const markdownComponents = {
 };
 
 export default function CreateActivityModal({ isOpen, onClose, courseId, onActivityCreated }) {
+  const { t } = useTranslation();
   // New state added to know which step I'm in, for example 1 = im in form, 2 = im in preview
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
@@ -241,26 +243,26 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
             <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Type className="w-5 h-5 text-blue-400" />
-                Activity Details
+                {t('activityDetails')}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Title</span>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('titleLabel')}</span>
                   <p className="text-white mt-1">{title}</p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Video</span>
-                  <p className="text-gray-300 mt-1">{videoFile ? videoFile.name : "No video"}</p>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('videoLabel')}</span>
+                  <p className="text-gray-300 mt-1">{videoFile ? videoFile.name : t('noVideo')}</p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</span>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('startDateLabel')}</span>
                   <p className="text-gray-300 mt-1 flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-gray-500" />
                     {formatPreviewDate(startDate)}
                   </p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</span>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('endDateLabel')}</span>
                   <p className="text-gray-300 mt-1 flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-gray-500" />
                     {formatPreviewDate(endDate)}
@@ -274,7 +276,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <Eye className="w-5 h-5 text-green-400" />
-                  Content Preview
+                  {t('contentPreview')}
                 </h3>
                 <div className="bg-gray-900/50 p-5 rounded-lg border border-gray-600">
                   <ReactMarkdown components={markdownComponents}>
@@ -289,9 +291,9 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <Code2 className="w-5 h-5 text-purple-400" />
-                  Starter Code
+                  {t('starterCode')}
                   <span className="text-sm font-normal text-gray-500">
-                    ({starterFiles.length} file{starterFiles.length !== 1 ? "s" : ""})
+                    {"("}{starterFiles.length} {starterFiles.length !== 1 ? t('files') : t('file')}{")"}
                   </span>
                 </h3>
                 <div className="space-y-3">
@@ -315,9 +317,9 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <HelpCircle className="w-5 h-5 text-blue-400" />
-                  Video Quiz
+                  {t('videoQuiz')}
                   <span className="text-sm font-normal text-gray-500">
-                    ({quizQuestions.length} question{quizQuestions.length !== 1 ? "s" : ""})
+                    {"("}{quizQuestions.length} {quizQuestions.length !== 1 ? t('questions') : t('question')}{")"}
                   </span>
                 </h3>
                 <div className="space-y-2">
@@ -342,9 +344,9 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <Eye className="w-5 h-5 text-blue-400" />
-                  Video Chapters
+                  {t('videoChapters')}
                   <span className="text-sm font-normal text-gray-500">
-                    ({chapters.length} chapter{chapters.length !== 1 ? "s" : ""})
+                    {"("}{chapters.length} {chapters.length !== 1 ? t('chapters') : t('chapter')}{")"}
                   </span>
                 </h3>
                 <div className="space-y-2">
@@ -374,7 +376,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-semibold transition-all duration-300"
             >
               <ArrowLeft className="w-5 h-5" />
-              Back to Edit
+              {t('backToEdit')}
             </button>
             <button
               type="button"
@@ -385,12 +387,12 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               {loading ? (
                 <>
                   <Loader className="w-5 h-5 animate-spin" />
-                  Publishing...
+                  {t('publishing')}
                 </>
               ) : (
                 <>
                   <Send className="w-5 h-5" />
-                  Publish Lab
+                  {t('publishLab')}
                 </>
               )}
             </button>
@@ -456,8 +458,8 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
             {/* Video Upload */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-3">
-                Video
-                <span className="text-gray-500 font-normal">(Optional)</span>
+                {t('videoLabel')}
+                <span className="text-gray-500 font-normal">{t('optional')}</span>
               </label>
 
               <FileUploadZone
@@ -491,9 +493,9 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
                 <div className="flex items-center gap-3">
                   <Github className="w-5 h-5 text-gray-400" />
                   <div>
-                    <p className="text-sm font-medium text-white">Create template repo in GitHub Org</p>
+                    <p className="text-sm font-medium text-white">{t('createTemplateRepoInOrg')}</p>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      Pushes starter code & markdown as a repo to your connected org
+                      {t('pushesStarterCodeDesc')}
                     </p>
                   </div>
                 </div>

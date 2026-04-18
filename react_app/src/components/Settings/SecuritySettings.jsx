@@ -301,7 +301,7 @@ const SecuritySettings = ({ user, setUser }) => {
             {/* Type confirmation */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">
-                {t('typeToConfirm')} <span className="text-red-400 font-mono">DELETE</span> {t('toConfirm')}
+                {t('typeToConfirm')} <span className="text-red-400 font-mono">{"DELETE"}</span> {t('toConfirm')}
               </label>
               <input
                 type="text"

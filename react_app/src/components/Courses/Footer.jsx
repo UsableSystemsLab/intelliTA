@@ -54,7 +54,7 @@ export default function HomeFooter() {
             {/* Social Icons */}
             <div className="flex gap-4">
               <a href="#" className="text-gray-500 hover:text-white transition-colors">
-                <span className="sr-only">Twitter</span>
+                <span className="sr-only">{t("twitter")}</span>
                 <Twitter className="w-5 h-5" />
               </a>
               <a href="#" className="text-gray-500 hover:text-white transition-colors">

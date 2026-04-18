@@ -42,35 +42,35 @@ const getActivityStatus = (startDate, endDate) => {
 };
 
 
-const StatusBadge = ({ status }) => {
+const StatusBadge = ({ status, t }) => {
     const config = {
         upcoming: {
             bg: 'bg-amber-500/10',
             border: 'border-amber-500/30',
             text: 'text-amber-400',
             icon: Timer,
-            label: 'Upcoming'
+            label: t('statusUpcoming')
         },
         active: {
             bg: 'bg-emerald-500/10',
             border: 'border-emerald-500/30',
             text: 'text-emerald-400',
             icon: CheckCircle2,
-            label: 'Active'
+            label: t('statusActive')
         },
         completed: {
             bg: 'bg-gray-500/10',
             border: 'border-gray-500/30',
             text: 'text-gray-400',
             icon: CheckCircle2,
-            label: 'Completed'
+            label: t('statusCompleted')
         },
         end: {
             bg: 'bg-red-500/10',
             border: 'border-red-500/30',
             text: 'text-red-400',
             icon: CheckCircle2,
-            label: 'Ended'
+            label: t('statusEnded')
         }
     };
 
@@ -137,7 +137,7 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
                         <BookOpen className="w-7 h-7 text-blue-400" strokeWidth={1.5} />
                     </div>
                     <div className="flex items-center gap-2">
-                        <StatusBadge status={status} />
+                        <StatusBadge status={status} t={t} />
                         {isInstructor && (
                             <>
                                 <button
@@ -146,7 +146,7 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
                                         onEdit(activity);
                                     }}
                                     className="p-2 text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all duration-200"
-                                    title="Edit Activity"
+                                    title={t('editActivity')}
                                 >
                                     <Pencil size={16} />
                                 </button>
@@ -156,7 +156,7 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
                                         onDelete(activity.activity_id);
                                     }}
                                     className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
-                                    title="Delete Activity"
+                                    title={t('deleteActivity')}
                                 >
                                     <Trash2 size={16} />
                                 </button>
@@ -174,11 +174,11 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
                 <div className="space-y-2 mb-6 flex-grow">
                     <div className="flex items-center gap-2 text-sm text-gray-400">
                         <Calendar className="w-4 h-4 text-gray-500" />
-                        <span>Start: {formatDate(activity.start_date)}</span>
+                        <span>{t('startDate')} {formatDate(activity.start_date)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-400">
                         <Clock className="w-4 h-4 text-gray-500" />
-                        <span>End: {formatDate(activity.end_date)}</span>
+                        <span>{t('endDate')} {formatDate(activity.end_date)}</span>
                     </div>
                 </div>
 
@@ -192,7 +192,7 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
                         className="inline-flex items-center justify-center w-full px-4 py-3 mb-2 bg-gray-900 hover:bg-gray-700 border border-gray-600 text-white rounded-xl font-medium transition-all duration-300"
                     >
                         <Github className="w-4 h-4 mr-2 text-gray-300" />
-                        <span className="text-sm">Starter Code Repo</span>
+                        <span className="text-sm">{t('starterCodeRepo')}</span>
                     </a>
                 )}
 
@@ -208,7 +208,7 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
                         <Github className="w-5 h-5 mr-2" />
                         <span>
                           {isInstructor
-                            ? "View Classroom Assignment"
+                            ? t("viewClassroomAssignment")
                             : t("githubClassroom")}
                         </span>
                     </a>
@@ -228,7 +228,7 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
                                     disabled={savingLink || !linkValue.trim()}
                                     className="px-3 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
                                 >
-                                    {savingLink ? "..." : "Save"}
+                                    {savingLink ? "..." : t('save')}
                                 </button>
                                 <button
                                     onClick={() => { setShowLinkInput(false); setLinkValue(""); }}
@@ -243,7 +243,7 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
                                 className="inline-flex items-center justify-center w-full px-4 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded-xl font-medium transition-all duration-300 border border-dashed border-gray-600 hover:border-gray-500"
                             >
                                 <Plus className="w-4 h-4 mr-2" />
-                                <span className="text-sm">Add Assignment Link</span>
+                                <span className="text-sm">{t('addAssignmentLink')}</span>
                             </button>
                         )}
                     </div>
@@ -256,7 +256,7 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
                     className="inline-flex items-center justify-center w-full px-4 py-3 bg-gray-700 hover:bg-blue-600 text-white rounded-xl font-medium transition-all duration-300 group-hover:shadow-lg group-hover:shadow-blue-500/25"
                 >
                     <PlayCircle className="w-5 h-5 mr-2" />
-                    <span>Start Activity</span>
+                    <span>{t('startActivity')}</span>
                     <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
                 </button>
             </div>
@@ -265,16 +265,16 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
 };
 
 
-const EmptyState = ({ isInstructor, onCreateClick }) => (
+const EmptyState = ({ isInstructor, onCreateClick, t }) => (
     <div className="col-span-full flex flex-col items-center justify-center py-16 px-6">
         <div className="w-20 h-20 bg-gray-800 rounded-2xl flex items-center justify-center mb-6 border border-gray-700">
             <BookOpen className="w-10 h-10 text-gray-600" />
         </div>
-        <h3 className="text-xl font-semibold text-gray-300 mb-2">No activities yet</h3>
+        <h3 className="text-xl font-semibold text-gray-300 mb-2">{t('noActivitiesYet')}</h3>
         <p className="text-gray-500 text-center max-w-md mb-6">
             {isInstructor
-                ? "Create your first activity to get started with interactive lessons for your students."
-                : "Your instructor hasn't added any activities yet. Check back soon!"
+                ? t('createFirstActivityInstructor')
+                : t('noActivitiesStudent')
             }
         </p>
         {isInstructor && (
@@ -283,14 +283,14 @@ const EmptyState = ({ isInstructor, onCreateClick }) => (
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-medium transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
             >
                 <Plus className="w-5 h-5" />
-                Create First Activity
+                {t('createFirstActivity')}
             </button>
         )}
     </div>
 );
 
 
-const TokenModal = ({ course, onClose, onGenerate, generating }) => {
+const TokenModal = ({ course, onClose, onGenerate, generating, t }) => {
     const [codeVisible, setCodeVisible] = useState(false);
     const [copySuccess, setCopySuccess] = useState(false);
 
@@ -318,7 +318,7 @@ const TokenModal = ({ course, onClose, onGenerate, generating }) => {
                         <div className="p-3 bg-blue-500/10 rounded-xl">
                             <Key className="w-6 h-6 text-blue-400" />
                         </div>
-                        <h3 className="text-2xl font-bold text-white">Course Token</h3>
+                        <h3 className="text-2xl font-bold text-white">{t('courseToken')}</h3>
                     </div>
 
                     <div className="bg-gray-900/50 p-4 rounded-xl flex items-center justify-between mb-6 border border-gray-700">
@@ -329,14 +329,14 @@ const TokenModal = ({ course, onClose, onGenerate, generating }) => {
                             <button
                                 onClick={() => setCodeVisible(!codeVisible)}
                                 className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                                title={codeVisible ? "Hide" : "Show"}
+                                title={codeVisible ? t('hide') : t('show')}
                             >
                                 {codeVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                             <button
                                 onClick={copyToClipboard}
                                 className="p-2 text-gray-400 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors"
-                                title="Copy"
+                                title={t('copy')}
                             >
                                 <Copy className={`w-4 h-4 ${copySuccess ? 'text-green-400' : ''}`} />
                             </button>
@@ -344,7 +344,7 @@ const TokenModal = ({ course, onClose, onGenerate, generating }) => {
                     </div>
 
                     {copySuccess && (
-                        <p className="text-green-400 text-sm text-center mb-4">Copied to clipboard!</p>
+                        <p className="text-green-400 text-sm text-center mb-4">{t('copiedToClipboard')}</p>
                     )}
 
                     <button
@@ -353,12 +353,12 @@ const TokenModal = ({ course, onClose, onGenerate, generating }) => {
                         className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white rounded-xl font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <RefreshCw className={`w-4 h-4 ${generating ? 'animate-spin' : ''}`} />
-                        {generating ? "Generating..." : "Generate New Token"}
+                        {generating ? t('generating') : t('generateNewToken')}
                     </button>
 
                     <p className="flex items-start gap-2 text-xs text-amber-400/80 mt-4">
                         <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                        Warning: Generating a new token will invalidate the previous one.
+                        {t('tokenWarning')}
                     </p>
                 </div>
             </div>
@@ -420,7 +420,7 @@ export default function Maincontent({ user }) {
     };
 
     const handleGenerateNewCode = async () => {
-        if (!window.confirm("Are you sure? Old token will stop working.")) return;
+        if (!window.confirm(t("confirmGenerateToken"))) return;
         setGenerating(true);
         try {
             const res = await fetch(`${API_BASE}/courses/${courseId}/code`, {
@@ -432,9 +432,9 @@ export default function Maincontent({ user }) {
             if (res.ok) {
                 const data = await res.json();
                 setCourse(prev => ({ ...prev, token: data.token }));
-                alert("New token generated!");
+                alert(t("newTokenGenerated"));
             } else {
-                alert("Failed to generate token");
+                alert(t("failedToGenerateToken"));
             }
         } catch (err) {
             console.error(err);
@@ -444,7 +444,7 @@ export default function Maincontent({ user }) {
     };
 
     const handleDeleteCourse = async () => {
-        if (!window.confirm("Are you sure you want to delete this course? This action cannot be undone.")) return;
+        if (!window.confirm(t("confirmDeleteCourse"))) return;
 
         try {
             const res = await fetch(`${API_BASE}/courses/${courseId}`, {
@@ -458,16 +458,16 @@ export default function Maincontent({ user }) {
                 navigate("/courses");
             } else {
                 const data = await res.json();
-                alert(data.message || "Failed to delete course");
+                alert(data.message || t("failedToDeleteCourse"));
             }
         } catch (err) {
             console.error("Error deleting course:", err);
-            alert("An error occurred while deleting the course.");
+            alert(t("errorDeletingCourse"));
         }
     };
 
     const handleDeleteActivity = async (activityId) => {
-        if (!window.confirm("Are you sure you want to delete this activity?")) return;
+        if (!window.confirm(t("confirmDeleteActivity"))) return;
 
         try {
             const res = await fetch(`${API_BASE}/courses/${courseId}/activities/${activityId}`, {
@@ -481,11 +481,11 @@ export default function Maincontent({ user }) {
                 setActivities(prev => prev.filter(a => a.activity_id !== activityId));
             } else {
                 const data = await res.json();
-                alert(data.message || "Failed to delete activity");
+                alert(data.message || t("failedToDeleteActivity"));
             }
         } catch (err) {
             console.error("Error deleting activity:", err);
-            alert("An error occurred while deleting the activity.");
+            alert(t("errorDeletingActivity"));
         }
     };
 
@@ -505,7 +505,7 @@ export default function Maincontent({ user }) {
             <div className="flex items-center justify-center min-h-screen bg-gray-900">
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                    <p className="text-gray-400">Loading course...</p>
+                    <p className="text-gray-400">{t('loadingCourse')}</p>
                 </div>
             </div>
         );
@@ -516,7 +516,7 @@ export default function Maincontent({ user }) {
             <div className="flex items-center justify-center min-h-screen bg-gray-900">
                 <div className="text-center">
                     <AlertCircle className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-xl text-gray-400">Course not found.</p>
+                    <p className="text-xl text-gray-400">{t('courseNotFound')}</p>
                 </div>
             </div>
         );
@@ -533,7 +533,7 @@ export default function Maincontent({ user }) {
                 <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
                     <div className="mb-4">
                         <Breadcrumb items={[
-                            { label: "Courses", href: "/courses" },
+                            { label: t("courses"), href: "/courses" },
                             { label: course.title }
                         ]} />
                     </div>
@@ -554,14 +554,14 @@ export default function Maincontent({ user }) {
                                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 hover:border-blue-500/50 rounded-xl font-medium transition-all duration-300"
                                 >
                                     <Users className="w-4 h-4 text-blue-400" />
-                                    Members
+                                    {t('members')}
                                 </button>
                                 <button
                                     onClick={() => setShowCodeModal(true)}
                                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 hover:border-blue-500/50 rounded-xl font-medium transition-all duration-300"
                                 >
                                     <Key className="w-4 h-4 text-blue-400" />
-                                    View Token
+                                    {t('viewToken')}
                                 </button>
                                 <button
                                     onClick={() => setShowGitHubModal(true)}
@@ -575,7 +575,7 @@ export default function Maincontent({ user }) {
                                     className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-red-500/10 text-gray-300 hover:text-red-400 border border-gray-700 hover:border-red-500/50 rounded-xl font-medium transition-all duration-300"
                                 >
                                     <Trash2 className="w-4 h-4" />
-                                    Delete Course
+                                    {t('deleteCourse')}
                                 </button>
                             </div>
                         )}
@@ -588,9 +588,9 @@ export default function Maincontent({ user }) {
                 {/* Section Header */}
                 <div className="flex justify-between items-center mb-8">
                     <div>
-                        <h2 className="text-2xl font-bold text-white">Activities</h2>
+                        <h2 className="text-2xl font-bold text-white">{t('activities')}</h2>
                         <p className="text-gray-500 mt-1">
-                            {activities.length} {activities.length === 1 ? 'activity' : 'activities'} available
+                            {activities.length} {activities.length === 1 ? t('activityAvailableSingular') : t('activityAvailablePlural')}
                         </p>
                     </div>
                     {isInstructor() && activities.length > 0 && (
@@ -599,7 +599,7 @@ export default function Maincontent({ user }) {
                             className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white rounded-xl font-medium transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40"
                         >
                             <Plus className="w-5 h-5" />
-                            Create Activity
+                            {t('createActivity')}
                         </button>
                     )}
                 </div>
@@ -610,6 +610,7 @@ export default function Maincontent({ user }) {
                         <EmptyState
                             isInstructor={isInstructor()}
                             onCreateClick={() => setShowActivityModal(true)}
+                            t={t}
                         />
                     ) : (
                         activities.map(activity => (
@@ -654,6 +655,7 @@ export default function Maincontent({ user }) {
                     onClose={() => setShowCodeModal(false)}
                     onGenerate={handleGenerateNewCode}
                     generating={generating}
+                    t={t}
                 />
             )}
 
