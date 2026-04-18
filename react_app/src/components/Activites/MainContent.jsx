@@ -27,7 +27,8 @@ import {
     EyeOff,
     Pencil,
     Users,
-    Github
+    Github,
+    ShieldCheck
 } from "lucide-react";
 
 
@@ -380,7 +381,32 @@ export default function Maincontent({ user }) {
     const [generating, setGenerating] = useState(false);
     const [showMembersModal, setShowMembersModal] = useState(false);
     const [showGitHubModal, setShowGitHubModal] = useState(false);
+    const [githubUsername, setGithubUsername] = useState(() => {
+        const p = new URLSearchParams(window.location.search);
+        return p.get("github") === "verified" ? p.get("username") : null;
+    });
+    const [githubVerified, setGithubVerified] = useState(() => {
+        return new URLSearchParams(window.location.search).get("github") === "verified";
+    });
+    const [githubMsg, setGithubMsg] = useState(() => {
+        const p = new URLSearchParams(window.location.search);
+        const result = p.get("github");
+        if (result === "verified") return { type: "success", text: `@${p.get("username")}` };
+        if (result === "error") return { type: "error", text: p.get("message") || "" };
+        return null;
+    });
 
+    // Clean up OAuth callback params from URL
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("github")) {
+            const url = new URL(window.location);
+            url.searchParams.delete("github");
+            url.searchParams.delete("username");
+            url.searchParams.delete("message");
+            window.history.replaceState({}, "", url);
+        }
+    }, []);
 
     useEffect(() => {
         async function fetchData() {
@@ -405,6 +431,20 @@ export default function Maincontent({ user }) {
                     setActivities(activitiesData);
                 }
 
+                // Fetch student GitHub status
+                if (user?.uid) {
+                    const profileRes = await fetch(`${API_BASE}/users/${user.uid}/profile`, {
+                        headers: await getAuthHeaders(auth.currentUser),
+                    });
+                    if (profileRes.ok) {
+                        const profileData = await profileRes.json();
+                        if (profileData.github_username) {
+                            setGithubUsername(profileData.github_username);
+                            setGithubVerified(profileData.github_verified || false);
+                        }
+                    }
+                }
+
             } catch (err) {
                 console.error("Failed to fetch data:", err);
             } finally {
@@ -412,7 +452,7 @@ export default function Maincontent({ user }) {
             }
         }
         if (courseId) fetchData();
-    }, [courseId]);
+    }, [courseId, user?.uid]);
 
     const isInstructor = () => {
         if (!user || !course || !course.instructor) return false;
@@ -547,7 +587,7 @@ export default function Maincontent({ user }) {
                             </p>
                         </div>
 
-                        {isInstructor() && (
+                        {isInstructor() ? (
                             <div className="flex flex-wrap gap-3">
                                 <button
                                     onClick={() => setShowMembersModal(true)}
@@ -578,10 +618,56 @@ export default function Maincontent({ user }) {
                                     {t('deleteCourse')}
                                 </button>
                             </div>
+                        ) : (
+                            <div className="flex items-center gap-3">
+                                {githubVerified ? (
+                                    <span className="inline-flex items-center gap-2 px-4 py-2.5 bg-green-500/10 border border-green-500/30 text-green-400 rounded-xl text-sm font-medium">
+                                        <ShieldCheck className="w-4 h-4" />
+                                        {`@${githubUsername}`}
+                                    </span>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            const redirectBack = window.location.href.split("?")[0];
+                                            window.location.href =
+                                                `${API_BASE}/github/student-auth` +
+                                                `?firebaseId=${encodeURIComponent(user.uid)}` +
+                                                `&courseId=${encodeURIComponent(courseId)}` +
+                                                `&redirect=${encodeURIComponent(redirectBack)}`;
+                                        }}
+                                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 hover:border-blue-500/50 rounded-xl font-medium transition-all duration-300"
+                                    >
+                                        <Github className="w-4 h-4 text-blue-400" />
+                                        {t('connectGitHub')}
+                                    </button>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>
             </div>
+
+            {/* GitHub callback message */}
+            {githubMsg && (
+                <div className={`max-w-7xl mx-auto px-6 pt-4`}>
+                    <div className={`flex items-center gap-2 text-sm p-3 rounded-xl ${
+                        githubMsg.type === "success"
+                            ? "text-green-400 bg-green-500/10 border border-green-500/20"
+                            : "text-red-400 bg-red-500/10 border border-red-500/20"
+                    }`}>
+                        {githubMsg.type === "success"
+                            ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+                            : <AlertCircle className="w-4 h-4 shrink-0" />}
+                        {githubMsg.text}
+                        <button
+                            onClick={() => setGithubMsg(null)}
+                            className="ml-auto p-1 hover:bg-gray-700 rounded"
+                        >
+                            <X className="w-3 h-3" />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Activities Section */}
             <div className="max-w-7xl mx-auto px-6 py-10">
