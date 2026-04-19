@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Play, Pause, SkipBack, SkipForward, RotateCcw, Video, Maximize, Minimize, Volume2, VolumeX, ChevronUp, Subtitles, List } from 'lucide-react';
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -28,6 +29,7 @@ export default function VideoSection({
     captionLang = 'en',
     onToggleCaptionLang
 }) {
+    const { t } = useTranslation();
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [showSpeedMenu, setShowSpeedMenu] = useState(false);
     const [showChaptersMenu, setShowChaptersMenu] = useState(false);
@@ -224,7 +226,7 @@ export default function VideoSection({
             {/* Header */}
             <div className="h-10 border-b border-gray-800 bg-gray-900 flex items-center px-4 gap-2 shrink-0">
                 <Video className="w-4 h-4 text-purple-400" />
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Video Lesson</span>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('videoLesson')}</span>
             </div>
 
             {/* Video Container */}
@@ -281,7 +283,7 @@ export default function VideoSection({
                 {/* Current Chapter Display */}
                 {chapters.length > 0 && getCurrentChapter() && (
                     <div className="px-4 pt-2 flex items-center gap-2">
-                        <span className="text-xs text-gray-500">Chapter:</span>
+                        <span className="text-xs text-gray-500">{t('chapterLabel')}</span>
                         <span className="text-xs font-medium text-white">{getCurrentChapter().title}</span>
                     </div>
                 )}
@@ -515,7 +517,7 @@ export default function VideoSection({
                                 className="flex items-center gap-1 px-2 py-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-all text-xs font-medium"
                                 title="Playback Speed"
                             >
-                                {playbackSpeed}x
+                                {`${playbackSpeed}x`}
                                 <ChevronUp className={`w-3 h-3 transition-transform ${showSpeedMenu ? '' : 'rotate-180'}`} />
                             </button>
                             {showSpeedMenu && (
@@ -528,7 +530,7 @@ export default function VideoSection({
                                                 playbackSpeed === speed ? 'text-blue-400 font-semibold' : 'text-gray-300'
                                             }`}
                                         >
-                                            {speed}x
+                                            {`${speed}x`}
                                         </button>
                                     ))}
                                 </div>
@@ -548,7 +550,7 @@ export default function VideoSection({
 
                         {/* Checkpoint Counter */}
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 rounded-lg border border-gray-700">
-                            <span className="text-xs font-medium text-gray-500">Checkpoints</span>
+                            <span className="text-xs font-medium text-gray-500">{t('checkpoints')}</span>
                             <span className="text-sm font-bold text-emerald-400">
                                 {checkpoints.filter(c => c.status === 'verified').length}
                             </span>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Lock, Trash2, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { auth, db } from '@/utils/firebase.js';
 import {
   updatePassword,
@@ -15,7 +16,9 @@ const isGoogleOnly = (user) => {
   return user?.providerData?.every((p) => p.providerId === 'google.com');
 };
 
-const PasswordInput = ({ id, label, value, onChange, show, onToggle, placeholder, ringColor = 'focus:ring-blue-500/50 focus:border-blue-500' }) => (
+const PasswordInput = ({ id, label, value, onChange, show, onToggle, placeholder, ringColor = 'focus:ring-blue-500/50 focus:border-blue-500' }) => {
+  const { t } = useTranslation();
+  return (
   <div className="space-y-2">
     <label htmlFor={id} className="text-sm font-medium text-gray-300">
       {label}
@@ -27,7 +30,7 @@ const PasswordInput = ({ id, label, value, onChange, show, onToggle, placeholder
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className={`w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700 text-gray-100 focus:outline-none focus:ring-2 ${ringColor} transition-all placeholder-gray-500 pr-12`}
-        placeholder={placeholder || `Enter ${label.toLowerCase()}`}
+        placeholder={placeholder || `${t('enterField')} ${label.toLowerCase()}`}
       />
       <button
         type="button"
@@ -38,9 +41,11 @@ const PasswordInput = ({ id, label, value, onChange, show, onToggle, placeholder
       </button>
     </div>
   </div>
-);
+  );
+};
 
 const SecuritySettings = ({ user, setUser }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // Change Password state
@@ -74,11 +79,11 @@ const SecuritySettings = ({ user, setUser }) => {
     if (/[0-9]/.test(pass)) score++;
     if (/[^A-Za-z0-9]/.test(pass)) score++;
 
-    if (score <= 1) return { label: 'Weak', color: 'bg-red-500', width: '20%' };
-    if (score <= 2) return { label: 'Fair', color: 'bg-orange-500', width: '40%' };
-    if (score <= 3) return { label: 'Good', color: 'bg-yellow-500', width: '60%' };
-    if (score <= 4) return { label: 'Strong', color: 'bg-green-500', width: '80%' };
-    return { label: 'Very Strong', color: 'bg-emerald-400', width: '100%' };
+    if (score <= 1) return { label: t('strengthWeak'), color: 'bg-red-500', width: '20%' };
+    if (score <= 2) return { label: t('strengthFair'), color: 'bg-orange-500', width: '40%' };
+    if (score <= 3) return { label: t('strengthGood'), color: 'bg-yellow-500', width: '60%' };
+    if (score <= 4) return { label: t('strengthStrong'), color: 'bg-green-500', width: '80%' };
+    return { label: t('strengthVeryStrong'), color: 'bg-emerald-400', width: '100%' };
   };
 
   const strength = getPasswordStrength(newPassword);
@@ -88,15 +93,15 @@ const SecuritySettings = ({ user, setUser }) => {
     setPasswordSuccess('');
 
     if (newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters.');
+      setPasswordError(t('errPassMin6'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match.');
+      setPasswordError(t('errPassNoMatch'));
       return;
     }
     if (currentPassword === newPassword) {
-      setPasswordError('New password must be different from current password.');
+      setPasswordError(t('errPassSameAsCurrent'));
       return;
     }
 
@@ -109,17 +114,17 @@ const SecuritySettings = ({ user, setUser }) => {
       await reauthenticateWithCredential(auth.currentUser, credential);
       await updatePassword(auth.currentUser, newPassword);
 
-      setPasswordSuccess('Password changed successfully.');
+      setPasswordSuccess(t('passwordChanged'));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
       if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setPasswordError('Current password is incorrect.');
+        setPasswordError(t('errCurrentPassWrong'));
       } else if (err.code === 'auth/weak-password') {
-        setPasswordError('New password is too weak. Use at least 6 characters.');
+        setPasswordError(t('errPassTooWeak'));
       } else {
-        setPasswordError('Failed to change password. Please try again.');
+        setPasswordError(t('errPassChangeFailed'));
       }
     } finally {
       setPasswordLoading(false);
@@ -149,7 +154,7 @@ const SecuritySettings = ({ user, setUser }) => {
       });
       if (!deactivateRes.ok && deactivateRes.status !== 404) {
         const data = await deactivateRes.json().catch(() => ({}));
-        throw new Error(data.message || 'Failed to deactivate account on server.');
+        throw new Error(data.message || t('errDeleteFailed'));
       }
 
       // Mark as deleted in Firestore
@@ -166,11 +171,11 @@ const SecuritySettings = ({ user, setUser }) => {
       navigate('/login');
     } catch (err) {
       if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setDeleteError('Incorrect password.');
+        setDeleteError(t('errIncorrectPass'));
       } else if (err.code === 'auth/requires-recent-login') {
-        setDeleteError('Please log out and log back in, then try again.');
+        setDeleteError(t('errRequiresRecentLogin'));
       } else {
-        setDeleteError(err.message || 'Failed to delete account. Please try again.');
+        setDeleteError(err.message || t('errDeleteFailed'));
       }
     } finally {
       setDeleteLoading(false);
@@ -184,10 +189,10 @@ const SecuritySettings = ({ user, setUser }) => {
         <div>
           <h2 className="text-xl font-semibold text-gray-100 flex items-center gap-2">
             <Lock className="w-5 h-5" />
-            Change Password
+            {t('changePassword')}
           </h2>
           <p className="text-sm text-gray-400 mt-1">
-            Update your password to keep your account secure.
+            {t('changePasswordDesc')}
           </p>
         </div>
 
@@ -195,14 +200,14 @@ const SecuritySettings = ({ user, setUser }) => {
           <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
             <AlertTriangle className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
             <p className="text-sm text-gray-300">
-              Your account is using Google sign-in. Password is managed through your Google account.
+              {t('googleSignInNote')}
             </p>
           </div>
         ) : (
           <div className="grid gap-4">
             <PasswordInput
               id="current-password"
-              label="Current Password"
+              label={t('currentPassword')}
               value={currentPassword}
               onChange={setCurrentPassword}
               show={showCurrent}
@@ -210,7 +215,7 @@ const SecuritySettings = ({ user, setUser }) => {
             />
             <PasswordInput
               id="new-password"
-              label="New Password"
+              label={t('newPassword')}
               value={newPassword}
               onChange={setNewPassword}
               show={showNew}
@@ -227,14 +232,14 @@ const SecuritySettings = ({ user, setUser }) => {
                   />
                 </div>
                 <p className="text-xs text-gray-400">
-                  Strength: <span className="font-medium">{strength.label}</span>
+                  {t('strength')}: <span className="font-medium">{strength.label}</span>
                 </p>
               </div>
             )}
 
             <PasswordInput
               id="confirm-password"
-              label="Confirm New Password"
+              label={t('confirmNewPassword')}
               value={confirmPassword}
               onChange={setConfirmPassword}
               show={showConfirm}
@@ -250,7 +255,7 @@ const SecuritySettings = ({ user, setUser }) => {
                 disabled={passwordLoading || !currentPassword || !newPassword || !confirmPassword}
                 className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors shadow-lg shadow-blue-900/20"
               >
-                {passwordLoading ? 'Updating...' : 'Update Password'}
+                {passwordLoading ? t('updating') : t('updatePassword')}
               </button>
             </div>
           </div>
@@ -265,10 +270,10 @@ const SecuritySettings = ({ user, setUser }) => {
         <div>
           <h2 className="text-xl font-semibold text-red-400 flex items-center gap-2">
             <Trash2 className="w-5 h-5" />
-            Delete Account
+            {t('deleteAccount')}
           </h2>
           <p className="text-sm text-gray-400 mt-1">
-            Permanently delete your account and all associated data. This action cannot be undone.
+            {t('deleteAccountDesc')}
           </p>
         </div>
 
@@ -277,18 +282,18 @@ const SecuritySettings = ({ user, setUser }) => {
             onClick={() => setShowDeleteConfirm(true)}
             className="px-6 py-2.5 bg-red-600/10 hover:bg-red-600/20 text-red-400 border border-red-500/30 hover:border-red-500/50 font-medium rounded-xl transition-all"
           >
-            Delete My Account
+            {t('deleteMyAccount')}
           </button>
         ) : (
           <div className="p-6 rounded-xl bg-red-500/5 border border-red-500/20 space-y-4">
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-red-400 mt-0.5 shrink-0" />
               <div className="text-sm text-gray-300 space-y-2">
-                <p className="font-medium text-red-400">This will permanently:</p>
+                <p className="font-medium text-red-400">{t('thisWillPermanently')}</p>
                 <ul className="list-disc list-inside text-gray-400 space-y-1">
-                  <li>Delete your account and profile</li>
-                  <li>Remove you from all courses</li>
-                  <li>Delete all your submissions and progress</li>
+                  <li>{t('deleteList1')}</li>
+                  <li>{t('deleteList2')}</li>
+                  <li>{t('deleteList3')}</li>
                 </ul>
               </div>
             </div>
@@ -296,7 +301,7 @@ const SecuritySettings = ({ user, setUser }) => {
             {/* Type confirmation */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">
-                Type <span className="text-red-400 font-mono">DELETE</span> to confirm
+                {t('typeToConfirm')} <span className="text-red-400 font-mono">{"DELETE"}</span> {t('toConfirm')}
               </label>
               <input
                 type="text"
@@ -311,7 +316,7 @@ const SecuritySettings = ({ user, setUser }) => {
             {!googleOnly && (
               <PasswordInput
                 id="delete-password"
-                label="Enter your password"
+                label={t('enterYourPassword')}
                 value={deletePassword}
                 onChange={setDeletePassword}
                 show={showDeletePassword}
@@ -331,7 +336,7 @@ const SecuritySettings = ({ user, setUser }) => {
                 }}
                 className="px-6 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-200 font-medium rounded-xl transition-colors"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={handleDeleteAccount}
@@ -342,7 +347,7 @@ const SecuritySettings = ({ user, setUser }) => {
                 }
                 className="px-6 py-2.5 bg-red-600 hover:bg-red-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors shadow-lg shadow-red-900/20"
               >
-                {deleteLoading ? 'Deleting...' : 'Permanently Delete Account'}
+                {deleteLoading ? t('deleting') : t('permanentlyDeleteAccount')}
               </button>
             </div>
           </div>

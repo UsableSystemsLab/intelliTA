@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import {
   HelpCircle,
@@ -44,12 +45,13 @@ const markdownComponents = {
 };
 
 function MarkdownQuestionField({ value, onChange, placeholder }) {
+  const { t } = useTranslation();
   const [preview, setPreview] = useState(false);
 
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <label className="text-xs font-medium text-gray-400">Question</label>
+        <label className="text-xs font-medium text-gray-400">{t('questionLabel')}</label>
         <button
           type="button"
           onClick={() => setPreview(!preview)}
@@ -64,7 +66,7 @@ function MarkdownQuestionField({ value, onChange, placeholder }) {
           {value ? (
             <ReactMarkdown components={markdownComponents}>{value}</ReactMarkdown>
           ) : (
-            <p className="text-gray-500 text-sm italic">Nothing to preview</p>
+            <p className="text-gray-500 text-sm italic">{t('nothingToPreview')}</p>
           )}
         </div>
       ) : (
@@ -77,7 +79,7 @@ function MarkdownQuestionField({ value, onChange, placeholder }) {
         />
       )}
       {!preview && (
-        <p className="text-[10px] text-gray-600 mt-0.5">Markdown is supported: **bold**, *italic*, `code`, lists, etc.</p>
+        <p className="text-[10px] text-gray-600 mt-0.5">{t('markdownSupported')}</p>
       )}
     </div>
   );
@@ -135,6 +137,7 @@ function findFreeTime(desired, otherTimes) {
 }
 
 function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDuration, getVideoTime, otherTimes }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
   const [adjustedNotice, setAdjustedNotice] = useState(null);
   const noticeTimer = useRef(null);
@@ -190,7 +193,7 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
             {question.question || question.title || `Question ${index + 1}`}
           </span>
           <span className="text-xs text-gray-500">
-            {typeConfig?.label} &middot; {formatTime(question.time)}
+            {typeConfig?.label} {"·"} {formatTime(question.time)}
           </span>
         </div>
         <ChevronDown
@@ -202,7 +205,7 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
         <div className="px-4 pb-4 space-y-4 border-t border-gray-700/50 pt-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-medium text-gray-400 mb-1 block">Type</label>
+              <label className="text-xs font-medium text-gray-400 mb-1 block">{t('typeLabel')}</label>
               <select
                 value={question.type}
                 onChange={(e) => {
@@ -231,9 +234,9 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
             </div>
             <div>
               <label className="text-xs font-medium text-gray-400 mb-1 block">
-                Time (MM:SS)
+                {t('timeMmSs')}
                 {videoDuration > 0 && (
-                  <span className="text-gray-600 font-normal ml-1">max {formatTime(videoDuration)}</span>
+                  <span className="text-gray-600 font-normal ml-1">{t('maxLabel')} {formatTime(videoDuration)}</span>
                 )}
               </label>
               <div className="relative">
@@ -263,19 +266,19 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
                   className="mt-1.5 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-blue-400 hover:text-blue-300 rounded-lg text-xs font-medium transition-all"
                 >
                   <Play className="w-3 h-3" />
-                  Use current video time
+                  {t('useCurrentVideoTime')}
                 </button>
               )}
               {videoDuration > 0 && question.time > videoDuration && (
                 <p className="flex items-center gap-1 text-[10px] text-red-400 mt-0.5">
                   <AlertTriangle className="w-3 h-3" />
-                  Exceeds video duration ({formatTime(videoDuration)})
+                  {t('exceedsVideoDuration')} {"("}{formatTime(videoDuration)}{")"}
                 </p>
               )}
               {adjustedNotice && (
                 <p className="flex items-center gap-1 text-[10px] text-blue-400 mt-0.5">
                   <Clock className="w-3 h-3" />
-                  Adjusted to {adjustedNotice} to avoid conflict
+                  {t('adjustedTo')} {adjustedNotice} {t('toAvoidConflict')}
                 </p>
               )}
             </div>
@@ -301,7 +304,7 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
               className="flex items-center gap-1.5 px-3 py-1.5 text-red-400 hover:bg-red-500/10 rounded-lg text-xs font-medium transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              Remove
+              {t('remove')}
             </button>
           </div>
         </div>
@@ -311,6 +314,7 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
 }
 
 function QuizFields({ question, onChange, update, updateOption, addOption, removeOption }) {
+  const { t } = useTranslation();
   return (
     <>
       <MarkdownQuestionField
@@ -322,7 +326,7 @@ function QuizFields({ question, onChange, update, updateOption, addOption, remov
       {question.type === "mcq" && (
         <div>
           <label className="text-xs font-medium text-gray-400 mb-2 block">
-            Options (click to mark correct)
+            {t('optionsClickToMark')}
           </label>
           <div className="space-y-2">
             {question.options.map((opt, idx) => (
@@ -364,7 +368,7 @@ function QuizFields({ question, onChange, update, updateOption, addOption, remov
               className="mt-2 flex items-center gap-1.5 text-xs text-gray-400 hover:text-blue-400 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
-              Add option
+              {t('addOption')}
             </button>
           )}
         </div>
@@ -372,7 +376,7 @@ function QuizFields({ question, onChange, update, updateOption, addOption, remov
 
       {question.type === "true_false" && (
         <div>
-          <label className="text-xs font-medium text-gray-400 mb-2 block">Correct Answer</label>
+          <label className="text-xs font-medium text-gray-400 mb-2 block">{t('correctAnswer')}</label>
           <div className="flex gap-3">
             <button
               type="button"
@@ -383,7 +387,7 @@ function QuizFields({ question, onChange, update, updateOption, addOption, remov
                   : "bg-gray-800 text-gray-400 border-gray-600 hover:border-gray-400"
               }`}
             >
-              True
+              {t('trueLabel')}
             </button>
             <button
               type="button"
@@ -394,7 +398,7 @@ function QuizFields({ question, onChange, update, updateOption, addOption, remov
                   : "bg-gray-800 text-gray-400 border-gray-600 hover:border-gray-400"
               }`}
             >
-              False
+              {t('falseLabel')}
             </button>
           </div>
         </div>
@@ -402,7 +406,7 @@ function QuizFields({ question, onChange, update, updateOption, addOption, remov
 
       {question.type === "fill_blank" && (
         <div>
-          <label className="text-xs font-medium text-gray-400 mb-1 block">Correct Answer</label>
+          <label className="text-xs font-medium text-gray-400 mb-1 block">{t('correctAnswer')}</label>
           <input
             type="text"
             value={question.correctAnswer || ""}
@@ -417,12 +421,13 @@ function QuizFields({ question, onChange, update, updateOption, addOption, remov
 }
 
 function CodingFields({ question, onChange, fileNames = [] }) {
+  const { t } = useTranslation();
   const update = (field, value) => onChange({ ...question, [field]: value });
 
   return (
     <>
       <div>
-        <label className="text-xs font-medium text-gray-400 mb-1 block">Challenge Title</label>
+        <label className="text-xs font-medium text-gray-400 mb-1 block">{t('challengeTitle')}</label>
         <input
           type="text"
           value={question.title || ""}
@@ -437,22 +442,22 @@ function CodingFields({ question, onChange, fileNames = [] }) {
         placeholder="Describe what the student needs to do... (supports **markdown**)"
       />
       <div>
-        <label className="text-xs font-medium text-gray-400 mb-1 block">File Name</label>
+        <label className="text-xs font-medium text-gray-400 mb-1 block">{t('fileName')}</label>
         {fileNames.length > 0 ? (
           <select
             value={question.fileName || ""}
             onChange={(e) => update("fileName", e.target.value)}
             className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
           >
-            <option value="">Select a file...</option>
+            <option value="">{t('selectAFile')}</option>
             {fileNames.map((name) => (
               <option key={name} value={name}>{name}</option>
             ))}
           </select>
         ) : (
           <div className="flex items-center gap-2 px-3 py-2 bg-yellow-900/30 border border-yellow-600/50 rounded-lg">
-            <span className="text-yellow-400">⚠</span>
-            <p className="text-yellow-400 text-xs">No starter files added to this activity yet.</p>
+            <span className="text-yellow-400">{"⚠"}</span>
+            <p className="text-yellow-400 text-xs">{t('noStarterFilesYet')}</p>
           </div>
         )}
       </div>
@@ -461,6 +466,7 @@ function CodingFields({ question, onChange, fileNames = [] }) {
 }
 
 function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNames, videoDuration, videoFile, videoUrl, activityId }) {
+  const { t } = useTranslation();
   const [nextId, setNextId] = useState(
     () => (questions.length > 0 ? Math.max(...questions.map((q) => q.id)) + 1 : 1)
   );
@@ -539,9 +545,9 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
               <HelpCircle className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">Quiz Editor</h3>
+              <h3 className="text-xl font-bold text-white">{t('quizEditor')}</h3>
               <p className="text-xs text-gray-500">
-                {questions.length} question{questions.length !== 1 ? "s" : ""}
+                {questions.length} {questions.length !== 1 ? t('questions') : t('question')}
               </p>
             </div>
           </div>
@@ -619,7 +625,7 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
             {questions.length === 0 && !showAI ? (
               <div className="flex flex-col items-center justify-center py-16 text-gray-500">
                 <HelpCircle className="w-12 h-12 mb-3 opacity-30" />
-                <p className="text-sm">No questions yet. Add your first question below.</p>
+                <p className="text-sm">{t('noQuestionsYet')}</p>
               </div>
             ) : (
               questions.map((q, idx) => (
@@ -653,7 +659,7 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
                 }`}
               >
                 <Sparkles className="w-4 h-4" />
-                Suggest with AI
+                {t('suggestWithAI')}
               </button>
             )}
             <button
@@ -662,7 +668,7 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
               className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition-colors"
             >
               <Plus className="w-4 h-4" />
-              Add Question
+              {t('addQuestion')}
             </button>
           </div>
           <button
@@ -670,7 +676,7 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
             onClick={onClose}
             className="px-6 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-xl font-medium transition-colors"
           >
-            Done
+            {t('done')}
           </button>
         </div>
       </div>
@@ -679,16 +685,17 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
 }
 
 export default function QuizEditor({ questions, onQuestionsChange, fileNames = [], videoDuration = 0, videoFile = null, videoUrl = null, activityId = null }) {
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const typeLabel = (type) => QUIZ_TYPES.find((t) => t.value === type)?.label || type;
+  const typeLabel = (type) => QUIZ_TYPES.find((tp) => tp.value === type)?.label || type;
 
   return (
     <div>
       <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
         <HelpCircle className="w-4 h-4 text-gray-500" />
-        Video Quiz
-        <span className="text-gray-500 font-normal">(Optional)</span>
+        {t('videoQuiz')}
+        <span className="text-gray-500 font-normal">{t('optional')}</span>
       </label>
 
       <button
@@ -703,7 +710,7 @@ export default function QuizEditor({ questions, onQuestionsChange, fileNames = [
             </div>
             <div className="min-w-0">
               <p className="text-sm text-gray-300">
-                {questions.length} question{questions.length !== 1 ? "s" : ""}
+                {questions.length} {questions.length !== 1 ? t('questions') : t('question')}
               </p>
               <p className="text-xs text-gray-500 truncate">
                 {questions.map((q) => `${formatTime(q.time)} - ${typeLabel(q.type)}`).join(", ")}
@@ -714,7 +721,7 @@ export default function QuizEditor({ questions, onQuestionsChange, fileNames = [
           <div className="flex items-center gap-3 text-gray-500">
             <HelpCircle className="w-5 h-5 group-hover:text-blue-400 transition-colors" />
             <span className="group-hover:text-gray-400 transition-colors">
-              Click to add quiz questions to the video...
+              {t('clickToAddQuiz')}
             </span>
           </div>
         )}

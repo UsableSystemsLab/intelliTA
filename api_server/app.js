@@ -8,6 +8,7 @@ import { ensureBucketExists } from "./configs/s3.js";
 import "./models/index.js";
 import validateApiKey from "./middlewares/validateApiKey.js";
 import errorHandling from "./middlewares/errorHandling.js";
+import githubOAuthRoutes from "./routes/GitHubRoutes.js";
 import * as Sentry from "@sentry/node";
 
 Sentry.init({
@@ -22,15 +23,18 @@ app.use(cors());
 app.use(json());
 const port = process.env.API_SERVER_PORT || 4000;
 
+// GitHub OAuth routes (browser redirects, no API key required)
+app.use("/api/github", githubOAuthRoutes);
+
 // only requests to /api/* will be sent to our router
 const router = express.Router();
 apiRoutes(router);
 app.use("/api", validateApiKey, router);
 
-  // // Endpoint to check that sentry logging works
-  // app.get("/debug-sentry", () => {
-  //   throw new Error("Sentry test error from API server");
-  // });
+  // Endpoint to check that sentry logging works
+  app.get("/debug-sentry", () => {
+    throw new Error("Sentry test error from API server");
+  });
 
 // API docs
 const swaggerUiOptions = {
