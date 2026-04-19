@@ -27,15 +27,15 @@ const Login = () => {
     switch (errorCode) {
       case "auth/invalid-credential":
       case "auth/user-not-found":
-        return "Account not found. Please sign up first.";
+        return t("errAccountNotFound");
       case "auth/wrong-password":
-        return "Incorrect password. Please try again.";
+        return t("errWrongPassword");
       case "auth/invalid-email":
-        return "Please enter a valid email address.";
+        return t("errInvalidEmail");
       case "auth/network-request-failed":
-        return "Network error. Please check your connection.";
+        return t("errNetwork");
       default:
-        return "An error occurred. Please try again.";
+        return t("errGeneric");
     }
   };
 
