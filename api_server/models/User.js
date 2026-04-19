@@ -62,6 +62,18 @@ const User = sequelize.define(
       field: "photo_url",
       allowNull: true,
     },
+    github_username: {
+      type: DataTypes.STRING(39),
+      field: "github_username",
+      allowNull: true,
+      unique: true,
+    },
+    github_verified: {
+      type: DataTypes.BOOLEAN,
+      field: "github_verified",
+      allowNull: false,
+      defaultValue: false,
+    },
     deleted_at: {
       type: DataTypes.DATE,
       field: "deleted_at",

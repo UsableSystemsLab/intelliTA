@@ -1,6 +1,8 @@
 import { FileCode, FileText, FileJson, Folder } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function FileExplorer({ files, activeFile, onFileSelect }) {
+    const { t } = useTranslation();
     if (!files) return null;
 
     const getFileIcon = (fileName) => {
@@ -8,7 +10,7 @@ export default function FileExplorer({ files, activeFile, onFileSelect }) {
         
         switch (ext) {
             case 'java':
-                return <span className="text-orange-400 font-bold text-xs w-4 flex justify-center">J</span>;
+                return <span className="text-orange-400 font-bold text-xs w-4 flex justify-center">{"J"}</span>;
             case 'js':
             case 'jsx':
                 return <FileCode className="w-4 h-4 text-yellow-400" />;
@@ -35,7 +37,7 @@ export default function FileExplorer({ files, activeFile, onFileSelect }) {
             {/* Header */}
             <div className="h-10 px-4 flex items-center gap-2 border-b border-gray-800 bg-gray-900/50">
                 <Folder className="w-4 h-4 text-gray-500" />
-                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Explorer</span>
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('explorer')}</span>
             </div>
             
             {/* File List */}

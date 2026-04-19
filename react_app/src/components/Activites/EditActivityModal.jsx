@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Save, Loader, HelpCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Save, Loader, HelpCircle, Github } from "lucide-react";
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 import ReactMarkdown from "react-markdown";
 import FormInput from "./form/FormInput";
 import FileUploadZone from "./form/FileUploadZone";
@@ -40,6 +43,7 @@ const markdownComponents = {
 };
 
 export default function EditActivityModal({ isOpen, onClose, courseId, activity, onActivityUpdated }) {
+  const { t } = useTranslation();
   // New state added to know which step I'm in, for example 1 = im in form, 2 = im in preview
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
@@ -52,6 +56,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
   const [videoDuration, setVideoDuration] = useState(0);
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [chapters, setChapters] = useState([]);
+  const [githubClassroomUrl, setGithubClassroomUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingContent, setLoadingContent] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -61,6 +66,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
     if (activity) {
       setStep(1);
       setTitle(activity.title || "");
+      setGithubClassroomUrl(activity.github_classroom_url || "");
       setVideoFile(null);
       setVideoDuration(0);
 
@@ -116,8 +122,8 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
       // Fetch quiz questions from DB
       try {
         const quizResponse = await fetch(
-          `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}/quiz`,
-          { headers: { Authorization: "Bearer 1111" } }
+          `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}/quiz`,
+          { headers: await getAuthHeaders(auth.currentUser) }
         );
         if (quizResponse.ok) {
           const quizData = await quizResponse.json();
@@ -132,8 +138,8 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
       // Fetch video chapters from DB
       try {
         const chaptersResponse = await fetch(
-          `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}/chapters`,
-          { headers: { Authorization: "Bearer 1111" } }
+          `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}/chapters`,
+          { headers: await getAuthHeaders(auth.currentUser) }
         );
         if (chaptersResponse.ok) {
           const chaptersData = await chaptersResponse.json();
@@ -222,6 +228,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
       formData.append("title", title);
       formData.append("start_date", new Date(startDate).toISOString());
       formData.append("end_date", new Date(endDate).toISOString());
+      formData.append("github_classroom_url", githubClassroomUrl.trim() || "");
 
       if (videoFile) {
         formData.append("video", videoFile);
@@ -241,11 +248,11 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
         formData.append("starter_code", starterCodeFile);
       }
       const response = await fetch(
-        `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}`,
+        `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}`,
         {
           method: "PUT",
           headers: {
-            Authorization: "Bearer 1111",
+            ...await getAuthHeaders(auth.currentUser),
           },
           body: formData,
         }
@@ -270,10 +277,10 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
         }),
       };
       await fetch(
-        `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}/quiz`,
+        `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}/quiz`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
+          headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
           body: JSON.stringify(quizPayload),
         }
       );
@@ -286,10 +293,10 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
         })),
       };
       await fetch(
-        `http://localhost:4000/api/courses/${courseId}/activities/${activity.activity_id}/chapters`,
+        `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}/chapters`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
+          headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
           body: JSON.stringify(chaptersPayload),
         }
       );
@@ -342,28 +349,28 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
             <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Type className="w-5 h-5 text-blue-400" />
-                Activity Details
+                {t('activityDetails')}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Title</span>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('titleLabel')}</span>
                   <p className="text-white mt-1">{title}</p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Video</span>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('videoLabel')}</span>
                   <p className="text-gray-300 mt-1">
-                    {videoFile ? videoFile.name : activity.video_url ? "No changes (keeping current)" : "No video"}
+                    {videoFile ? videoFile.name : activity.video_url ? t('noChangesKeepingCurrent') : t('noVideo')}
                   </p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</span>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('startDateLabel')}</span>
                   <p className="text-gray-300 mt-1 flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-gray-500" />
                     {formatPreviewDate(startDate)}
                   </p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</span>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('endDateLabel')}</span>
                   <p className="text-gray-300 mt-1 flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-gray-500" />
                     {formatPreviewDate(endDate)}
@@ -377,7 +384,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
               <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <Eye className="w-5 h-5 text-green-400" />
-                  Content Preview
+                  {t('contentPreview')}
                 </h3>
                 <div className="bg-gray-900/50 p-5 rounded-lg border border-gray-600">
                   <ReactMarkdown components={markdownComponents}>
@@ -392,9 +399,9 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
               <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <Code2 className="w-5 h-5 text-purple-400" />
-                  Starter Code
+                  {t('starterCode')}
                   <span className="text-sm font-normal text-gray-500">
-                    ({starterFiles.length} file{starterFiles.length !== 1 ? "s" : ""})
+                    {"("}{starterFiles.length} {starterFiles.length !== 1 ? t('files') : t('file')}{")"}
                   </span>
                 </h3>
                 <div className="space-y-3">
@@ -418,9 +425,9 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
               <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <HelpCircle className="w-5 h-5 text-blue-400" />
-                  Video Quiz
+                  {t('videoQuiz')}
                   <span className="text-sm font-normal text-gray-500">
-                    ({quizQuestions.length} question{quizQuestions.length !== 1 ? "s" : ""})
+                    {"("}{quizQuestions.length} {quizQuestions.length !== 1 ? t('questions') : t('question')}{")"}
                   </span>
                 </h3>
                 <div className="space-y-2">
@@ -445,9 +452,9 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
               <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <Eye className="w-5 h-5 text-blue-400" />
-                  Video Chapters
+                  {t('videoChapters')}
                   <span className="text-sm font-normal text-gray-500">
-                    ({chapters.length} chapter{chapters.length !== 1 ? "s" : ""})
+                    {"("}{chapters.length} {chapters.length !== 1 ? t('chapters') : t('chapter')}{")"}
                   </span>
                 </h3>
                 <div className="space-y-2">
@@ -477,7 +484,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
               className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-semibold transition-all duration-300"
             >
               <ArrowLeft className="w-5 h-5" />
-              Back to Edit
+              {t('backToEdit')}
             </button>
             <button
               type="button"
@@ -488,12 +495,12 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
               {loading ? (
                 <>
                   <Loader className="w-5 h-5 animate-spin" />
-                  Saving...
+                  {t('saving')}
                 </>
               ) : (
                 <>
                   <Save className="w-5 h-5" />
-                  Save Changes
+                  {t('saveChanges')}
                 </>
               )}
             </button>
@@ -527,7 +534,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
           {loadingContent ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-              <span className="ml-3 text-gray-400">Loading activity content...</span>
+              <span className="ml-3 text-gray-400">{t('loadingActivityContent')}</span>
             </div>
           ) : (
             <form onSubmit={handleGoToPreview} className="space-y-5">
@@ -565,16 +572,16 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
               {/* Video Upload */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-3">
-                  Video
+                  {t('videoLabel')}
                   <span className="text-gray-500 font-normal">
-                    {activity.video_url ? "(Replace existing)" : "(Optional)"}
+                    {activity.video_url ? t('replaceExisting') : t('optional')}
                   </span>
                 </label>
 
                 {activity.video_url && !videoFile && (
                   <div className="mb-2 flex items-center gap-2 px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg">
                     <Upload className="w-4 h-4 text-green-400" />
-                    <span className="text-sm text-gray-300 truncate">Current video uploaded</span>
+                    <span className="text-sm text-gray-300 truncate">{t('currentVideoUploaded')}</span>
                   </div>
                 )}
 
@@ -601,6 +608,15 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                 onFilesChange={setStarterFiles}
                 prompt={starterPrompt}
                 onPromptChange={setStarterPrompt}
+              />
+
+              {/* GitHub Classroom Link */}
+              <FormInput
+                label="GitHub Classroom Link (optional)"
+                icon={Github}
+                placeholder="https://classroom.github.com/a/..."
+                value={githubClassroomUrl}
+                onChange={setGithubClassroomUrl}
               />
 
               {/* Video Quiz */}

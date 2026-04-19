@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { API_BASE, LLM_BASE, getAuthHeaders } from '../../config/api';
+import { auth } from '@/utils/firebase.js';
 import ReactMarkdown from 'react-markdown';
 import ActivityHeader from './ActivityHeader';
 import VideoSection from './VideoSection';
@@ -10,6 +12,7 @@ import LoadingScreen from './LoadingScreen';
 import ErrorScreen from './ErrorScreen';
 import SubmissionResultOverlay from './SubmissionResultOverlay';
 import { Play, FileText, Clock, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useCheckpoints } from '@/components/Activity/useCheckpoints';
 
 
@@ -127,6 +130,7 @@ const getLanguageFromFileName = (fileName) => {
 };
 
 export default function Maincontent({ user }) {
+    const { t } = useTranslation();
     const { courseId, activityId } = useParams();
     const navigate = useNavigate();
     const videoRef = useRef(null);
@@ -170,11 +174,11 @@ export default function Maincontent({ user }) {
         if (videoRef.current) videoRef.current.currentTime = newTime;
     };
 
-    const recordAnswer = useCallback(({ question_id, answer, is_correct }) => {
+    const recordAnswer = useCallback(async ({ question_id, answer, is_correct }) => {
         if (!user?.uid || !courseId || !activityId) return;
-        fetch(`http://localhost:4000/api/courses/${courseId}/activities/${activityId}/answers`, {
+        fetch(`${API_BASE}/courses/${courseId}/activities/${activityId}/answers`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer 1111' },
+            headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
             body: JSON.stringify({ firebaseId: user.uid, question_id, answer })
         }).catch(() => {});
     }, [user, courseId, activityId]);
@@ -218,7 +222,7 @@ export default function Maincontent({ user }) {
         try {
             const fileName = activeCheckpoint.fileName || activeFile.name;
             const targetFile = files.find(f => f.name === fileName) || activeFile;
-            const res = await fetch('http://localhost:8000/hint/generate', {
+            const res = await fetch(`${LLM_BASE}/hint/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -258,8 +262,8 @@ export default function Maincontent({ user }) {
             try {
                 // Fetch course name for breadcrumb
                 if (courseId) {
-                    const courseRes = await fetch(`http://localhost:4000/api/courses/${courseId}`, {
-                        headers: { "Authorization": "Bearer 1111" }
+                    const courseRes = await fetch(`${API_BASE}/courses/${courseId}`, {
+                        headers: await getAuthHeaders(auth.currentUser)
                     });
                     if (courseRes.ok) {
                         const courseData = await courseRes.json();
@@ -267,9 +271,9 @@ export default function Maincontent({ user }) {
                     }
                 }
 
-                const url = `http://localhost:4000/api/courses/${courseId || '0'}/activities/${activityId}`;
+                const url = `${API_BASE}/courses/${courseId || '0'}/activities/${activityId}`;
                 const res = await fetch(url, {
-                    headers: { "Authorization": "Bearer 1111" }
+                    headers: await getAuthHeaders(auth.currentUser)
                 });
 
                 if (res.ok) {
@@ -319,8 +323,8 @@ export default function Maincontent({ user }) {
                     // Load quiz questions from DB
                     try {
                         const quizRes = await fetch(
-                            `http://localhost:4000/api/courses/${courseId}/activities/${activityId}/quiz`,
-                            { headers: { "Authorization": "Bearer 1111" } }
+                            `${API_BASE}/courses/${courseId}/activities/${activityId}/quiz`,
+                            { headers: await getAuthHeaders(auth.currentUser) }
                         );
                         if (quizRes.ok) {
                             const quizData = await quizRes.json();
@@ -333,8 +337,8 @@ export default function Maincontent({ user }) {
                     // Load video chapters
                     try {
                         const chaptersRes = await fetch(
-                            `http://localhost:4000/api/courses/${courseId}/activities/${activityId}/chapters`,
-                            { headers: { "Authorization": "Bearer 1111" } }
+                            `${API_BASE}/courses/${courseId}/activities/${activityId}/chapters`,
+                            { headers: await getAuthHeaders(auth.currentUser) }
                         );
                         if (chaptersRes.ok) {
                             const chaptersData = await chaptersRes.json();
@@ -347,16 +351,16 @@ export default function Maincontent({ user }) {
                     // Load transcript for captions (EN + AR)
                     try {
                         const transcriptRes = await fetch(
-                            `http://localhost:4000/api/transcripts/activities/${activityId}`,
-                            { headers: { "Authorization": "Bearer 1111" } }
+                            `${API_BASE}/transcripts/activities/${activityId}`,
+                            { headers: await getAuthHeaders(auth.currentUser) }
                         );
                         if (transcriptRes.ok) {
                             const transcriptData = await transcriptRes.json();
                             if (transcriptData.status === 'completed' && transcriptData.transcript_id) {
                                 // Fetch English transcript
                                 const enRes = await fetch(
-                                    `http://localhost:4000/api/transcripts/${transcriptData.transcript_id}/content`,
-                                    { headers: { "Authorization": "Bearer 1111" } }
+                                    `${API_BASE}/transcripts/${transcriptData.transcript_id}/content`,
+                                    { headers: await getAuthHeaders(auth.currentUser) }
                                 );
                                 if (enRes.ok) {
                                     const enData = await enRes.json();
@@ -366,8 +370,8 @@ export default function Maincontent({ user }) {
                                 // Fetch Arabic transcript (may not exist)
                                 if (transcriptData.transcript_url_ar) {
                                     const arRes = await fetch(
-                                        `http://localhost:4000/api/transcripts/${transcriptData.transcript_id}/content?lang=ar`,
-                                        { headers: { "Authorization": "Bearer 1111" } }
+                                        `${API_BASE}/transcripts/${transcriptData.transcript_id}/content?lang=ar`,
+                                        { headers: await getAuthHeaders(auth.currentUser) }
                                     );
                                     if (arRes.ok) {
                                         const arData = await arRes.json();
@@ -384,8 +388,8 @@ export default function Maincontent({ user }) {
                     if (user?.uid) {
                         try {
                             const answersRes = await fetch(
-                                `http://localhost:4000/api/courses/${courseId}/activities/${activityId}/answers?firebaseId=${user.uid}`,
-                                { headers: { "Authorization": "Bearer 1111" } }
+                                `${API_BASE}/courses/${courseId}/activities/${activityId}/answers?firebaseId=${user.uid}`,
+                                { headers: await getAuthHeaders(auth.currentUser) }
                             );
                             if (answersRes.ok) {
                                 const { answers } = await answersRes.json();
@@ -400,8 +404,8 @@ export default function Maincontent({ user }) {
                     if (user?.uid) {
                         try {
                             const progressRes = await fetch(
-                                `http://localhost:4000/api/courses/${courseId}/activities/${activityId}/progress?firebaseId=${user.uid}`,
-                                { headers: { "Authorization": "Bearer 1111" } }
+                                `${API_BASE}/courses/${courseId}/activities/${activityId}/progress?firebaseId=${user.uid}`,
+                                { headers: await getAuthHeaders(auth.currentUser) }
                             );
                             if (progressRes.ok) {
                                 const { last_watched_seconds } = await progressRes.json();
@@ -444,11 +448,11 @@ export default function Maincontent({ user }) {
     }, [isYouTube, isPlaying, activeCheckpoint, duration]);
 
 
-    const saveVideoProgress = useCallback((seconds) => {
+    const saveVideoProgress = useCallback(async (seconds) => {
         if (!user?.uid || !courseId || !activityId) return;
-        fetch(`http://localhost:4000/api/courses/${courseId}/activities/${activityId}/progress`, {
+        fetch(`${API_BASE}/courses/${courseId}/activities/${activityId}/progress`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer 1111' },
+            headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
             body: JSON.stringify({ firebaseId: user.uid, last_watched_seconds: Math.floor(seconds) })
         }).catch(() => {});
     }, [user, courseId, activityId]);
@@ -498,22 +502,33 @@ export default function Maincontent({ user }) {
             const verifiedCount = challenges.filter(cp => cp.status === 'verified').length;
             const calculatedScore = totalCount > 0 ? Math.round((verifiedCount / totalCount) * 100) : 100;
 
-            const url = `http://localhost:4000/api/courses/${courseId}/activities/${activityId}/submit`;
+            const url = `${API_BASE}/courses/${courseId}/activities/${activityId}/submit`;
             const res = await fetch(url, {
                 method: 'POST',
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": "Bearer 1111"
+                    ...await getAuthHeaders(auth.currentUser)
                 },
-                body: JSON.stringify({ firebaseId: user.uid, score: calculatedScore })
+                body: JSON.stringify({
+                    firebaseId: user.uid,
+                    score: calculatedScore,
+                    files: files.map(f => ({ name: f.name, content: f.content })),
+                })
             });
+
+            const data = await res.json();
 
             if (res.ok) {
                 setSubmissionScore(calculatedScore);
                 setShowResultOverlay(true);
-                setFeedback({ type: 'success', message: `Submission successful!` });
+                const ghMsg = data.github?.commitUrl
+                    ? ` Code pushed to GitHub.`
+                    : data.github?.error
+                        ? ` (GitHub push failed: ${data.github.error})`
+                        : "";
+                setFeedback({ type: 'success', message: `Submission successful!${ghMsg}` });
             } else {
-                setFeedback({ type: 'error', message: "Submission failed. Please try again." });
+                setFeedback({ type: 'error', message: data.message || "Submission failed. Please try again." });
             }
         } catch (error) {
             setFeedback({ type: 'error', message: "Network error during submission." });
@@ -545,7 +560,7 @@ export default function Maincontent({ user }) {
                             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
                         >
                             <ArrowLeft className="w-5 h-5" />
-                            <span className="text-sm">Back to Course</span>
+                            <span className="text-sm">{t('backToCourse')}</span>
                         </button>
                         <div className="w-px h-6 bg-gray-700" />
                         <h1 className="text-lg font-semibold text-white">{activity.title}</h1>
@@ -564,13 +579,13 @@ export default function Maincontent({ user }) {
                                     </div>
                                     <div>
                                         <h2 className="text-xl font-bold text-white">{activity.title}</h2>
-                                        <p className="text-sm text-gray-400">Lab Activity</p>
+                                        <p className="text-sm text-gray-400">{t('labActivity')}</p>
                                     </div>
                                 </div>
                                 {activity.end_date && (
                                     <div className="flex items-center gap-2 text-gray-400 text-sm">
                                         <Clock className="w-4 h-4" />
-                                        <span>Due: {new Date(activity.end_date).toLocaleDateString()}</span>
+                                        <span>{t('due')} {new Date(activity.end_date).toLocaleDateString()}</span>
                                     </div>
                                 )}
                             </div>
@@ -580,14 +595,14 @@ export default function Maincontent({ user }) {
                                 className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-lg shadow-blue-500/20"
                             >
                                 <Play className="w-5 h-5" />
-                                Start Solving
+                                {t('startSolving')}
                             </button>
                         </div>
 
                         {/* Markdown Instructions */}
                         <div className="bg-gray-900/30 border border-gray-800 rounded-xl overflow-hidden">
                             <div className="px-6 py-4 border-b border-gray-800 bg-gray-900/50">
-                                <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">Instructions</h3>
+                                <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">{t('instructions')}</h3>
                             </div>
                             <div className="px-6 py-6">
                                 {markdownContent ? (
@@ -628,7 +643,7 @@ export default function Maincontent({ user }) {
                                         {markdownContent}
                                     </ReactMarkdown>
                                 ) : (
-                                    <p className="text-gray-500 italic">No instructions available for this activity.</p>
+                                    <p className="text-gray-500 italic">{t('noInstructions')}</p>
                                 )}
                             </div>
                         </div>

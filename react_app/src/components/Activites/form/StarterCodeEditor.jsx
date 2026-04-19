@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import Editor from "@monaco-editor/react";
 import {
   Code2,
@@ -70,6 +71,7 @@ const defaultFiles = [
 ];
 
 function StarterCodeModal({ isOpen, onClose, files, onFilesChange, prompt, onPromptChange }) {
+  const { t } = useTranslation();
   const [activeFileIndex, setActiveFileIndex] = useState(0);
   const [newFileName, setNewFileName] = useState('');
   const [showAddFile, setShowAddFile] = useState(false);
@@ -119,7 +121,7 @@ function StarterCodeModal({ isOpen, onClose, files, onFilesChange, prompt, onPro
             <div className="p-2 bg-green-500/10 rounded-lg">
               <Code2 className="w-5 h-5 text-green-400" />
             </div>
-            <h3 className="text-xl font-bold text-white">Starter Code Editor</h3>
+            <h3 className="text-xl font-bold text-white">{t('starterCodeEditor')}</h3>
           </div>
           <button
             type="button"
@@ -135,7 +137,7 @@ function StarterCodeModal({ isOpen, onClose, files, onFilesChange, prompt, onPro
           {/* File Explorer Sidebar */}
           <div className="w-56 bg-gray-900/50 border-r border-gray-700 flex flex-col shrink-0">
             <div className="p-3 border-b border-gray-700 flex items-center justify-between">
-              <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Files</span>
+              <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{t('filesLabel')}</span>
               <button
                 type="button"
                 onClick={() => setShowAddFile(!showAddFile)}
@@ -169,7 +171,7 @@ function StarterCodeModal({ isOpen, onClose, files, onFilesChange, prompt, onPro
                     onClick={handleAddFile}
                     className="shrink-0 px-2 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm transition-colors"
                   >
-                    Add
+                    {t('add')}
                   </button>
                 </div>
               </div>
@@ -219,7 +221,7 @@ function StarterCodeModal({ isOpen, onClose, files, onFilesChange, prompt, onPro
             </div>
 
             {/* Monaco Editor */}
-            <div className="flex-1 min-h-0">
+            <div className="flex-1 min-h-0" dir="ltr">
               <Editor
                 height="100%"
                 language={getLanguageFromFileName(activeFile?.name || '')}
@@ -250,7 +252,7 @@ function StarterCodeModal({ isOpen, onClose, files, onFilesChange, prompt, onPro
               >
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-purple-400" />
-                  <span className="text-sm font-medium text-gray-300">AI Prompt</span>
+                  <span className="text-sm font-medium text-gray-300">{t('aiPrompt')}</span>
                 </div>
                 {promptExpanded ? (
                   <ChevronDown className="w-4 h-4 text-gray-600" />
@@ -290,7 +292,7 @@ Example: Create a simple HTML page with a form that has name and email fields. A
             onClick={onClose}
             className="px-6 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-xl font-medium transition-colors"
           >
-            Done
+            {t('done')}
           </button>
         </div>
       </div>
@@ -299,6 +301,7 @@ Example: Create a simple HTML page with a form that has name and email fields. A
 }
 
 export default function StarterCodeEditor({ files, onFilesChange, prompt, onPromptChange }) {
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
 
@@ -315,8 +318,8 @@ export default function StarterCodeEditor({ files, onFilesChange, prompt, onProm
     <div>
       <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
         <Code2 className="w-4 h-4 text-gray-500" />
-        Starter Code
-        <span className="text-gray-500 font-normal">(Optional)</span>
+        {t('starterCode')}
+        <span className="text-gray-500 font-normal">{t('optional')}</span>
       </label>
 
       {/* Preview / Open Button */}
@@ -345,7 +348,7 @@ export default function StarterCodeEditor({ files, onFilesChange, prompt, onProm
             </div>
             <div>
               <p className="text-sm text-gray-300">
-                {currentFiles.length} file{currentFiles.length !== 1 ? 's' : ''}
+                {currentFiles.length} {currentFiles.length !== 1 ? t('files') : t('file')}
               </p>
               <p className="text-xs text-gray-500">
                 {currentFiles.map(f => f.name).join(', ')}
@@ -355,7 +358,7 @@ export default function StarterCodeEditor({ files, onFilesChange, prompt, onProm
         ) : (
           <div className="flex items-center gap-3 text-gray-500">
             <Code2 className="w-5 h-5 group-hover:text-green-400 transition-colors" />
-            <span className="group-hover:text-gray-400 transition-colors">Click to add starter code files...</span>
+            <span className="group-hover:text-gray-400 transition-colors">{t('clickToAddStarterCode')}</span>
           </div>
         )}
       </button>

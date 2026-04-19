@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
 import { Users, Search, AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 import MemberCard from "./MemberCard";
 import KickConfirmModal from "./KickConfirmModal";
 
 export default function MembersList({ courseId, user, onClose }) {
+    const { t } = useTranslation();
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -20,11 +24,11 @@ export default function MembersList({ courseId, user, onClose }) {
             setLoading(true);
             setError(null);
             const response = await fetch(
-                `http://localhost:4000/api/courses/${courseId}/students?firebaseId=${user.uid}`,
+                `${API_BASE}/courses/${courseId}/students?firebaseId=${user.uid}`,
                 {
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": "Bearer 1111",
+                        ...await getAuthHeaders(auth.currentUser),
                     },
                 }
             );
@@ -49,12 +53,12 @@ export default function MembersList({ courseId, user, onClose }) {
         setKicking(true);
         try {
             const response = await fetch(
-                `http://localhost:4000/api/courses/${courseId}/students/${memberToKick.user_id}`,
+                `${API_BASE}/courses/${courseId}/students/${memberToKick.user_id}`,
                 {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": "Bearer 1111",
+                        ...await getAuthHeaders(auth.currentUser),
                     },
                     body: JSON.stringify({ firebaseId: user.uid }),
                 }
@@ -68,7 +72,7 @@ export default function MembersList({ courseId, user, onClose }) {
             setMemberToKick(null);
         } catch (err) {
             console.error("Error removing student:", err);
-            alert("Failed to remove student. Please try again.");
+            alert(t("failedToRemoveStudent"));
         } finally {
             setKicking(false);
         }
@@ -87,7 +91,7 @@ export default function MembersList({ courseId, user, onClose }) {
         return (
             <div className="flex flex-col items-center justify-center py-16">
                 <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="text-gray-400">Loading members...</p>
+                <p className="text-gray-400">{t('loadingMembers')}</p>
             </div>
         );
     }
@@ -101,7 +105,7 @@ export default function MembersList({ courseId, user, onClose }) {
                     onClick={fetchMembers}
                     className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                 >
-                    Retry
+                    {t('retry')}
                 </button>
             </div>
         );
@@ -117,10 +121,10 @@ export default function MembersList({ courseId, user, onClose }) {
                     </div>
                     <div>
                         <h3 className="text-lg font-semibold text-white">
-                            Enrolled Students
+                            {t('enrolledStudents')}
                         </h3>
                         <p className="text-sm text-gray-500">
-                            {members.length} {members.length === 1 ? 'student' : 'students'} enrolled
+                            {members.length} {members.length === 1 ? t('studentEnrolledSingular') : t('studentEnrolledPlural')}
                         </p>
                     </div>
                 </div>
@@ -132,7 +136,7 @@ export default function MembersList({ courseId, user, onClose }) {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                     <input
                         type="text"
-                        placeholder="Search by name or email..."
+                        placeholder={t('searchMembers')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
@@ -147,15 +151,15 @@ export default function MembersList({ courseId, user, onClose }) {
                         <Users className="w-8 h-8 text-gray-600" />
                     </div>
                     <h4 className="text-lg font-medium text-gray-300 mb-2">
-                        No students yet
+                        {t('noStudentsYet')}
                     </h4>
                     <p className="text-gray-500 max-w-sm">
-                        Share your course token with students to let them join this course.
+                        {t('shareTokenHint')}
                     </p>
                 </div>
             ) : filteredMembers.length === 0 ? (
                 <div className="text-center py-8">
-                    <p className="text-gray-500">No students match your search.</p>
+                    <p className="text-gray-500">{t('noSearchResults')}</p>
                 </div>
             ) : (
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">

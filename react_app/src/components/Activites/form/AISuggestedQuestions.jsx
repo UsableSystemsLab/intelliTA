@@ -30,10 +30,9 @@ const markdownComponents = {
   hr: () => <hr className="border-gray-700 my-3" />,
 };
 
-// Server endpoints
-const LLM_SERVER  = "http://localhost:8000";
-const API_SERVER  = "http://localhost:4000/api";
-const AUTH_HEADER = { Authorization: "Bearer 1111", "Content-Type": "application/json" };
+import { useTranslation } from 'react-i18next';
+import { API_BASE as API_SERVER, LLM_BASE as LLM_SERVER, getAuthHeaders } from '../../../config/api';
+import { auth } from '@/utils/firebase.js';
 
 const TYPE_META = {
   mcq:        { label: "MCQ",           icon: HelpCircle,  color: "text-blue-400 bg-blue-500/10 border-blue-500/30" },
@@ -51,6 +50,7 @@ function formatTime(seconds) {
 
 // Allows editing question text, options, and correct answer before accepting.
 function SuggestionEditForm({ suggestion, onSave, onCancel }) {
+  const { t } = useTranslation();
   const [question, setQuestion] = useState(suggestion.question || "");
   const [options, setOptions]   = useState(suggestion.options || []);
   // Default correct answer depends on type: boolean for T/F, empty string for fill_blank, 0 for mcq
@@ -62,7 +62,7 @@ function SuggestionEditForm({ suggestion, onSave, onCancel }) {
     <div className="px-4 pb-4 pt-3 space-y-3 border-t border-gray-700/50">
       {/* Question text */}
       <div>
-        <label className="text-xs font-medium text-gray-400 mb-1 block">Question</label>
+        <label className="text-xs font-medium text-gray-400 mb-1 block">{t('questionLabel')}</label>
         <textarea
           rows={2}
           value={question}
@@ -74,7 +74,7 @@ function SuggestionEditForm({ suggestion, onSave, onCancel }) {
       {/* MCQ options*/}
       {suggestion.type === "mcq" && (
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-400 block">Options (click circle to mark correct)</label>
+          <label className="text-xs font-medium text-gray-400 block">{t('optionsClickToMark')}</label>
           {options.map((opt, idx) => (
             <div key={idx} className="flex items-center gap-2">
               <button
@@ -106,7 +106,7 @@ function SuggestionEditForm({ suggestion, onSave, onCancel }) {
       {/* True/False */}
       {suggestion.type === "true_false" && (
         <div>
-          <label className="text-xs font-medium text-gray-400 mb-1.5 block">Correct Answer</label>
+          <label className="text-xs font-medium text-gray-400 mb-1.5 block">{t('correctAnswer')}</label>
           <div className="flex gap-2">
             {[true, false].map((val) => (
               <button
@@ -129,7 +129,7 @@ function SuggestionEditForm({ suggestion, onSave, onCancel }) {
       {/* Fill blank */}
       {suggestion.type === "fill_blank" && (
         <div>
-          <label className="text-xs font-medium text-gray-400 mb-1 block">Correct Answer</label>
+          <label className="text-xs font-medium text-gray-400 mb-1 block">{t('correctAnswer')}</label>
           <input
             type="text"
             value={correct}
@@ -145,14 +145,14 @@ function SuggestionEditForm({ suggestion, onSave, onCancel }) {
           onClick={onCancel}
           className="px-3 py-1.5 text-gray-400 hover:text-white text-sm rounded-lg hover:bg-gray-700 transition-colors"
         >
-          Cancel
+          {t('cancel')}
         </button>
         <button
           type="button"
           onClick={save}
           className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded-lg transition-colors"
         >
-          Save
+          {t('save')}
         </button>
       </div>
     </div>
@@ -161,6 +161,7 @@ function SuggestionEditForm({ suggestion, onSave, onCancel }) {
 
 // for AI suggestion card
 function SuggestionCard({ suggestion, onAccept, onReject, onRegenerate, onUpdate }) {
+  const { t } = useTranslation();
   const [editing, setEditing]     = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const meta = TYPE_META[suggestion.type] || TYPE_META.mcq; 
@@ -188,7 +189,7 @@ function SuggestionCard({ suggestion, onAccept, onReject, onRegenerate, onUpdate
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs text-gray-500">{meta.label}</span>
-            <span className="text-gray-600">·</span>
+            <span className="text-gray-600">{"·"}</span>
             <Clock className="w-3 h-3 text-gray-500" />
             <span className="text-xs text-gray-500">{formatTime(suggestion.time ?? 0)}</span>
           </div>
@@ -214,7 +215,7 @@ function SuggestionCard({ suggestion, onAccept, onReject, onRegenerate, onUpdate
                 onClick={() => { setEditing(!editing); setCollapsed(false); }}
                 className={`px-2 py-1 text-xs font-medium rounded-lg transition-colors ${editing ? "bg-gray-700 text-white" : "text-gray-400 hover:text-white hover:bg-gray-700"}`}
               >
-                Edit
+                {t('aiEdit')}
               </button>
               <button
                 type="button"
@@ -267,14 +268,14 @@ function SuggestionCard({ suggestion, onAccept, onReject, onRegenerate, onUpdate
       {!collapsed && !editing && suggestion.type === "true_false" && (
         <div className="px-4 pb-3 border-t border-gray-800/60 pt-2">
           <span className={`text-xs font-medium px-2 py-0.5 rounded ${suggestion.correctAnswer ? "text-emerald-400 bg-emerald-500/10" : "text-red-400 bg-red-500/10"}`}>
-            Answer: {suggestion.correctAnswer ? "True" : "False"}
+            {t('answerLabel')} {suggestion.correctAnswer ? t('trueLabel') : t('falseLabel')}
           </span>
         </div>
       )}
 
       {!collapsed && !editing && suggestion.type === "fill_blank" && (
         <div className="px-4 pb-3 border-t border-gray-800/60 pt-2">
-          <span className="text-xs text-gray-400">Answer: <span className="text-white font-medium">{suggestion.correctAnswer}</span></span>
+          <span className="text-xs text-gray-400">{t('answerLabel')} <span className="text-white font-medium">{suggestion.correctAnswer}</span></span>
         </div>
       )}
 
@@ -292,13 +293,14 @@ function SuggestionCard({ suggestion, onAccept, onReject, onRegenerate, onUpdate
 
 // Transcript status
 function TranscriptStatus({ transcriptStatus, onTrigger, onRefresh, triggering, refreshing }) {
+  const { t } = useTranslation();
   if (transcriptStatus === null) {
     return (
       <div className="flex items-start gap-3 p-3 bg-gray-700/50 border border-gray-600 rounded-xl">
         <FileVideo className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
         <div className="flex-1">
-          <p className="text-sm text-gray-300 font-medium">Transcript not processed yet</p>
-          <p className="text-xs text-gray-500 mt-0.5">The video needs to be transcribed before AI questions can be generated.</p>
+          <p className="text-sm text-gray-300 font-medium">{t('transcriptNotProcessed')}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{t('transcriptNeeded')}</p>
         </div>
         <button
           type="button"
@@ -307,7 +309,7 @@ function TranscriptStatus({ transcriptStatus, onTrigger, onRefresh, triggering, 
           className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 text-white text-xs font-medium rounded-lg transition-colors shrink-0"
         >
           {triggering ? <Loader className="w-3 h-3 animate-spin" /> : <FileVideo className="w-3 h-3" />}
-          Process Video
+          {t('processVideo')}
         </button>
       </div>
     );
@@ -319,7 +321,7 @@ function TranscriptStatus({ transcriptStatus, onTrigger, onRefresh, triggering, 
         <Loader className="w-4 h-4 text-blue-400 animate-spin shrink-0" />
         <div className="flex-1">
           <p className="text-sm text-blue-300 font-medium capitalize">{transcriptStatus}…</p>
-          <p className="text-xs text-gray-500 mt-0.5">This usually takes 1-2 minutes depends on video size. Check back soon.</p>
+          <p className="text-xs text-gray-500 mt-0.5">{t('transcriptProcessingDesc')}</p>
         </div>
         <button
           type="button"
@@ -328,7 +330,7 @@ function TranscriptStatus({ transcriptStatus, onTrigger, onRefresh, triggering, 
           className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 hover:text-white hover:bg-gray-700 text-xs font-medium rounded-lg transition-colors shrink-0"
         >
           <RotateCcw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
-          Refresh
+          {t('refresh')}
         </button>
       </div>
     );
@@ -339,8 +341,8 @@ function TranscriptStatus({ transcriptStatus, onTrigger, onRefresh, triggering, 
       <div className="flex items-start gap-3 p-3 bg-red-500/10 border border-red-500/30 rounded-xl">
         <AlertTriangle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
         <div className="flex-1">
-          <p className="text-sm text-red-300 font-medium">Transcription failed</p>
-          <p className="text-xs text-gray-500 mt-0.5">The previous attempt failed. You can retry.</p>
+          <p className="text-sm text-red-300 font-medium">{t('transcriptionFailed')}</p>
+          <p className="text-xs text-gray-500 mt-0.5">{t('transcriptionFailedDesc')}</p>
         </div>
         <button
           type="button"
@@ -349,7 +351,7 @@ function TranscriptStatus({ transcriptStatus, onTrigger, onRefresh, triggering, 
           className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-500 disabled:opacity-60 text-white text-xs font-medium rounded-lg transition-colors shrink-0"
         >
           {triggering ? <Loader className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
-          Retry
+          {t('retry')}
         </button>
       </div>
     );
@@ -360,6 +362,7 @@ function TranscriptStatus({ transcriptStatus, onTrigger, onRefresh, triggering, 
 
 // Interval selector
 function IntervalSelector({ interval, setInterval, videoDuration }) {
+  const { t } = useTranslation();
   const durationMin = Math.max(1, Math.ceil((videoDuration || 0) / 60));  // video length in minutes
   const maxInterval = Math.max(1, durationMin);                           // can't exceed video length
   const questionCount = Math.max(1, Math.floor(durationMin / interval));  // estimated questions
@@ -378,7 +381,7 @@ function IntervalSelector({ interval, setInterval, videoDuration }) {
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <Timer className="w-4 h-4 text-purple-400" />
-          <span className="text-sm text-gray-300">Question every</span>
+          <span className="text-sm text-gray-300">{t('questionEvery')}</span>
         </div>
 
         <div className="flex items-center gap-1">
@@ -406,13 +409,13 @@ function IntervalSelector({ interval, setInterval, videoDuration }) {
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
-          <span className="text-sm text-gray-400">min</span>
+          <span className="text-sm text-gray-400">{t('minAbbrev')}</span>
         </div>
 
         <div className="h-5 w-px bg-gray-700 hidden sm:block" />
 
         <span className="text-sm font-medium text-purple-300">
-          ~{questionCount} question{questionCount !== 1 ? "s" : ""}
+          {`~${questionCount} ${questionCount !== 1 ? t('questions') : t('questionSingular')}`}
         </span>
       </div>
 
@@ -422,7 +425,7 @@ function IntervalSelector({ interval, setInterval, videoDuration }) {
           <div className="flex items-center gap-1.5 mb-2">
             <Info className="w-3 h-3 text-gray-500" />
             <span className="text-[11px] text-gray-500">
-              {durationMin} min video — one question generated per shaded segment
+              {t('timelineHint', { duration: durationMin })}
             </span>
           </div>
 
@@ -443,7 +446,7 @@ function IntervalSelector({ interval, setInterval, videoDuration }) {
                   style={{ left: `${leftPct}%`, width: `${widthPct}%` }}
                 >
                   {widthPct > 8 && (
-                    <span className="text-[10px] text-gray-400 font-medium">Q{i + 1}</span>
+                    <span className="text-[10px] text-gray-400 font-medium">{"Q"}{i + 1}</span>
                   )}
                 </div>
               );
@@ -452,7 +455,7 @@ function IntervalSelector({ interval, setInterval, videoDuration }) {
 
           {/* Time labels */}
           <div className="flex justify-between mt-1">
-            <span className="text-[10px] text-gray-600">0:00</span>
+            <span className="text-[10px] text-gray-600">{"0:00"}</span>
             <span className="text-[10px] text-gray-600">
               {String(Math.floor(durationMin)).padStart(2, "0")}:{String(Math.round((videoDuration % 60))).padStart(2, "0")}
             </span>
@@ -465,6 +468,7 @@ function IntervalSelector({ interval, setInterval, videoDuration }) {
 
 
 export default function AISuggestedQuestions({ activityId, videoUrl, videoDuration, onInjectQuestions }) {
+  const { t } = useTranslation();
   const [status,            setStatus]            = useState("idle"); 
   const [suggestions,       setSuggestions]       = useState([]);     
   const [error,             setError]             = useState("");
@@ -483,7 +487,7 @@ export default function AISuggestedQuestions({ activityId, videoUrl, videoDurati
 
     try {
       const resp = await fetch(`${API_SERVER}/transcripts/activities/${activityId}`, {
-        headers: AUTH_HEADER,
+        headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
       });
       if (resp.status === 404) { setTranscriptStatus(null); return; }
       if (!resp.ok) { setTranscriptStatus(null); return; }
@@ -513,7 +517,7 @@ export default function AISuggestedQuestions({ activityId, videoUrl, videoDurati
     try {
       const resp = await fetch(`${API_SERVER}/transcripts/trigger`, {
         method: "POST",
-        headers: AUTH_HEADER,
+        headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
         body: JSON.stringify({ activityId, videoUrl }),
       });
       if (resp.ok) {
@@ -621,7 +625,7 @@ export default function AISuggestedQuestions({ activityId, videoUrl, videoDurati
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700/50">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-400" />
-          <span className="text-sm font-semibold text-purple-300">AI Suggested Questions</span>
+          <span className="text-sm font-semibold text-purple-300">{t('aiSuggestedQuestions')}</span>
           {suggestions.length > 0 && (
             <span className="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded-full font-medium">
               {suggestions.length}
@@ -636,7 +640,7 @@ export default function AISuggestedQuestions({ activityId, videoUrl, videoDurati
               className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600/80 hover:bg-red-500 text-white text-xs font-medium rounded-lg transition-colors"
             >
               <X className="w-3.5 h-3.5" />
-              Reject All
+              {t('rejectAll')}
             </button>
             <button
               type="button"
@@ -644,7 +648,7 @@ export default function AISuggestedQuestions({ activityId, videoUrl, videoDurati
               className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/80 hover:bg-emerald-500 text-white text-xs font-medium rounded-lg transition-colors"
             >
               <Check className="w-3.5 h-3.5" />
-              Accept All
+              {t('acceptAll')}
             </button>
           </div>
         )}
@@ -677,9 +681,9 @@ export default function AISuggestedQuestions({ activityId, videoUrl, videoDurati
               className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl transition-colors"
             >
               {status === "loading" ? (
-                <><Loader className="w-4 h-4 animate-spin" /> Generating…</>
+                <><Loader className="w-4 h-4 animate-spin" /> {t('generatingEllipsis')}</>
               ) : (
-                <><Sparkles className="w-4 h-4" /> Generate Questions</>
+                <><Sparkles className="w-4 h-4" /> {t('generateQuestions')}</>
               )}
             </button>
           </div>
@@ -712,7 +716,7 @@ export default function AISuggestedQuestions({ activityId, videoUrl, videoDurati
         {/* Empty accepted state */}
         {status === "done" && suggestions.length === 0 && (
           <p className="text-xs text-center text-gray-500 py-2">
-            All suggestions accepted or rejected.
+            {t('allSuggestionsHandled')}
           </p>
         )}
 
@@ -720,7 +724,7 @@ export default function AISuggestedQuestions({ activityId, videoUrl, videoDurati
         {/* Idle hint */}
         {transcriptStatus === "completed" && status === "idle" && (
           <p className="text-xs text-gray-500 text-center">
-            Click <span className="text-purple-400 font-medium">Generate Questions</span> to get AI-suggested questions based on the video transcript.
+            {t('clickBtn')} <span className="text-purple-400 font-medium">{t('generateQuestions')}</span> {t('toGetAISuggestions')}
           </p>
         )}
       </div>

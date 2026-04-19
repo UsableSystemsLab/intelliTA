@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Loader2, CheckCircle, XCircle, Info, Trash2 } from 'lucide-react';
-
-const NODE_API_URL = 'http://localhost:4000/api';
-const LLM_SERVER_URL = 'http://localhost:8000';
+import { useTranslation } from 'react-i18next';
+import { API_BASE as NODE_API_URL, LLM_BASE as LLM_SERVER_URL, getAuthHeaders } from '../../config/api';
+import { auth } from '@/utils/firebase.js';
 
 const AIIntegrationSettings = ({ user }) => {
+  const { t } = useTranslation();
   const [baseUrl, setBaseUrl] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [modelName, setModelName] = useState('');
@@ -23,7 +24,7 @@ const AIIntegrationSettings = ({ user }) => {
   const loadSavedKeys = async () => {
     try {
       const res = await fetch(`${NODE_API_URL}/users/${user.uid}/api-keys`, {
-        headers: { 'Authorization': 'Bearer 1111' },
+        headers: await getAuthHeaders(auth.currentUser),
       });
       if (res.ok) {
         setSavedKeys(await res.json());
@@ -56,14 +57,14 @@ const AIIntegrationSettings = ({ user }) => {
 
       if (!validateData.valid) {
         setStatus('invalid');
-        setErrorMsg(validateData.error || 'Invalid API key or model.');
+        setErrorMsg(validateData.error || t('apiKeyInvalid'));
         return;
       }
 
       // Step 2: Save to DB via Node API
       const saveRes = await fetch(`${NODE_API_URL}/users/${user.uid}/api-keys`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer 1111' },
+        headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
         body: JSON.stringify({
           base_url: baseUrl.trim(),
           api_key: apiKey.trim(),
@@ -72,7 +73,7 @@ const AIIntegrationSettings = ({ user }) => {
       });
 
       if (!saveRes.ok) {
-        throw new Error('Failed to save API key');
+        throw new Error(t('failedToSaveApiKey'));
       }
 
       setStatus('valid');
@@ -82,7 +83,7 @@ const AIIntegrationSettings = ({ user }) => {
       await loadSavedKeys();
     } catch (err) {
       setStatus('invalid');
-      setErrorMsg(err.message || 'Something went wrong.');
+      setErrorMsg(err.message || t('somethingWentWrong'));
     }
   };
 
@@ -90,7 +91,7 @@ const AIIntegrationSettings = ({ user }) => {
     try {
       const res = await fetch(`${NODE_API_URL}/users/${user.uid}/api-keys/${id}`, {
         method: 'DELETE',
-        headers: { 'Authorization': 'Bearer 1111' },
+        headers: await getAuthHeaders(auth.currentUser),
       });
       if (res.ok) {
         setSavedKeys((prev) => prev.filter((k) => k.id !== id));
@@ -109,8 +110,8 @@ const AIIntegrationSettings = ({ user }) => {
 
   const statusConfig = {
     validating: null,
-    valid: { text: 'API key is valid and saved.', color: 'text-green-400', Icon: CheckCircle },
-    invalid: { text: errorMsg || 'Invalid API key. Please check and try again.', color: 'text-red-400', Icon: XCircle },
+    valid: { text: t('apiKeyValid'), color: 'text-green-400', Icon: CheckCircle },
+    invalid: { text: errorMsg || t('apiKeyInvalid'), color: 'text-red-400', Icon: XCircle },
   };
 
   const info = statusConfig[status];
@@ -118,20 +119,20 @@ const AIIntegrationSettings = ({ user }) => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-semibold text-gray-100 mb-1">AI Integration</h2>
-        <p className="text-gray-400 text-sm">Configure external AI models for the hint sidebar chat.</p>
+        <h2 className="text-xl font-semibold text-gray-100 mb-1">{t('aiIntegration')}</h2>
+        <p className="text-gray-400 text-sm">{t('aiIntegrationDesc')}</p>
       </div>
 
       <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
         <Info className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
         <div className="text-sm text-gray-300 leading-relaxed">
           <p className="mb-1">
-            Connect any <span className="text-blue-400 font-medium">OpenAI-compatible</span> provider
-            (OpenAI, Groq, OpenRouter, etc.) to power the
-            <span className="text-blue-400 font-medium"> Hint Chat</span> in activities.
+            {t('aiInfoP1Pre')} <span className="text-blue-400 font-medium">{t('aiInfoP1Compatible')}</span>
+            {' '}{t('aiInfoP1Mid')}
+            <span className="text-blue-400 font-medium"> {t('aiInfoP1Hint')}</span> {t('aiInfoP1End')}
           </p>
           <p className="text-gray-400">
-            Enter the provider's base URL, your API key, and the model name. Your key will be validated before saving.
+            {t('aiInfoP2')}
           </p>
         </div>
       </div>
@@ -139,14 +140,14 @@ const AIIntegrationSettings = ({ user }) => {
       {/* Base URL */}
       <div className="space-y-2">
         <label htmlFor="base-url" className="block text-sm font-medium text-gray-300">
-          Base URL
+          {t('baseUrl')}
         </label>
         <input
           id="base-url"
           type="text"
           value={baseUrl}
           onChange={(e) => { setBaseUrl(e.target.value); resetStatus(); }}
-          placeholder="e.g. https://api.openai.com/v1"
+          placeholder={t('baseUrlPlaceholder')}
           className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none transition-all duration-300"
         />
       </div>
@@ -154,7 +155,7 @@ const AIIntegrationSettings = ({ user }) => {
       {/* API Key */}
       <div className="space-y-2">
         <label htmlFor="api-key" className="block text-sm font-medium text-gray-300">
-          API Key
+          {t('apiKey')}
         </label>
         <div className="relative">
           <input
@@ -162,7 +163,7 @@ const AIIntegrationSettings = ({ user }) => {
             type={showKey ? 'text' : 'password'}
             value={apiKey}
             onChange={(e) => { setApiKey(e.target.value); resetStatus(); }}
-            placeholder="Enter your API key"
+            placeholder={t('apiKeyPlaceholder')}
             className={`w-full px-4 py-3 rounded-xl bg-gray-800/50 border text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none transition-all duration-300 pr-12 ${
               status === 'valid' ? 'border-green-500/50' : status === 'invalid' ? 'border-red-500/50' : 'border-gray-700'
             }`}
@@ -180,14 +181,14 @@ const AIIntegrationSettings = ({ user }) => {
       {/* Model Name */}
       <div className="space-y-2">
         <label htmlFor="model-name" className="block text-sm font-medium text-gray-300">
-          Model Name
+          {t('modelName')}
         </label>
         <input
           id="model-name"
           type="text"
           value={modelName}
           onChange={(e) => { setModelName(e.target.value); resetStatus(); }}
-          placeholder="e.g. gpt-4o, llama-3.3-70b-versatile"
+          placeholder={t('modelNamePlaceholder')}
           className="w-full px-4 py-3 rounded-xl bg-gray-800/50 border border-gray-700 text-gray-100 placeholder-gray-500 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 outline-none transition-all duration-300"
         />
       </div>
@@ -209,7 +210,7 @@ const AIIntegrationSettings = ({ user }) => {
           className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all duration-300 shadow-lg shadow-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {status === 'validating' && <Loader2 className="w-4 h-4 animate-spin" />}
-          {status === 'validating' ? 'Validating...' : 'Save'}
+          {status === 'validating' ? t('validating') : t('save')}
         </button>
       </div>
 
@@ -217,11 +218,11 @@ const AIIntegrationSettings = ({ user }) => {
       {isLoading ? (
         <div className="flex items-center gap-2 text-gray-400 text-sm">
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Loading saved keys...</span>
+          <span>{t('loadingSavedKeys')}</span>
         </div>
       ) : savedKeys.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-sm font-medium text-gray-300">Saved API Keys</h3>
+          <h3 className="text-sm font-medium text-gray-300">{t('savedKeys')}</h3>
           <div className="space-y-2">
             {savedKeys.map((entry) => (
               <div
@@ -240,7 +241,7 @@ const AIIntegrationSettings = ({ user }) => {
                 <button
                   onClick={() => handleDelete(entry.id)}
                   className="ml-3 p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                  title="Delete API key"
+                  title={t('deleteApiKey')}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

@@ -1,26 +1,29 @@
-const validateApiKey = (req, res, next) => {
+import admin from '../configs/firebase.js';
+
+const validateApiKey = async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
     return res.status(401).json({ error: "Authorization header is missing" });
   }
 
-  const [type, apiKey] = authHeader.split(" ");
+  const [type, token] = authHeader.split(" ");
 
-  if (type !== "Bearer" || !apiKey) {
+  if (type !== "Bearer" || !token) {
     return res.status(401).json({
       error:
         "Invalid authorization format. " +
-        "Format is Authorization Bearer <API_KEY>",
+        "Format is Authorization: Bearer <token>",
     });
   }
 
-  if (apiKey !== process.env.API_SERVER_KEY) {
-    console.log(apiKey, process.env.API_SERVER_KEY);
-    return res.status(403).json({ error: "Invalid API key" });
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    req.firebaseUser = decodedToken;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid or expired token" });
   }
-
-  next();
 };
 
 export default validateApiKey;

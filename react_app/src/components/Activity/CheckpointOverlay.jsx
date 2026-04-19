@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { CheckCircle, FastForward, Code2, Lightbulb, Loader2, HelpCircle, ToggleLeft, PenLine } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const mdComponents = {
     h1: ({ children }) => <h1 className="text-lg font-bold text-white mb-2">{children}</h1>,
@@ -29,6 +30,7 @@ const mdComponents = {
 // --- Sub-components for each quiz type ---
 
 function McqBody({ checkpoint, onSubmit }) {
+    const { t } = useTranslation();
     const [selected, setSelected] = useState(null);
 
     useEffect(() => { setSelected(null); }, [checkpoint.id]);
@@ -64,13 +66,14 @@ function McqBody({ checkpoint, onSubmit }) {
                 className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 disabled:opacity-40 disabled:cursor-not-allowed"
             >
                 <CheckCircle className="w-5 h-5" />
-                Submit Answer
+                {t('submitAnswer')}
             </button>
         </>
     );
 }
 
 function TrueFalseBody({ checkpoint, onSubmit }) {
+    const { t } = useTranslation();
     return (
         <>
             <div className="text-gray-400 mb-5 text-sm leading-relaxed text-left">
@@ -82,14 +85,14 @@ function TrueFalseBody({ checkpoint, onSubmit }) {
                     className="flex-1 py-3 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 font-semibold rounded-xl transition-all border border-emerald-500/30 flex items-center justify-center gap-2"
                 >
                     <CheckCircle className="w-5 h-5" />
-                    True
+                    {t('trueLabel')}
                 </button>
                 <button
                     onClick={() => onSubmit(false)}
                     className="flex-1 py-3 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold rounded-xl transition-all border border-red-500/30 flex items-center justify-center gap-2"
                 >
                     <FastForward className="w-5 h-5" />
-                    False
+                    {t('falseLabel')}
                 </button>
             </div>
         </>
@@ -97,6 +100,7 @@ function TrueFalseBody({ checkpoint, onSubmit }) {
 }
 
 function FillBlankBody({ checkpoint, onSubmit }) {
+    const { t } = useTranslation();
     const [answer, setAnswer] = useState('');
 
     useEffect(() => { setAnswer(''); }, [checkpoint.id]);
@@ -120,13 +124,14 @@ function FillBlankBody({ checkpoint, onSubmit }) {
                 className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 disabled:opacity-40 disabled:cursor-not-allowed"
             >
                 <CheckCircle className="w-5 h-5" />
-                Submit Answer
+                {t('submitAnswer')}
             </button>
         </>
     );
 }
 
 function ChallengeBody({ checkpoint, onCheckSolution }) {
+    const { t } = useTranslation();
     return (
         <>
             <div className="text-gray-400 mb-6 text-sm leading-relaxed text-left">
@@ -137,7 +142,7 @@ function ChallengeBody({ checkpoint, onCheckSolution }) {
                 className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
             >
                 <CheckCircle className="w-5 h-5" />
-                Verify Solution
+                {t('verifySolution')}
             </button>
         </>
     );
@@ -164,6 +169,8 @@ export default function CheckpointOverlay({
     hintText,
     isLoadingHint
 }) {
+    const { t } = useTranslation();
+
     if (!activeCheckpoint) return null;
 
     const type = activeCheckpoint.type;
@@ -225,7 +232,7 @@ export default function CheckpointOverlay({
                                 ) : (
                                     <Lightbulb className="w-4 h-4" />
                                 )}
-                                {isLoadingHint ? 'Generating Hint...' : 'Hint'}
+                                {isLoadingHint ? 'Generating Hint...' : t('hint')}
                             </button>
                         )}
 
@@ -234,7 +241,7 @@ export default function CheckpointOverlay({
                             className="w-full py-2.5 px-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-sm font-medium rounded-xl transition-colors flex items-center justify-center gap-2 border border-red-500/30"
                         >
                             <FastForward className="w-4 h-4" />
-                            Skip
+                            {t('skip')}
                         </button>
                     </div>
 
@@ -242,7 +249,7 @@ export default function CheckpointOverlay({
                         <div className="mt-4 p-3 rounded-xl text-sm text-left bg-amber-500/10 text-amber-200 border border-amber-500/30">
                             <div className="flex items-center gap-2 mb-1.5 text-amber-400 font-semibold">
                                 <Lightbulb className="w-4 h-4" />
-                                Hint
+                                {t('hint')}
                             </div>
                             {hintText}
                         </div>

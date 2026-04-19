@@ -33,6 +33,41 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+      // Prevent hardcoded user-facing strings in JSX. Use t("key") from
+      // react-i18next instead. Brand names, symbols, separators, and other
+      // non-translatable tokens are allow-listed below.
+      'react/jsx-no-literals': [
+        'warn',
+        {
+          noStrings: false,
+          allowedStrings: [
+            'IntelliTA',
+            'Google',
+            'GitHub',
+            'AI',
+            'AI-Powered',
+            'Aa',
+            'OR',
+            ':',
+            ',',
+            '.',
+            '-',
+            '/',
+            '|',
+            '*',
+            '#',
+            '@',
+            '+',
+            '✕',
+            '×',
+            '...',
+            '…',
+            '©',
+          ],
+          ignoreProps: true,
+          noAttributeStrings: false,
+        },
+      ],
     },
   },
 ]

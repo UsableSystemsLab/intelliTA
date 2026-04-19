@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Card from "./CoursesCard";
 import Breadcrumb from "../shared/Breadcrumb";
 import { ChevronLeft, ChevronRight, BookOpen, Plus } from "lucide-react";
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 
 export default function Maincontent({ user }) {
   const { t, i18n } = useTranslation();
@@ -27,7 +29,7 @@ export default function Maincontent({ user }) {
   useEffect(() => {
     async function loadCourses() {
       try {
-        let url = "http://localhost:4000/api/courses";
+        let url = `${API_BASE}/courses`;
         if (user && user.uid && user.role !== "admin") {
           url += `?firebaseId=${user.uid}`;
         }
@@ -35,7 +37,7 @@ export default function Maincontent({ user }) {
         const response = await fetch(url, {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": "Bearer 1111",
+            ...await getAuthHeaders(auth.currentUser),
           },
         });
 
@@ -69,11 +71,11 @@ export default function Maincontent({ user }) {
     setJoinLoading(true);
     setJoinMessage(null);
 
-    const performJoin = () => fetch("http://localhost:4000/api/courses/join", {
+    const performJoin = async () => fetch(`${API_BASE}/courses/join`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 1111"
+        ...await getAuthHeaders(auth.currentUser)
       },
       body: JSON.stringify({
         token: joinCode,
@@ -87,9 +89,9 @@ export default function Maincontent({ user }) {
       let data = await response.json();
 
       if (response.status === 404 && data.message === "User not found") {
-        const createUserRes = await fetch("http://localhost:4000/api/users", {
+        const createUserRes = await fetch(`${API_BASE}/users`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "Authorization": "Bearer 1111" },
+          headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
           body: JSON.stringify({
             firebaseId: user?.uid,
             first_name: user?.firstName || user?.displayName?.split(' ')[0] || "Unknown",
@@ -112,11 +114,11 @@ export default function Maincontent({ user }) {
       }
 
       if (response.ok) {
-        setJoinMessage({ type: 'success', text: 'Joined successfully!' });
+        setJoinMessage({ type: 'success', text: t('joinedSuccess') });
         setShowNameModal(false);
         window.location.reload();
       } else {
-        setJoinMessage({ type: 'error', text: data.message || 'Failed to join' });
+        setJoinMessage({ type: 'error', text: data.message || t('failedToJoin') });
       }
     } catch (err) {
       setJoinMessage({ type: 'error', text: err.message });
@@ -137,18 +139,18 @@ export default function Maincontent({ user }) {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="relative bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-md w-full shadow-2xl text-white">
             <button onClick={() => setShowNameModal(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">✕</button>
-            <h3 className="text-2xl font-bold mb-4">Select Your Name</h3>
-            <p className="text-gray-400 mb-6">Identify yourself from the list below:</p>
+            <h3 className="text-2xl font-bold mb-4">{t("selectYourName")}</h3>
+            <p className="text-gray-400 mb-6">{t("identifyFromList")}</p>
             <select
               className="w-full p-3 mb-6 bg-gray-900/50 border border-gray-700 rounded-xl text-white"
               value={selectedName}
               onChange={(e) => setSelectedName(e.target.value)}
             >
-              <option value="">-- Select Name --</option>
+              <option value="">{t("selectNamePlaceholder")}</option>
               {availableNames.map(name => <option key={name} value={name}>{name}</option>)}
             </select>
             <button onClick={submitNameSelection} disabled={joinLoading || !selectedName} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium disabled:opacity-50 transition-colors">
-              {joinLoading ? "Joining..." : "Confirm & Join"}
+              {joinLoading ? t("joining") : t("confirmAndJoin")}
             </button>
           </div>
         </div>
@@ -162,26 +164,28 @@ export default function Maincontent({ user }) {
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
           <div className="mb-4">
-            <Breadcrumb items={[{ label: "Courses" }]} />
+            <Breadcrumb items={[{ label: t("courses") }]} />
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            
+
             <div className="flex-1">
               <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
-                Courses
+                {t("courses")}
               </h1>
               <p className="text-gray-400 text-lg">
-                {loading ? "Loading..." : `${courses.length} ${courses.length === 1 ? 'course' : 'courses'} available`}
+                {loading
+                  ? t("loading")
+                  : `${courses.length} ${courses.length === 1 ? t("coursesAvailableSingular") : t("coursesAvailablePlural")}`}
               </p>
             </div>
 
-           
+
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2 bg-gray-800/50 p-2 rounded-xl backdrop-blur-sm border border-gray-700">
                 <input
                   type="text"
-                  placeholder="Enter Token"
+                  placeholder={t("enterToken")}
                   className="bg-transparent text-white px-3 py-2 outline-none w-40 sm:w-56 placeholder-gray-500"
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value)}
@@ -191,7 +195,7 @@ export default function Maincontent({ user }) {
                   disabled={joinLoading}
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium disabled:opacity-50 transition-colors"
                 >
-                  {joinLoading ? "Joining..." : "Join"}
+                  {joinLoading ? t("joining") : t("join")}
                 </button>
               </div>
               {!loading && courses.length > 0 && (
@@ -200,7 +204,7 @@ export default function Maincontent({ user }) {
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-medium transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
                 >
                   <Plus className="w-5 h-5" />
-                  Create Course
+                  {t("createCourse")}
                 </Link>
               )}
             </div>
@@ -221,22 +225,22 @@ export default function Maincontent({ user }) {
       <div className="max-w-7xl mx-auto px-6 py-10">
         {/* Course Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading && <p className="text-white text-xl col-span-full">Loading courses...</p>}
+          {loading && <p className="text-white text-xl col-span-full">{t("loadingCourses")}</p>}
           {!loading && courses.length === 0 && (
             <div className="col-span-full flex flex-col items-center justify-center py-16 px-6">
               <div className="w-20 h-20 bg-gray-800 rounded-2xl flex items-center justify-center mb-6 border border-gray-700">
                 <BookOpen className="w-10 h-10 text-gray-600" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">No courses yet</h3>
+              <h3 className="text-xl font-semibold text-gray-300 mb-2">{t("noCoursesYet")}</h3>
               <p className="text-gray-500 text-center max-w-md mb-6">
-                Create your first course to get started, or join an existing one using a token.
+                {t("createFirstCourseHint")}
               </p>
               <Link
                 to="/courses/create"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white rounded-xl font-medium transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
               >
                 <Plus className="w-5 h-5" />
-                Create First Course
+                {t("createFirstCourse")}
               </Link>
             </div>
           )}
@@ -263,7 +267,7 @@ export default function Maincontent({ user }) {
               <ChevronLeft className={`w-6 h-6 ${isArabic ? 'rotate-180' : ''}`} />
             </button>
             <span className="text-gray-400 font-medium">
-              Page <span className="text-white">{currentPage}</span> of <span className="text-white">{totalPages}</span>
+              {t("page")} <span className="text-white">{currentPage}</span> {t("of")} <span className="text-white">{totalPages}</span>
             </span>
             <button
               onClick={handleNextPage}

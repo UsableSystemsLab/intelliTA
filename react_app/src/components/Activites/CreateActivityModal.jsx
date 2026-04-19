@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Send, Loader, HelpCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { Upload, Calendar, Type, ArrowLeft, Eye, FileCode, Code2, Send, Loader, HelpCircle, Github } from "lucide-react";
+import { API_BASE, getAuthHeaders } from "../../config/api";
+import { auth } from "@/utils/firebase.js";
 import ReactMarkdown from "react-markdown";
 import FormInput from "./form/FormInput";
 import FileUploadZone from "./form/FileUploadZone";
@@ -40,6 +43,7 @@ const markdownComponents = {
 };
 
 export default function CreateActivityModal({ isOpen, onClose, courseId, onActivityCreated }) {
+  const { t } = useTranslation();
   // New state added to know which step I'm in, for example 1 = im in form, 2 = im in preview
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
@@ -52,6 +56,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
   const [starterPrompt, setStarterPrompt] = useState("");
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [chapters, setChapters] = useState([]);
+  const [createGithubRepo, setCreateGithubRepo] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -69,6 +74,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     setStarterPrompt("");
     setQuizQuestions([]);
     setChapters([]);
+    setCreateGithubRepo(false);
     setErrorMsg("");
   };
 // Extract video duration
@@ -115,7 +121,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     formData.append("title", title);
     formData.append("start_date", new Date(startDate).toISOString());
     formData.append("end_date", new Date(endDate).toISOString());
-
+    formData.append("create_github_repo", createGithubRepo ? "true" : "false");
     if (videoFile) {
       formData.append("video", videoFile);
     }
@@ -134,9 +140,9 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     }
 
     try {
-      const response = await fetch(`http://localhost:4000/api/courses/${courseId}/activities`, {
+      const response = await fetch(`${API_BASE}/courses/${courseId}/activities`, {
         method: "POST",
-        headers: { Authorization: "Bearer 1111" },
+        headers: await getAuthHeaders(auth.currentUser),
         body: formData,
       });
 
@@ -161,10 +167,10 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
           }),
         };
         await fetch(
-          `http://localhost:4000/api/courses/${courseId}/activities/${newActivity.activity_id}/quiz`,
+          `${API_BASE}/courses/${courseId}/activities/${newActivity.activity_id}/quiz`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
+            headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
             body: JSON.stringify(quizPayload),
           }
         );
@@ -179,16 +185,18 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
           })),
         };
         await fetch(
-          `http://localhost:4000/api/courses/${courseId}/activities/${newActivity.activity_id}/chapters`,
+          `${API_BASE}/courses/${courseId}/activities/${newActivity.activity_id}/chapters`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: "Bearer 1111" },
+            headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
             body: JSON.stringify(chaptersPayload),
           }
         );
       }
 
       onActivityCreated(newActivity);
+      // Note: GitHub repo is created asynchronously on the server.
+      // The repo link will appear on the activity card once it's ready.
       handleClose();
     } catch (err) {
       setErrorMsg(err.message);
@@ -235,26 +243,26 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
             <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <Type className="w-5 h-5 text-blue-400" />
-                Activity Details
+                {t('activityDetails')}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Title</span>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('titleLabel')}</span>
                   <p className="text-white mt-1">{title}</p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Video</span>
-                  <p className="text-gray-300 mt-1">{videoFile ? videoFile.name : "No video"}</p>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('videoLabel')}</span>
+                  <p className="text-gray-300 mt-1">{videoFile ? videoFile.name : t('noVideo')}</p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</span>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('startDateLabel')}</span>
                   <p className="text-gray-300 mt-1 flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-gray-500" />
                     {formatPreviewDate(startDate)}
                   </p>
                 </div>
                 <div>
-                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">End Date</span>
+                  <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">{t('endDateLabel')}</span>
                   <p className="text-gray-300 mt-1 flex items-center gap-1.5">
                     <Calendar className="w-4 h-4 text-gray-500" />
                     {formatPreviewDate(endDate)}
@@ -268,7 +276,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <Eye className="w-5 h-5 text-green-400" />
-                  Content Preview
+                  {t('contentPreview')}
                 </h3>
                 <div className="bg-gray-900/50 p-5 rounded-lg border border-gray-600">
                   <ReactMarkdown components={markdownComponents}>
@@ -283,9 +291,9 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <Code2 className="w-5 h-5 text-purple-400" />
-                  Starter Code
+                  {t('starterCode')}
                   <span className="text-sm font-normal text-gray-500">
-                    ({starterFiles.length} file{starterFiles.length !== 1 ? "s" : ""})
+                    {"("}{starterFiles.length} {starterFiles.length !== 1 ? t('files') : t('file')}{")"}
                   </span>
                 </h3>
                 <div className="space-y-3">
@@ -309,9 +317,9 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <HelpCircle className="w-5 h-5 text-blue-400" />
-                  Video Quiz
+                  {t('videoQuiz')}
                   <span className="text-sm font-normal text-gray-500">
-                    ({quizQuestions.length} question{quizQuestions.length !== 1 ? "s" : ""})
+                    {"("}{quizQuestions.length} {quizQuestions.length !== 1 ? t('questions') : t('question')}{")"}
                   </span>
                 </h3>
                 <div className="space-y-2">
@@ -336,9 +344,9 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               <div className="mb-6 p-5 bg-gray-900/50 rounded-xl border border-gray-700">
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <Eye className="w-5 h-5 text-blue-400" />
-                  Video Chapters
+                  {t('videoChapters')}
                   <span className="text-sm font-normal text-gray-500">
-                    ({chapters.length} chapter{chapters.length !== 1 ? "s" : ""})
+                    {"("}{chapters.length} {chapters.length !== 1 ? t('chapters') : t('chapter')}{")"}
                   </span>
                 </h3>
                 <div className="space-y-2">
@@ -368,7 +376,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               className="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-semibold transition-all duration-300"
             >
               <ArrowLeft className="w-5 h-5" />
-              Back to Edit
+              {t('backToEdit')}
             </button>
             <button
               type="button"
@@ -379,12 +387,12 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               {loading ? (
                 <>
                   <Loader className="w-5 h-5 animate-spin" />
-                  Publishing...
+                  {t('publishing')}
                 </>
               ) : (
                 <>
                   <Send className="w-5 h-5" />
-                  Publish Lab
+                  {t('publishLab')}
                 </>
               )}
             </button>
@@ -450,8 +458,8 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
             {/* Video Upload */}
             <div>
               <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-3">
-                Video
-                <span className="text-gray-500 font-normal">(Optional)</span>
+                {t('videoLabel')}
+                <span className="text-gray-500 font-normal">{t('optional')}</span>
               </label>
 
               <FileUploadZone
@@ -478,6 +486,34 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               prompt={starterPrompt}
               onPromptChange={setStarterPrompt}
             />
+
+            {/* Create GitHub Template Repo */}
+            {(mdContent.trim() || starterFiles.length > 0) && (
+              <div className="flex items-center justify-between p-4 bg-gray-900/50 rounded-xl border border-gray-700">
+                <div className="flex items-center gap-3">
+                  <Github className="w-5 h-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm font-medium text-white">{t('createTemplateRepoInOrg')}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      {t('pushesStarterCodeDesc')}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCreateGithubRepo(!createGithubRepo)}
+                  className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${
+                    createGithubRepo ? "bg-green-500" : "bg-gray-600"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                      createGithubRepo ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+              </div>
+            )}
 
             {/* Video Quiz */}
             <QuizEditor
