@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import {
   FileText, X, Edit3, Eye, Bold, Italic, List, ListOrdered,
@@ -7,6 +8,7 @@ import {
 } from "lucide-react";
 
 function MarkdownModal({ isOpen, onClose, value, onChange }) {
+  const { t } = useTranslation();
   const textareaRef = useRef(null);
   const containerRef = useRef(null);
   const isDragging = useRef(false);
@@ -82,7 +84,7 @@ function MarkdownModal({ isOpen, onClose, value, onChange }) {
   const toolbarButtons = [
     {
       type: 'dropdown',
-      icon: <span className="text-sm font-semibold">Tt</span>,
+      icon: <span className="text-sm font-semibold">{"Tt"}</span>,
       label: 'Headings',
       show: showHeadingMenu,
       setShow: setShowHeadingMenu,
@@ -127,7 +129,7 @@ function MarkdownModal({ isOpen, onClose, value, onChange }) {
             <div className="p-2 bg-blue-500/10 rounded-lg">
               <FileText className="w-5 h-5 text-blue-400" />
             </div>
-            <h3 className="text-xl font-bold text-white">Markdown Editor</h3>
+            <h3 className="text-xl font-bold text-white">{t('markdownEditor')}</h3>
           </div>
           <button
             onClick={onClose}
@@ -149,7 +151,7 @@ function MarkdownModal({ isOpen, onClose, value, onChange }) {
           <div className="flex flex-col overflow-hidden" style={{ width: `${leftWidth}%` }}>
             <div className="flex items-center gap-2 px-4 py-3 bg-gray-900/50 border-b border-gray-700">
               <Edit3 className="w-4 h-4 text-blue-400" />
-              <span className="text-sm font-medium text-gray-300">Write</span>
+              <span className="text-sm font-medium text-gray-300">{t('write')}</span>
             </div>
 
             {/* Toolbar */}
@@ -263,7 +265,7 @@ code block
           <div className="flex flex-col overflow-hidden" style={{ width: `${100 - leftWidth}%` }}>
             <div className="flex items-center gap-2 px-4 py-3 bg-gray-900/50 border-b border-gray-700">
               <Eye className="w-4 h-4 text-green-400" />
-              <span className="text-sm font-medium text-gray-300">Preview</span>
+              <span className="text-sm font-medium text-gray-300">{t('preview')}</span>
             </div>
             <div className="flex-1 px-6 py-4 bg-gray-900/30 overflow-y-auto">
               {value ? (
@@ -317,7 +319,7 @@ code block
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-gray-500">
                   <FileText className="w-12 h-12 mb-3 opacity-50" />
-                  <p className="italic">Preview will appear here</p>
+                  <p className="italic">{t('previewWillAppearHere')}</p>
                 </div>
               )}
             </div>
@@ -330,7 +332,7 @@ code block
             onClick={onClose}
             className="px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-colors"
           >
-            Done
+            {t('done')}
           </button>
         </div>
       </div>
@@ -339,6 +341,7 @@ code block
 }
 
 export default function MarkdownEditor({ value, onChange, label = "Markdown Content" }) {
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -346,7 +349,7 @@ export default function MarkdownEditor({ value, onChange, label = "Markdown Cont
       <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
         <FileText className="w-4 h-4 text-gray-500" />
         {label}
-        <span className="text-gray-500 font-normal">(Optional)</span>
+        <span className="text-gray-500 font-normal">{t('optional')}</span>
       </label>
 
       {/* Preview / Open Button */}
@@ -362,7 +365,7 @@ export default function MarkdownEditor({ value, onChange, label = "Markdown Cont
         ) : (
           <div className="flex items-center gap-3 text-gray-500">
             <Edit3 className="w-5 h-5 group-hover:text-blue-400 transition-colors" />
-            <span className="group-hover:text-gray-400 transition-colors">Click to write markdown content...</span>
+            <span className="group-hover:text-gray-400 transition-colors">{t('clickToWriteMarkdown')}</span>
           </div>
         )}
       </button>

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   List,
   X,
@@ -34,6 +35,7 @@ function createEmptyChapter(id) {
 }
 
 function ChapterCard({ chapter, index, onChange, onDelete, videoDuration, getVideoTime }) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
 
   const update = (field, value) => {
@@ -67,7 +69,7 @@ function ChapterCard({ chapter, index, onChange, onDelete, videoDuration, getVid
       {expanded && (
         <div className="px-4 pb-4 space-y-4 border-t border-gray-700/50 pt-4">
           <div>
-            <label className="text-xs font-medium text-gray-400 mb-1 block">Chapter Title</label>
+            <label className="text-xs font-medium text-gray-400 mb-1 block">{t('chapterTitle')}</label>
             <input
               type="text"
               value={chapter.title || ""}
@@ -79,9 +81,9 @@ function ChapterCard({ chapter, index, onChange, onDelete, videoDuration, getVid
 
           <div>
             <label className="text-xs font-medium text-gray-400 mb-1 block">
-              Start Time (MM:SS)
+              {t('startTimeMmSs')}
               {videoDuration > 0 && (
-                <span className="text-gray-600 font-normal ml-1">max {formatTime(videoDuration)}</span>
+                <span className="text-gray-600 font-normal ml-1">{t('maxLabel')} {formatTime(videoDuration)}</span>
               )}
             </label>
             <div className="relative">
@@ -111,13 +113,13 @@ function ChapterCard({ chapter, index, onChange, onDelete, videoDuration, getVid
                 className="mt-1.5 w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-blue-400 hover:text-blue-300 rounded-lg text-xs font-medium transition-all"
               >
                 <Play className="w-3 h-3" />
-                Use current video time
+                {t('useCurrentVideoTime')}
               </button>
             )}
             {videoDuration > 0 && chapter.start_time_seconds > videoDuration && (
               <p className="flex items-center gap-1 text-[10px] text-red-400 mt-0.5">
                 <AlertTriangle className="w-3 h-3" />
-                Exceeds video duration ({formatTime(videoDuration)})
+                {t('exceedsVideoDuration')} {"("}{formatTime(videoDuration)}{")"}
               </p>
             )}
           </div>
@@ -129,7 +131,7 @@ function ChapterCard({ chapter, index, onChange, onDelete, videoDuration, getVid
               className="flex items-center gap-1.5 px-3 py-1.5 text-red-400 hover:bg-red-500/10 rounded-lg text-xs font-medium transition-colors"
             >
               <Trash2 className="w-3.5 h-3.5" />
-              Remove
+              {t('remove')}
             </button>
           </div>
         </div>
@@ -139,6 +141,7 @@ function ChapterCard({ chapter, index, onChange, onDelete, videoDuration, getVid
 }
 
 function ChaptersEditorModal({ isOpen, onClose, chapters, onChaptersChange, videoDuration, videoFile, videoUrl }) {
+  const { t } = useTranslation();
   const [nextId, setNextId] = useState(
     () => (chapters.length > 0 ? Math.max(...chapters.map((c) => c.id || 0)) + 1 : 1)
   );
@@ -212,9 +215,9 @@ function ChaptersEditorModal({ isOpen, onClose, chapters, onChaptersChange, vide
               <List className="w-5 h-5 text-blue-400" />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">Video Chapters</h3>
+              <h3 className="text-xl font-bold text-white">{t('videoChapters')}</h3>
               <p className="text-xs text-gray-500">
-                {chapters.length} chapter{chapters.length !== 1 ? "s" : ""}
+                {chapters.length} {chapters.length !== 1 ? t('chapters') : t('chapter')}
               </p>
             </div>
           </div>
@@ -283,7 +286,7 @@ function ChaptersEditorModal({ isOpen, onClose, chapters, onChaptersChange, vide
             {chapters.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-gray-500">
                 <List className="w-12 h-12 mb-3 opacity-30" />
-                <p className="text-sm">No chapters yet. Add your first chapter below.</p>
+                <p className="text-sm">{t('noChaptersYet')}</p>
               </div>
             ) : (
               sortedChapters.map((chapter, idx) => {
@@ -312,14 +315,14 @@ function ChaptersEditorModal({ isOpen, onClose, chapters, onChaptersChange, vide
             className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-medium transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Add Chapter
+            {t('addChapter')}
           </button>
           <button
             type="button"
             onClick={onClose}
             className="px-6 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-xl font-medium transition-colors"
           >
-            Done
+            {t('done')}
           </button>
         </div>
       </div>
@@ -328,14 +331,15 @@ function ChaptersEditorModal({ isOpen, onClose, chapters, onChaptersChange, vide
 }
 
 export default function ChaptersEditor({ chapters, onChaptersChange, videoDuration = 0, videoFile = null, videoUrl = null }) {
+  const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <div>
       <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
         <List className="w-4 h-4 text-gray-500" />
-        Video Chapters
-        <span className="text-gray-500 font-normal">(Optional)</span>
+        {t('videoChapters')}
+        <span className="text-gray-500 font-normal">{t('optional')}</span>
       </label>
 
       <button
@@ -350,7 +354,7 @@ export default function ChaptersEditor({ chapters, onChaptersChange, videoDurati
             </div>
             <div className="min-w-0">
               <p className="text-sm text-gray-300">
-                {chapters.length} chapter{chapters.length !== 1 ? "s" : ""}
+                {chapters.length} {chapters.length !== 1 ? t('chapters') : t('chapter')}
               </p>
               <p className="text-xs text-gray-500 truncate">
                 {chapters
@@ -364,7 +368,7 @@ export default function ChaptersEditor({ chapters, onChaptersChange, videoDurati
           <div className="flex items-center gap-3 text-gray-500">
             <List className="w-5 h-5 group-hover:text-blue-400 transition-colors" />
             <span className="group-hover:text-gray-400 transition-colors">
-              Click to add video chapters.
+              {t('clickToAddChapters')}
             </span>
           </div>
         )}

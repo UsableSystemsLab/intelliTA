@@ -29,15 +29,15 @@ const SignUp = () => {
   const getErrorMessage = (errorCode) => {
     switch (errorCode) {
       case 'auth/email-already-in-use':
-        return "This email is already registered. Please login instead.";
+        return t("errEmailInUse");
       case 'auth/weak-password':
-        return "Password should be at least 6 characters.";
+        return t("errWeakPassword");
       case 'auth/invalid-email':
-        return "Please enter a valid email address.";
+        return t("errInvalidEmail");
       case 'auth/network-request-failed':
-        return "Network error. Please check your connection.";
+        return t("errNetwork");
       default:
-        return "An error occurred. Please try again.";
+        return t("errGeneric");
     }
   };
 
@@ -46,7 +46,7 @@ const SignUp = () => {
     setError('');
 
     if (password !== confirmPassword) {
-      setError("Passwords don't match.");
+      setError(t("errPassMismatch"));
       return;
     }
 
@@ -130,7 +130,7 @@ const SignUp = () => {
     console.error('Google sign up error:', err);
 
     if (err.code === 'auth/popup-closed-by-user') {
-      setError('Sign up cancelled.');
+      setError(t("signUpCancelled"));
     } else {
       setError(getErrorMessage(err.code));
     }
