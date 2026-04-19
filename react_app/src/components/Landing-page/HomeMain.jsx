@@ -1,5 +1,3 @@
-import LogoLoop from "@/components/lib/LogoLoop";
-import { imageLogos } from "@/utils/imageLogos";
 import CodeFrame from "@/components/Landing-page/CodeFrame";
 import AnimateOnScroll from "@/components/lib/AnimateOnScroll";
 import { Link } from "react-router-dom";
@@ -102,22 +100,6 @@ export default function HomeMain({ user }) {
                 </a>
               </AnimateOnScroll>
 
-              {/* Language logos strip */}
-              <AnimateOnScroll delay={500} className="pt-4" dir="ltr">
-                <LogoLoop
-                  className="loop-logos"
-                  logos={imageLogos}
-                  speed={120}
-                  direction="left"
-                  logoHeight={32}
-                  gap={40}
-                  pauseOnHover
-                  scaleOnHover
-                  fadeOut
-                  fadeOutColor="#111827"
-                  ariaLabel="Supported programming languages"
-                />
-              </AnimateOnScroll>
             </div>
 
             {/* Right column */}
