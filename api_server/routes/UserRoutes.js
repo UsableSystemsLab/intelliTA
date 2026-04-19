@@ -3,6 +3,7 @@ import multer from "multer";
 import multerS3 from "multer-s3";
 import UserController from "../controllers/UserController.js";
 import { s3, S3_BUCKET } from "../configs/s3.js";
+import { restrictToKauDomain } from "../middlewares/kauDomain.js";
 
 const upload = multer({
   storage: multerS3({
@@ -19,7 +20,7 @@ const upload = multer({
 
 const router = express.Router();
 
-router.post("/", UserController.createUser);
+router.post("/", restrictToKauDomain, UserController.createUser);
 router.get("/", UserController.getAllUsers);
 router.post("/:firebaseUid/profile/avatar", upload.single("avatar"), UserController.uploadAvatar);
 router.get("/:firebaseUid/profile", UserController.getProfile);
