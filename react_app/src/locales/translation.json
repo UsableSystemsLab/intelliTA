@@ -88,7 +88,7 @@
     "feature6Desc": "تتبع تقدم الطلاب واحصل على تقارير مفصّلة حول الأداء لتحسين العملية التعليمية.",
     "kauModalTitle": "بريد جامعة الملك عبدالعزيز مطلوب",
     "kauModalMessage": "الوصول متاح حاليًا لطلاب ومحاضري جامعة الملك عبدالعزيز فقط. يرجى استخدام بريدك @stu.kau.edu.sa أو @kau.edu.sa.",
-    "ok": "حسنًا"
+    "ok": "حسنًا",
     "githubClassroom": "GitHub Classroom",
     "githubClassroomLink": "رابط GitHub Classroom (اختياري)",
     "goToActivities": "اذهب إلى الأنشطة",
@@ -539,7 +539,7 @@
     "feature6Desc": "Track student progress and gain detailed performance insights to improve learning outcomes.",
     "kauModalTitle": "KAU email required",
     "kauModalMessage": "Access is currently limited to KAU students and instructors only. Please use your @stu.kau.edu.sa or @kau.edu.sa email.",
-    "ok": "OK"
+    "ok": "OK",
     "githubClassroom": "GitHub Classroom",
     "githubClassroomLink": "GitHub Classroom Link (optional)",
 
