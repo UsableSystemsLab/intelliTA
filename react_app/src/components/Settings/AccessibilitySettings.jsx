@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ALargeSmall, Contrast, Volume2 } from 'lucide-react';
-import { TTS_ENABLED_KEY, TTS_VOICE_KEY, TTS_RATE_KEY, TTS_PITCH_KEY } from '@/utils/useTTS.js';
-import React, { useState } from 'react';
-import { ALargeSmall, Contrast, Sun, Moon } from 'lucide-react';
+import { ALargeSmall, Contrast, Sun, Moon, Volume2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { TTS_ENABLED_KEY, TTS_VOICE_KEY, TTS_RATE_KEY, TTS_PITCH_KEY } from '@/utils/useTTS.js';
 
 const FONT_SIZE_KEY = 'intelliTA-font-size';
 const HIGH_CONTRAST_KEY = 'intelliTA-high-contrast';
@@ -65,6 +63,7 @@ const AccessibilitySettings = () => {
   const [ttsRate, setTtsRate] = useState(() => parseFloat(localStorage.getItem(TTS_RATE_KEY)) || 1.0);
   const [ttsPitch, setTtsPitch] = useState(() => parseFloat(localStorage.getItem(TTS_PITCH_KEY)) || 1.0);
   const [voices, setVoices] = useState([]);
+  const [theme, setTheme] = useState(getTheme);
 
   useEffect(() => {
     if (!isSTTSupported) return;
@@ -73,7 +72,6 @@ const AccessibilitySettings = () => {
     window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
     return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
   }, []);
-  const [theme, setTheme] = useState(getTheme);
 
   const sizeLabels = {
     sm: t('sizeSmall'),
