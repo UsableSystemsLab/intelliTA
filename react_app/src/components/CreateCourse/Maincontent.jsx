@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { AlertCircle, Loader, Info, Github, Eye, EyeOff, Copy } from "lucide-react";
 import Breadcrumb from "../shared/Breadcrumb";
 import { API_BASE, getAuthHeaders } from "../../config/api";
 import { auth } from "@/utils/firebase.js";
 
 export default function CreateCourseMain({ user }) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [courseCode, setCourseCode] = useState("");
   const [description, setDescription] = useState("");
@@ -41,7 +43,7 @@ export default function CreateCourseMain({ user }) {
     setFieldErrors(errors);
 
     if (Object.keys(errors).length > 0) {
-      setErrorMsg("Please fill in all required fields.");
+      setErrorMsg(t("fillAllRequired"));
       return;
     }
 
@@ -145,16 +147,16 @@ export default function CreateCourseMain({ user }) {
     <main className="flex-1 p-22 flex flex-col items-center text-white w-full overflow-y-auto">
       <div className="max-w-2xl w-full mb-4">
         <Breadcrumb items={[
-          { label: "Courses", href: "/courses" },
-          { label: "Create Course" }
+          { label: t("courses"), href: "/courses" },
+          { label: t("createCourse") }
         ]} />
       </div>
       <div className="bg-gray-800 p-8 rounded-2xl border border-gray-700 max-w-2xl w-full shadow-xl shadow-blue-900/10">
-        <h1 className="text-3xl font-bold mb-4 text-white">Create New Course</h1>
+        <h1 className="text-3xl font-bold mb-4 text-white">{t("createNewCourse")}</h1>
 
         <div className="bg-blue-500/10 border border-blue-500/30 text-blue-300 p-4 rounded-xl mb-6 flex items-start gap-3">
           <Info className="w-5 h-5 shrink-0 mt-0.5" />
-          <p className="text-sm">You will be assigned as the <strong className="text-white">instructor</strong> of this course. A GitHub organization must be connected to enable activity repositories for students.</p>
+          <p className="text-sm">{t("createCourseInfo")}</p>
         </div>
 
         {errorMsg && (
@@ -166,41 +168,41 @@ export default function CreateCourseMain({ user }) {
 
         {/* Course Details */}
         <div className="mb-6">
-          <label className="block mb-2 font-medium text-gray-300">Course Title <span className="text-red-400">*</span></label>
+          <label className="block mb-2 font-medium text-gray-300">{t("courseTitleLabel")} <span className="text-red-400">*</span></label>
           <input
             type="text"
             className={`w-full p-3 rounded-xl bg-gray-900 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${fieldErrors.title ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"}`}
-            placeholder="Enter course title"
+            placeholder={t("enterCourseTitle")}
             value={title}
             onChange={(e) => { setTitle(e.target.value); setFieldErrors(prev => ({ ...prev, title: false })); }}
           />
         </div>
 
         <div className="mb-6">
-          <label className="block mb-2 font-medium text-gray-300">Course Code <span className="text-red-400">*</span></label>
+          <label className="block mb-2 font-medium text-gray-300">{t("courseCodeLabel")} <span className="text-red-400">*</span></label>
           <input
             type="text"
             className={`w-full p-3 rounded-xl bg-gray-900 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all ${fieldErrors.courseCode ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"}`}
-            placeholder="Enter course code (e.g., CPCS-202)"
+            placeholder={t("enterCourseCode")}
             value={courseCode}
             onChange={(e) => { setCourseCode(e.target.value); setFieldErrors(prev => ({ ...prev, courseCode: false })); }}
           />
         </div>
 
         <div className="mb-6">
-          <label className="block mb-2 font-medium text-gray-300">Description <span className="text-red-400">*</span></label>
+          <label className="block mb-2 font-medium text-gray-300">{t("descriptionLabel")} <span className="text-red-400">*</span></label>
           <textarea
             rows="4"
             className={`w-full p-3 rounded-xl bg-gray-900 border text-white placeholder-gray-500 focus:outline-none focus:ring-1 transition-all resize-none ${fieldErrors.description ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-gray-700 focus:border-blue-500 focus:ring-blue-500"}`}
-            placeholder="Write course description"
+            placeholder={t("writeCourseDescription")}
             value={description}
             onChange={(e) => { setDescription(e.target.value); setFieldErrors(prev => ({ ...prev, description: false })); }}
           />
         </div>
 
         <div className="mb-6">
-          <label className="block mb-2 font-semibold">Allowed Student Names <span className="text-gray-500 font-normal">(Optional)</span></label>
-          <p className="text-sm text-gray-400 mb-2">Enter names separated by new lines. If provided, students must pick a name from this list to join.</p>
+          <label className="block mb-2 font-semibold">{t("allowedStudentNames")} <span className="text-gray-500 font-normal">{t("optional")}</span></label>
+          <p className="text-sm text-gray-400 mb-2">{t("allowedStudentsHint")}</p>
           <textarea
             rows="4"
             className="w-full p-3 rounded bg-slate-700 border border-slate-600 outline-none"
@@ -214,15 +216,15 @@ export default function CreateCourseMain({ user }) {
         <div className="mb-8 p-5 rounded-xl border border-gray-600 bg-gray-900/50">
           <h2 className="text-lg font-semibold text-white mb-1 flex items-center gap-2">
             <Github className="w-5 h-5 text-white" />
-            GitHub Organization <span className="text-red-400 text-sm font-normal ml-1">Required</span>
+            {t("githubOrganization")} <span className="text-red-400 text-sm font-normal ml-1">{t("required")}</span>
           </h2>
           <p className="text-sm text-gray-400 mb-4">
-            A GitHub OAuth App is required to auto-create activity repositories. You will be redirected to authorize after creating the course.
+            {t("githubOrgInfo")}
           </p>
 
           {/* Callback URL helper */}
           <div className="mb-4">
-            <label className="block mb-1 text-xs font-medium text-gray-400 uppercase tracking-wider">OAuth Callback URL</label>
+            <label className="block mb-1 text-xs font-medium text-gray-400 uppercase tracking-wider">{t("oauthCallbackUrl")}</label>
             <div className="flex items-center gap-2">
               <code className="flex-1 bg-gray-800 border border-gray-700 text-blue-300 text-xs px-3 py-2 rounded-lg font-mono truncate">
                 {callbackUrl}
@@ -233,15 +235,15 @@ export default function CreateCourseMain({ user }) {
                 className="flex items-center gap-1.5 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 text-xs rounded-lg transition-all"
               >
                 <Copy className="w-3.5 h-3.5" />
-                {copiedCallback ? "Copied!" : "Copy"}
+                {copiedCallback ? t("copied") : t("copy")}
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-1">Paste this URL into the "Authorization callback URL" field of your GitHub OAuth App.</p>
+            <p className="text-xs text-gray-500 mt-1">{t("callbackHint")}</p>
           </div>
 
           <div className="mb-4">
             <label className="block mb-2 text-sm font-medium text-gray-300">
-              Client ID <span className="text-red-400">*</span>
+              {t("clientId")} <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -254,7 +256,7 @@ export default function CreateCourseMain({ user }) {
 
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-300">
-              Client Secret <span className="text-red-400">*</span>
+              {t("clientSecret")} <span className="text-red-400">*</span>
             </label>
             <div className="relative">
               <input
@@ -284,12 +286,12 @@ export default function CreateCourseMain({ user }) {
             {loading ? (
               <>
                 <Loader className="w-5 h-5 animate-spin" />
-                <span>Creating & connecting GitHub...</span>
+                <span>{t("creatingAndConnecting")}</span>
               </>
             ) : (
               <>
                 <Github className="w-5 h-5" />
-                Create Course & Connect GitHub
+                {t("createCourseAndConnect")}
               </>
             )}
           </button>

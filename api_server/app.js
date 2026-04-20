@@ -31,10 +31,10 @@ const router = express.Router();
 apiRoutes(router);
 app.use("/api", validateApiKey, router);
 
-  // // Endpoint to check that sentry logging works
-  // app.get("/debug-sentry", () => {
-  //   throw new Error("Sentry test error from API server");
-  // });
+  // Endpoint to check that sentry logging works
+  app.get("/debug-sentry", () => {
+    throw new Error("Sentry test error from API server");
+  });
 
 // API docs
 const swaggerUiOptions = {

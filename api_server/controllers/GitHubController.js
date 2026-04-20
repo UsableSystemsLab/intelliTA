@@ -331,9 +331,9 @@ const GitHubController = {
    */
   async initiateStudentAuth(req, res) {
     try {
-      const { firebaseId, redirect } = req.query;
-      if (!firebaseId || !redirect) {
-        return res.status(400).json({ message: "firebaseId and redirect are required" });
+      const { firebaseId, courseId, redirect } = req.query;
+      if (!firebaseId || !courseId || !redirect) {
+        return res.status(400).json({ message: "firebaseId, courseId and redirect are required" });
       }
 
       const user = await User.findOne({ where: { firebaseId } });
@@ -341,20 +341,18 @@ const GitHubController = {
         return res.redirect(`${redirect}?github=error&message=User+not+found`);
       }
 
-      // Use any active GitHub connection on the platform — we only need the client_id
-      // to initiate the OAuth flow and identify the student's GitHub username.
       const connection = await GitHubConnection.findOne({
-        where: { github_token: { [Op.ne]: null } },
+        where: { course_id: courseId, github_client_id: { [Op.ne]: null } },
       });
 
       if (!connection) {
         return res.redirect(
-          `${redirect}?github=error&message=GitHub+integration+not+set+up+yet.+Ask+your+instructor+to+connect+GitHub+in+their+course+settings.`
+          `${redirect}?github=error&message=GitHub+not+configured+for+this+course`
         );
       }
 
       const callbackUrl = `${req.protocol}://${req.get("host")}/api/github/callback`;
-      const state = createState({ type: "student", userId: user.id, redirect });
+      const state = createState({ type: "student", userId: user.id, courseId, redirect });
 
       const params = new URLSearchParams({
         client_id: connection.github_client_id,
@@ -424,11 +422,10 @@ const GitHubController = {
 
       // ── Student identity verification ──────────────────────────────────────
       if (stateData.type === "student") {
-        const { userId, redirect } = stateData;
+        const { userId, courseId: stateCourseId, redirect } = stateData;
 
-        // Find any active GitHub connection to exchange the code
         const connection = await GitHubConnection.findOne({
-          where: { github_token: { [Op.ne]: null } },
+          where: { course_id: stateCourseId, github_client_id: { [Op.ne]: null } },
         });
 
         if (!connection) {

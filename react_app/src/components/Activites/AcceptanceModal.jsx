@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { X, CheckCircle2, XCircle, GitBranch, Loader, AlertCircle, ExternalLink, ShieldCheck, ShieldAlert } from "lucide-react";
 import { API_BASE, getAuthHeaders } from "../../config/api";
 import { auth } from "@/utils/firebase.js";
 
 export default function AcceptanceModal({ courseId, activityId, activityTitle, onClose }) {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,7 +39,7 @@ export default function AcceptanceModal({ courseId, activityId, activityTitle, o
           <div>
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <GitBranch className="w-5 h-5 text-blue-400" />
-              Assignment Tracking
+              {t('assignmentTracking')}
             </h2>
             <p className="text-sm text-gray-400 mt-0.5">{activityTitle}</p>
           </div>
@@ -54,7 +56,7 @@ export default function AcceptanceModal({ courseId, activityId, activityTitle, o
           {loading && (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader className="w-8 h-8 text-blue-400 animate-spin mb-3" />
-              <p className="text-gray-400">Fetching from GitHub Classroom...</p>
+              <p className="text-gray-400">{t('fetchingFromGitHub')}</p>
             </div>
           )}
 
@@ -71,17 +73,17 @@ export default function AcceptanceModal({ courseId, activityId, activityTitle, o
               <div className="flex items-center gap-4 mb-5 p-4 bg-gray-900/50 rounded-xl border border-gray-700">
                 <div className="flex-1 text-center">
                   <p className="text-2xl font-bold text-white">{data.total_enrolled}</p>
-                  <p className="text-xs text-gray-500 uppercase tracking-wider">Enrolled</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">{t('enrolled')}</p>
                 </div>
                 <div className="w-px h-10 bg-gray-700" />
                 <div className="flex-1 text-center">
                   <p className="text-2xl font-bold text-emerald-400">{data.accepted_count}</p>
-                  <p className="text-xs text-gray-500 uppercase tracking-wider">Accepted</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">{t('accepted')}</p>
                 </div>
                 <div className="w-px h-10 bg-gray-700" />
                 <div className="flex-1 text-center">
                   <p className="text-2xl font-bold text-red-400">{data.total_enrolled - data.accepted_count}</p>
-                  <p className="text-xs text-gray-500 uppercase tracking-wider">Pending</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wider">{t('pending')}</p>
                 </div>
               </div>
 
@@ -125,7 +127,7 @@ export default function AcceptanceModal({ courseId, activityId, activityTitle, o
                             @{s.github_username}
                           </span>
                         ) : (
-                          <span className="text-xs text-gray-500">No GitHub linked</span>
+                          <span className="text-xs text-gray-500">{t('noGitHubLinked')}</span>
                         )}
                       </div>
                     </div>
@@ -134,7 +136,7 @@ export default function AcceptanceModal({ courseId, activityId, activityTitle, o
                     {s.accepted && (
                       <div className="flex items-center gap-3 shrink-0">
                         <span className="text-xs text-gray-400">
-                          {s.commit_count} commit{s.commit_count !== 1 ? "s" : ""}
+                          {s.commit_count} {s.commit_count !== 1 ? t('commits') : t('commit')}
                         </span>
                         {s.repo_url && (
                           <a
@@ -153,7 +155,7 @@ export default function AcceptanceModal({ courseId, activityId, activityTitle, o
                 ))}
 
                 {data.students.length === 0 && (
-                  <p className="text-center text-gray-500 py-8">No students enrolled in this course.</p>
+                  <p className="text-center text-gray-500 py-8">{t('noStudentsEnrolledInCourse')}</p>
                 )}
               </div>
             </>

@@ -1,4 +1,5 @@
 import Editor from "@monaco-editor/react";
+import { useTranslation } from 'react-i18next';
 import ReactMarkdown from "react-markdown";
 import FileExplorer from './FileExplorer';
 import { Terminal, Code2, ChevronDown, ChevronUp, FileText, Sparkles } from 'lucide-react';
@@ -61,6 +62,7 @@ export default function CodeEditorSection({
     activityTitle,
     onAskAI
 }) {
+    const { t } = useTranslation();
     const [consoleExpanded, setConsoleExpanded] = useState(true);
     const editorRef = useRef(null);
     const monacoRef = useRef(null);
@@ -149,7 +151,7 @@ export default function CodeEditorSection({
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                         <Code2 className="w-4 h-4 text-blue-400" />
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Sandbox</span>
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{t('sandbox')}</span>
                     </div>
                     <div className="h-4 w-px bg-gray-700" />
                     <Breadcrumb items={[
@@ -174,7 +176,7 @@ export default function CodeEditorSection({
                 />
 
                 {/* Editor + Console */}
-                <div ref={editorContainerRef} className="flex-1 flex flex-col relative overflow-hidden">
+                <div ref={editorContainerRef} className="flex-1 flex flex-col relative overflow-hidden" dir="ltr">
                     {/* Editor or Markdown Preview */}
                     <div className={`${consoleExpanded ? 'flex-1' : 'flex-1'} min-h-0`}>
                         {isMarkdownFile(activeFile?.name) ? (
@@ -224,7 +226,7 @@ export default function CodeEditorSection({
                         >
                             <div className="flex items-center gap-2 text-gray-500">
                                 <Terminal className="w-4 h-4" />
-                                <span className="text-xs font-medium uppercase tracking-wider">Console</span>
+                                <span className="text-xs font-medium uppercase tracking-wider">{t('consoleLabel')}</span>
                                 {feedback && (
                                     <span className={`ml-2 w-2 h-2 rounded-full ${feedback.type === 'success' ? 'bg-emerald-400' : feedback.type === 'error' ? 'bg-red-400' : 'bg-blue-400'}`}></span>
                                 )}
@@ -242,20 +244,20 @@ export default function CodeEditorSection({
                                 <div className={`${feedback?.type === 'success' ? 'text-emerald-400' : feedback?.type === 'error' ? 'text-red-400' : 'text-gray-400'}`}>
                                     {feedback ? (
                                         <span className="flex items-center gap-2">
-                                            <span className="text-gray-600">›</span>
+                                            <span className="text-gray-600">{"›"}</span>
                                             {feedback.message}
                                         </span>
                                     ) : (
                                         <span className="flex items-center gap-2 text-gray-600">
-                                            <span>›</span>
-                                            Ready...
+                                            <span>{"›"}</span>
+                                            {t('ready')}
                                         </span>
                                     )}
                                 </div>
                                 {activeCheckpoint && (
                                     <div className="text-amber-400 mt-1 flex items-center gap-2">
-                                        <span className="text-gray-600">›</span>
-                                        <span>Waiting for solution: <strong>{activeCheckpoint.title}</strong></span>
+                                        <span className="text-gray-600">{"›"}</span>
+                                        <span>{t('waitingForSolution')} <strong>{activeCheckpoint.title}</strong></span>
                                     </div>
                                 )}
                             </div>
