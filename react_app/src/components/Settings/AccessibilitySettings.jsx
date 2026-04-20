@@ -1,16 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { ALargeSmall, Contrast, Volume2 } from 'lucide-react';
 import { TTS_ENABLED_KEY, TTS_VOICE_KEY, TTS_RATE_KEY, TTS_PITCH_KEY } from '@/utils/useTTS.js';
+import React, { useState } from 'react';
+import { ALargeSmall, Contrast, Sun, Moon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const FONT_SIZE_KEY = 'intelliTA-font-size';
 const HIGH_CONTRAST_KEY = 'intelliTA-high-contrast';
+const THEME_KEY = 'intelliTA-theme';
 
-const sizes = [
-  { id: 'sm',  label: 'Small',       px: 14, preview: 'text-xs' },
-  { id: 'md',  label: 'Medium',      px: 16, preview: 'text-sm' },
-  { id: 'lg',  label: 'Large',       px: 18, preview: 'text-base' },
-  { id: 'xl',  label: 'Extra Large', px: 20, preview: 'text-lg' },
+const sizeIds = [
+  { id: 'sm',  px: 14, preview: 'text-xs' },
+  { id: 'md',  px: 16, preview: 'text-sm' },
+  { id: 'lg',  px: 18, preview: 'text-base' },
+  { id: 'xl',  px: 20, preview: 'text-lg' },
 ];
+
+// Kept for backward-compatible imports of `applySize`.
+const sizes = sizeIds;
 
 function getSavedSize() {
   return localStorage.getItem(FONT_SIZE_KEY) || 'md';
@@ -36,8 +43,21 @@ function applyHighContrast(enabled) {
 }
 
 const isSTTSupported = 'speechSynthesis' in window;
+function getTheme() {
+  return localStorage.getItem(THEME_KEY) || 'dark';
+}
+
+function applyTheme(theme) {
+  if (theme === 'light') {
+    document.documentElement.classList.add('light-theme');
+  } else {
+    document.documentElement.classList.remove('light-theme');
+  }
+  localStorage.setItem(THEME_KEY, theme);
+}
 
 const AccessibilitySettings = () => {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState(getSavedSize);
   const [highContrast, setHighContrast] = useState(getHighContrast);
   const [ttsEnabled, setTtsEnabled] = useState(() => localStorage.getItem(TTS_ENABLED_KEY) !== 'false');
@@ -53,10 +73,23 @@ const AccessibilitySettings = () => {
     window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
     return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
   }, []);
+  const [theme, setTheme] = useState(getTheme);
+
+  const sizeLabels = {
+    sm: t('sizeSmall'),
+    md: t('sizeMedium'),
+    lg: t('sizeLarge'),
+    xl: t('sizeExtraLarge'),
+  };
 
   const handleSelect = (id) => {
     setSelected(id);
     applySize(id);
+  };
+
+  const handleThemeSelect = (t) => {
+    setTheme(t);
+    applyTheme(t);
   };
 
   const handleContrastToggle = () => {
@@ -67,14 +100,51 @@ const AccessibilitySettings = () => {
 
   return (
     <div className="space-y-8 max-w-3xl">
+      {/* Theme Toggle */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+          {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          Theme
+        </label>
+        <p className="text-xs text-gray-500">
+          Switch between light and dark appearance.
+        </p>
+
+        <div className="grid grid-cols-2 gap-3 max-w-xs">
+          {[
+            { id: 'dark', label: 'Dark', icon: Moon },
+            { id: 'light', label: 'Light', icon: Sun },
+          ].map(({ id, label, icon: Icon }) => {
+            const isActive = theme === id;
+            return (
+              <button
+                key={id}
+                onClick={() => handleThemeSelect(id)}
+                className={`flex flex-col items-center justify-center gap-2 px-4 py-5 rounded-xl border transition-all duration-200
+                  ${isActive
+                    ? 'bg-blue-600/20 border-blue-500/50 text-blue-400 shadow-lg shadow-blue-900/20'
+                    : 'bg-gray-800/50 border-gray-700 text-gray-400 hover:bg-gray-700/50 hover:text-gray-200 hover:border-gray-600'
+                  }`}
+              >
+                <Icon className="w-5 h-5" />
+                <span className="text-xs font-medium">{label}</span>
+                {isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* High Contrast Toggle */}
       <div className="space-y-3">
         <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
           <Contrast className="w-4 h-4" />
-          High Contrast Mode
+          {t('highContrastMode')}
         </label>
         <p className="text-xs text-gray-500">
-          Increases color contrast across the interface for better visibility.
+          {t('highContrastDesc')}
         </p>
 
         <button
@@ -94,7 +164,7 @@ const AccessibilitySettings = () => {
         {highContrast && (
           <div className="mt-2 p-3 rounded-xl bg-gray-800/30 border border-gray-700/50">
             <p className="text-gray-300 text-sm">
-              High contrast mode is <span className="font-semibold text-blue-400">enabled</span>. Colors have been adjusted for better readability.
+              {t('highContrastEnabled')} <span className="font-semibold text-blue-400">{t('enabled')}</span>. {t('highContrastEnabledNote')}
             </p>
           </div>
         )}
@@ -216,15 +286,15 @@ const AccessibilitySettings = () => {
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
           <ALargeSmall className="w-4 h-4" />
-          Font Size
+          {t('fontSize')}
         </label>
         <p className="text-xs text-gray-500">
-          Adjusts the base text size across the entire application.
+          {t('fontSizeDesc')}
         </p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {sizes.map((size) => {
+        {sizeIds.map((size) => {
           const isActive = selected === size.id;
           return (
             <button
@@ -242,7 +312,7 @@ const AccessibilitySettings = () => {
               >
                 Aa
               </span>
-              <span className="text-xs font-medium">{size.label}</span>
+              <span className="text-xs font-medium">{sizeLabels[size.id]}</span>
               {isActive && (
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
               )}
@@ -252,14 +322,14 @@ const AccessibilitySettings = () => {
       </div>
 
       <div className="mt-4 p-4 rounded-xl bg-gray-800/30 border border-gray-700/50">
-        <p className="text-gray-300 text-sm font-medium mb-1">Preview</p>
+        <p className="text-gray-300 text-sm font-medium mb-1">{t('preview')}</p>
         <p className="text-gray-400">
-          This is how body text will look across the site. Headings and labels scale with it.
+          {t('previewBodyText')}
         </p>
       </div>
     </div>
   );
 };
 
-export { applySize, FONT_SIZE_KEY, applyHighContrast, HIGH_CONTRAST_KEY };
+export { applySize, FONT_SIZE_KEY, applyHighContrast, HIGH_CONTRAST_KEY, applyTheme, THEME_KEY };
 export default AccessibilitySettings;

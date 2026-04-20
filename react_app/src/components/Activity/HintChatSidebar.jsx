@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Send, Bot, Loader2, Square, Volume2, VolumeX } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { X, Send, Bot, Loader2, Square } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { API_BASE as NODE_API_URL, LLM_BASE as LLM_SERVER_URL, getAuthHeaders } from '../../config/api';
 import { auth } from '@/utils/firebase.js';
@@ -107,6 +109,7 @@ function TTSButton({ text, onSpeakStart }) {
 }
 
 export default function HintChatSidebar({ isOpen, onClose, initialInput, onInitialInputConsumed, user, activityId, activityContext }) {
+    const { t } = useTranslation();
     const [messages, setMessages] = useState([WELCOME_MESSAGE]);
     const [input, setInput] = useState('');
     const [availableModels, setAvailableModels] = useState(LOCAL_MODELS);
@@ -341,7 +344,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
                         <div className="w-7 h-7 rounded-lg bg-blue-500/20 flex items-center justify-center">
                             <Bot className="w-4 h-4 text-blue-400" />
                         </div>
-                        <span className="text-base font-semibold text-white">AI Assistant</span>
+                        <span className="text-base font-semibold text-white">{t('aiAssistant')}</span>
                     </div>
                     <button
                         onClick={onClose}
@@ -356,7 +359,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
                     {isLoadingHistory ? (
                         <div className="flex items-center justify-center py-8">
                             <Loader2 className="w-6 h-6 text-blue-400 animate-spin" />
-                            <span className="ml-2 text-sm text-gray-400">Loading conversation...</span>
+                            <span className="ml-2 text-sm text-gray-400">{t('loadingConversation')}</span>
                         </div>
                     ) : (
                         messages.map((msg, i) => (
@@ -388,6 +391,22 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
                                             text={msg.content}
                                             onSpeakStart={() => window.speechSynthesis.cancel()}
                                         />
+                                <div
+                                    className={`max-w-[85%] rounded-xl px-4 py-3 ${
+                                        msg.role === 'user'
+                                            ? 'bg-blue-600 text-white rounded-br-sm'
+                                            : 'bg-gray-800 border border-gray-700 rounded-bl-sm'
+                                    }`}
+                                >
+                                    {msg.isStreaming && !msg.content ? (
+                                        <div className="flex items-center gap-2">
+                                            <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />
+                                            <span className="text-base text-gray-400">{t('thinking')}</span>
+                                        </div>
+                                    ) : (
+                                        <ReactMarkdown components={msg.role === 'assistant' ? markdownComponents : userMarkdownComponents}>
+                                            {msg.content}
+                                        </ReactMarkdown>
                                     )}
                                 </div>
                             </div>

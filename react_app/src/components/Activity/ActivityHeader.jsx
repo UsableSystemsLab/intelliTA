@@ -1,4 +1,5 @@
 import { ChevronsLeft, CheckCircle, Loader, Lightbulb } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function ActivityHeader({
     activityTitle,
@@ -10,6 +11,7 @@ export default function ActivityHeader({
     onHintClick,
     isHintOpen
 }) {
+    const { t } = useTranslation();
     return (
         <div className="h-10 border-b border-gray-800 bg-gray-900 px-4 flex items-center justify-between shrink-0 shadow-lg z-10">
             <div className="flex items-center gap-3">
@@ -36,7 +38,7 @@ export default function ActivityHeader({
                     }`}
                 >
                     <Lightbulb className="w-4 h-4" />
-                    <span>Hint</span>
+                    <span>{t('hint')}</span>
                 </button>
                 <button
                     onClick={onSubmit}
@@ -49,7 +51,7 @@ export default function ActivityHeader({
                     ) : (
                         <CheckCircle className="w-3.5 h-3.5" />
                     )}
-                    <span>{isEnded ? "Ended" : isUpcoming ? "Upcoming" : "Submit"}</span>
+                    <span>{isEnded ? t('statusEnded') : isUpcoming ? t('statusUpcoming') : t('submitBtn')}</span>
                 </button>
             </div>
         </div>

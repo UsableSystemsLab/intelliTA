@@ -1,5 +1,3 @@
-import LogoLoop from "@/components/lib/LogoLoop";
-import { imageLogos } from "@/utils/imageLogos";
 import CodeFrame from "@/components/Landing-page/CodeFrame";
 import AnimateOnScroll from "@/components/lib/AnimateOnScroll";
 import { Link } from "react-router-dom";
@@ -102,22 +100,6 @@ export default function HomeMain({ user }) {
                 </a>
               </AnimateOnScroll>
 
-              {/* Language logos strip */}
-              <AnimateOnScroll delay={500} className="pt-4" dir="ltr">
-                <LogoLoop
-                  className="loop-logos"
-                  logos={imageLogos}
-                  speed={120}
-                  direction="left"
-                  logoHeight={32}
-                  gap={40}
-                  pauseOnHover
-                  scaleOnHover
-                  fadeOut
-                  fadeOutColor="#111827"
-                  ariaLabel="Supported programming languages"
-                />
-              </AnimateOnScroll>
             </div>
 
             {/* Right column */}
@@ -128,7 +110,7 @@ export default function HomeMain({ user }) {
                   <div className="w-3 h-3 rounded-full bg-red-500/80" />
                   <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
                   <div className="w-3 h-3 rounded-full bg-green-500/80" />
-                  <span className="ml-3 text-xs text-gray-500 font-medium">IntelliTA - Lab Environment</span>
+                  <span className="ml-3 text-xs text-gray-500 font-medium">{t('intelliTALabEnv')}</span>
                 </div>
                 <div dir="ltr">
                   <CodeFrame />
@@ -296,15 +278,15 @@ export default function HomeMain({ user }) {
               <div className="flex flex-wrap justify-center gap-3 mb-8">
                 <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium text-blue-400 bg-blue-600/10 border border-blue-500/20 rounded-full">
                   <Brain className="w-3.5 h-3.5" />
-                  AI-Powered
+                  {t('badgeAIPowered')}
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium text-purple-300 bg-purple-500/10 border border-purple-500/20 rounded-full">
                   <BookOpen className="w-3.5 h-3.5" />
-                  Interactive Labs
+                  {t('badgeInteractiveLabs')}
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium text-blue-300 bg-blue-500/10 border border-blue-500/20 rounded-full">
                   <Trophy className="w-3.5 h-3.5" />
-                  Gamified
+                  {t('badgeGamified')}
                 </span>
               </div>
 

@@ -1,7 +1,9 @@
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import MembersList from "./MembersList";
 
 export default function MembersModal({ courseId, user, onClose }) {
+    const { t } = useTranslation();
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="relative bg-gray-800 rounded-2xl border border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl">
@@ -10,7 +12,7 @@ export default function MembersModal({ courseId, user, onClose }) {
 
                 {/* Header */}
                 <div className="relative z-10 flex items-center justify-between p-6 border-b border-gray-700">
-                    <h2 className="text-xl font-bold text-white">Course Members</h2>
+                    <h2 className="text-xl font-bold text-white">{t('courseMembers')}</h2>
                     <button
                         onClick={onClose}
                         className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"

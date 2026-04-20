@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   X,
   Github,
@@ -16,6 +17,7 @@ import { API_BASE, getAuthHeaders } from "../../config/api";
 import { auth } from "@/utils/firebase.js";
 
 const GitHubCourseModal = ({ courseId, onClose }) => {
+  const { t } = useTranslation();
   const [clientId, setClientId] = useState("");
   const [clientSecret, setClientSecret] = useState("");
   const [showSecret, setShowSecret] = useState(false);
@@ -207,15 +209,15 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
               <Github className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">GitHub Integration</h2>
-              <p className="text-sm text-gray-400">Connect GitHub Classroom for this course</p>
+              <h2 className="text-xl font-bold text-white">{t('githubIntegration')}</h2>
+              <p className="text-sm text-gray-400">{t('connectGitHubClassroom')}</p>
             </div>
           </div>
 
           {loading ? (
             <div className="flex items-center gap-2 text-gray-400 text-sm py-8 justify-center">
               <Loader2 className="w-4 h-4 animate-spin" />
-              <span>Loading...</span>
+              <span>{t('loading')}</span>
             </div>
           ) : status?.connected ? (
             // ── Connected State ──
@@ -229,7 +231,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
                       <span className="text-white font-medium">{status.github_username}</span>
                       <CheckCircle className="w-4 h-4 text-green-400" />
                     </div>
-                    <p className="text-xs text-gray-400 mt-0.5">GitHub account connected</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{t('githubAccountConnected')}</p>
                   </div>
                 </div>
               </div>
@@ -239,12 +241,12 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <BookOpen className="w-4 h-4 text-blue-400" />
-                    <span className="text-sm font-medium text-gray-200">GitHub Classroom</span>
+                    <span className="text-sm font-medium text-gray-200">{t('githubClassroom')}</span>
                   </div>
                   {status.github_classroom_id && (
                     <span className="flex items-center gap-1 text-xs text-green-400">
                       <CheckCircle className="w-3 h-3" />
-                      Linked
+                      {t('linked')}
                     </span>
                   )}
                 </div>
@@ -253,15 +255,15 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
                   <div className="mb-3">
                     <p className="text-sm text-white font-medium">{status.github_classroom_name}</p>
                     {status.github_org && (
-                      <p className="text-xs text-gray-400 mt-0.5">Org: {status.github_org}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{t('orgLabel')} {status.github_org}</p>
                     )}
                     <p className="text-xs text-gray-500 mt-0.5">
-                      Activities will auto-create repos + classroom assignments.
+                      {t('autoCreateReposDesc')}
                     </p>
                   </div>
                 ) : (
                   <p className="text-xs text-gray-400 mb-3">
-                    Link a classroom so activities automatically create GitHub Classroom assignments for students.
+                    {t('linkClassroomDesc')}
                   </p>
                 )}
 
@@ -269,7 +271,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
                 {showClassroomPicker && (
                   <div className="mt-2 mb-3 border border-gray-700 rounded-xl overflow-hidden">
                     {classrooms.length === 0 ? (
-                      <p className="text-sm text-gray-400 p-3 text-center">No classrooms found for your account.</p>
+                      <p className="text-sm text-gray-400 p-3 text-center">{t('noClassroomsFound')}</p>
                     ) : (
                       classrooms.map((c) => (
                         <button
@@ -306,10 +308,10 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
                     <BookOpen className="w-4 h-4" />
                   )}
                   {loadingClassrooms
-                    ? "Loading classrooms..."
+                    ? t('loadingClassrooms')
                     : status.github_classroom_id
-                    ? "Change Classroom"
-                    : "Select Classroom"}
+                    ? t('changeClassroom')
+                    : t('selectClassroom')}
                 </button>
               </div>
 
@@ -319,14 +321,14 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
                   className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-xl transition-colors"
                 >
                   <Unplug className="w-4 h-4" />
-                  Disconnect
+                  {t('disconnect')}
                 </button>
                 <button
                   onClick={handleDeleteCredentials}
                   className="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
-                  Remove All
+                  {t('removeAll')}
                 </button>
               </div>
             </div>
@@ -336,7 +338,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
               <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
                 <Info className="w-5 h-5 text-amber-400 mt-0.5 shrink-0" />
                 <p className="text-sm text-gray-300">
-                  Credentials saved. Click below to authorize with GitHub.
+                  {t('credentialsSavedClickToAuth')}
                 </p>
               </div>
 
@@ -345,7 +347,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
                 className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-gray-900 hover:bg-gray-950 text-white border border-gray-600 hover:border-gray-500 rounded-xl font-medium transition-all duration-300"
               >
                 <Github className="w-5 h-5" />
-                Connect GitHub
+                {t('connectGitHub')}
               </button>
 
               <div className="flex gap-2">
@@ -353,13 +355,13 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
                   onClick={() => setStatus({ has_credentials: false, connected: false })}
                   className="flex-1 text-sm text-gray-400 hover:text-gray-300 py-2 transition-colors"
                 >
-                  Update Credentials
+                  {t('updateCredentials')}
                 </button>
                 <button
                   onClick={handleDeleteCredentials}
                   className="text-sm text-red-400 hover:text-red-300 py-2 transition-colors"
                 >
-                  Remove
+                  {t('remove')}
                 </button>
               </div>
             </div>
@@ -370,12 +372,12 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
                 <Info className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
                 <div className="text-sm text-gray-300 leading-relaxed">
                   <p>
-                    Create a{" "}
-                    <span className="text-blue-400 font-medium">GitHub OAuth App</span>{" "}
-                    under your organization, then enter the credentials below.
+                    {t('createA')}{" "}
+                    <span className="text-blue-400 font-medium">{t('gitHubOAuthApp')}</span>{" "}
+                    {t('underYourOrgEnterCredentials')}
                   </p>
                   <p className="text-gray-400 mt-1">
-                    Set the callback URL to:{" "}
+                    {t('setCallbackUrlTo')}{" "}
                     <code className="text-xs bg-gray-700 px-1.5 py-0.5 rounded">
                       {`${API_BASE}/github/callback`}
                     </code>
@@ -384,7 +386,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300">Client ID</label>
+                <label className="block text-sm font-medium text-gray-300">{t('clientId')}</label>
                 <input
                   type="text"
                   value={clientId}
@@ -395,7 +397,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300">Client Secret</label>
+                <label className="block text-sm font-medium text-gray-300">{t('clientSecret')}</label>
                 <div className="relative">
                   <input
                     type={showSecret ? "text" : "password"}
@@ -420,7 +422,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
                 className="w-full px-5 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-all duration-300 shadow-lg shadow-blue-900/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                {saving ? "Saving..." : "Save Credentials"}
+                {saving ? t('saving') : t('saveCredentials')}
               </button>
             </div>
           )}

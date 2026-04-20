@@ -38,12 +38,12 @@ const User = sequelize.define(
       unique: true,
     },
     first_name: {
-      type: DataTypes.STRING(15),
+      type: DataTypes.STRING(50),
       field: "fname",
       allowNull: false,
     },
     last_name: {
-      type: DataTypes.STRING(15),
+      type: DataTypes.STRING(50),
       field: "lname",
       allowNull: false,
     },

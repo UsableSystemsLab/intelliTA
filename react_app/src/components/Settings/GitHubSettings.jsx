@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Github, CheckCircle, Loader2, ShieldCheck, ShieldAlert, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { API_BASE, getAuthHeaders } from '../../config/api';
 import { auth } from '@/utils/firebase.js';
 
 const GitHubSettings = ({ user }) => {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState(null);   // { github_username, github_verified }
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState(false);
@@ -20,9 +22,9 @@ const GitHubSettings = ({ user }) => {
         github_username: data.github_username || null,
         github_verified: data.github_verified || false,
       }))
-      .catch(() => setError('Failed to load profile.'))
+      .catch(() => setError(t('failedToLoadProfile')))
       .finally(() => setLoading(false));
-  }, [user?.uid]);
+  }, [user?.uid, t]);
 
   // Handle OAuth callback params (?github=verified&username=...)
   useEffect(() => {
@@ -31,13 +33,13 @@ const GitHubSettings = ({ user }) => {
     if (result === 'verified') {
       const username = params.get('username');
       setProfile({ github_username: username, github_verified: true });
-      setSuccess(`GitHub account verified: @${username}`);
+      setSuccess(`${t('githubVerifiedSuccess')} @${username}`);
       const url = new URL(window.location);
       url.searchParams.delete('github');
       url.searchParams.delete('username');
       window.history.replaceState({}, '', url);
     } else if (result === 'error') {
-      setError(params.get('message') || 'GitHub verification failed.');
+      setError(params.get('message') || t('githubVerifyFailed'));
       const url = new URL(window.location);
       url.searchParams.delete('github');
       url.searchParams.delete('message');
@@ -63,11 +65,11 @@ const GitHubSettings = ({ user }) => {
         headers: { ...await getAuthHeaders(auth.currentUser), 'Content-Type': 'application/json' },
         body: JSON.stringify({ github_username: null }),
       });
-      if (!res.ok) throw new Error('Failed to remove');
+      if (!res.ok) throw new Error(t('failedToRemove'));
       setProfile({ github_username: null, github_verified: false });
-      setSuccess('GitHub account disconnected.');
+      setSuccess(t('githubDisconnected'));
     } catch {
-      setError('Failed to remove GitHub account.');
+      setError(t('failedToRemoveGitHub'));
     } finally {
       setRemoving(false);
     }
@@ -77,7 +79,7 @@ const GitHubSettings = ({ user }) => {
     return (
       <div className="flex items-center gap-2 text-gray-400 text-sm py-8">
         <Loader2 className="w-4 h-4 animate-spin" />
-        <span>Loading...</span>
+        <span>{t('loading')}</span>
       </div>
     );
   }
@@ -85,9 +87,9 @@ const GitHubSettings = ({ user }) => {
   return (
     <div className="space-y-8 max-w-lg">
       <div>
-        <h2 className="text-xl font-semibold text-gray-100 mb-1">GitHub Account</h2>
+        <h2 className="text-xl font-semibold text-gray-100 mb-1">{t('githubAccount')}</h2>
         <p className="text-gray-400 text-sm">
-          Connect your GitHub account so your instructor can match you to your assignment repository.
+          {t('githubAccountDesc')}
         </p>
       </div>
 
@@ -103,19 +105,19 @@ const GitHubSettings = ({ user }) => {
                   {profile.github_verified ? (
                     <span className="flex items-center gap-1 text-xs text-green-400 bg-green-400/10 border border-green-400/20 px-2 py-0.5 rounded-full">
                       <ShieldCheck className="w-3 h-3" />
-                      Verified
+                      {t('verified')}
                     </span>
                   ) : (
                     <span className="flex items-center gap-1 text-xs text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-full">
                       <ShieldAlert className="w-3 h-3" />
-                      Not verified
+                      {t('notVerified')}
                     </span>
                   )}
                 </div>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {profile.github_verified
-                    ? 'Identity confirmed via GitHub OAuth'
-                    : 'Verify ownership by connecting with GitHub'}
+                    ? t('identityConfirmed')
+                    : t('verifyOwnership')}
                 </p>
               </div>
             </div>
@@ -123,7 +125,7 @@ const GitHubSettings = ({ user }) => {
               onClick={handleRemove}
               disabled={removing}
               className="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
-              title="Disconnect"
+              title={t('disconnect')}
             >
               {removing ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
             </button>
@@ -135,7 +137,7 @@ const GitHubSettings = ({ user }) => {
               className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-gray-900 hover:bg-gray-950 text-white border border-gray-600 hover:border-gray-400 rounded-xl font-medium transition-all duration-300"
             >
               <Github className="w-5 h-5" />
-              Verify with GitHub
+              {t('verifyWithGitHub')}
             </button>
           )}
         </div>
@@ -143,16 +145,16 @@ const GitHubSettings = ({ user }) => {
         // ── Not connected state ──
         <div className="space-y-4">
           <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-sm text-gray-300 leading-relaxed">
-            Click the button below to authorize with GitHub. We will read only your
-            <span className="text-blue-400 font-medium"> public username </span>
-            — no repositories, no write access.
+            {t('githubReadOnlyNote')}
+            <span className="text-blue-400 font-medium"> {t('publicUsername')} </span>
+            {t('githubReadOnlyEnd')}
           </div>
           <button
             onClick={handleVerify}
             className="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 bg-gray-900 hover:bg-gray-800 text-white border border-gray-600 hover:border-gray-400 rounded-xl font-semibold transition-all duration-300 shadow-lg"
           >
             <Github className="w-5 h-5" />
-            Connect GitHub Account
+            {t('connectGitHubAccount')}
           </button>
         </div>
       )}
