@@ -47,14 +47,17 @@ export default function HomeFooter() {
           <div className="my-8 border-t border-gray-800" />
 
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
-            <span className="text-center md:text-left">
+            <span className="text-center md:text-left flex items-center gap-2 flex-wrap justify-center md:justify-start">
               © 2025 <span className="text-gray-300 font-medium">IntelliTA</span>. {t("rights")}
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-yellow-500/10 text-yellow-400 border border-yellow-500/30">
+                Beta
+              </span>
             </span>
             
             {/* Social Icons */}
             <div className="flex gap-4">
               <a href="#" className="text-gray-500 hover:text-white transition-colors">
-                <span className="sr-only">Twitter</span>
+                <span className="sr-only">{t("twitter")}</span>
                 <Twitter className="w-5 h-5" />
               </a>
               <a href="#" className="text-gray-500 hover:text-white transition-colors">

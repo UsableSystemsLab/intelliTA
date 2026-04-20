@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { ALargeSmall, Contrast, Volume2, Sun, Moon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { TTS_ENABLED_KEY, TTS_VOICE_KEY, TTS_RATE_KEY, TTS_PITCH_KEY } from '@/utils/useTTS.js';
 
 const FONT_SIZE_KEY = 'intelliTA-font-size';
 const HIGH_CONTRAST_KEY = 'intelliTA-high-contrast';
 const THEME_KEY = 'intelliTA-theme';
 
-const sizes = [
-  { id: 'sm',  label: 'Small',       px: 14, preview: 'text-xs' },
-  { id: 'md',  label: 'Medium',      px: 16, preview: 'text-sm' },
-  { id: 'lg',  label: 'Large',       px: 18, preview: 'text-base' },
-  { id: 'xl',  label: 'Extra Large', px: 20, preview: 'text-lg' },
+const sizeIds = [
+  { id: 'sm',  px: 14, preview: 'text-xs' },
+  { id: 'md',  px: 16, preview: 'text-sm' },
+  { id: 'lg',  px: 18, preview: 'text-base' },
+  { id: 'xl',  px: 20, preview: 'text-lg' },
 ];
+
+const sizes = sizeIds;
 
 function getSavedSize() {
   return localStorage.getItem(FONT_SIZE_KEY) || 'md';
@@ -52,6 +55,7 @@ function applyTheme(theme) {
 const isTTSSupported = 'speechSynthesis' in window;
 
 const AccessibilitySettings = () => {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState(getSavedSize);
   const [highContrast, setHighContrast] = useState(getHighContrast);
   const [theme, setTheme] = useState(getTheme);
@@ -68,6 +72,13 @@ const AccessibilitySettings = () => {
     window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
     return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
   }, []);
+
+  const sizeLabels = {
+    sm: t('sizeSmall'),
+    md: t('sizeMedium'),
+    lg: t('sizeLarge'),
+    xl: t('sizeExtraLarge'),
+  };
 
   const handleSelect = (id) => {
     setSelected(id);
@@ -128,10 +139,10 @@ const AccessibilitySettings = () => {
       <div className="space-y-3">
         <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
           <Contrast className="w-4 h-4" />
-          High Contrast Mode
+          {t('highContrastMode')}
         </label>
         <p className="text-xs text-gray-500">
-          Increases color contrast across the interface for better visibility.
+          {t('highContrastDesc')}
         </p>
 
         <button
@@ -151,7 +162,7 @@ const AccessibilitySettings = () => {
         {highContrast && (
           <div className="mt-2 p-3 rounded-xl bg-gray-800/30 border border-gray-700/50">
             <p className="text-gray-300 text-sm">
-              High contrast mode is <span className="font-semibold text-blue-400">enabled</span>. Colors have been adjusted for better readability.
+              {t('highContrastEnabled')} <span className="font-semibold text-blue-400">{t('enabled')}</span>. {t('highContrastEnabledNote')}
             </p>
           </div>
         )}
@@ -273,15 +284,15 @@ const AccessibilitySettings = () => {
       <div className="space-y-2">
         <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
           <ALargeSmall className="w-4 h-4" />
-          Font Size
+          {t('fontSize')}
         </label>
         <p className="text-xs text-gray-500">
-          Adjusts the base text size across the entire application.
+          {t('fontSizeDesc')}
         </p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {sizes.map((size) => {
+        {sizeIds.map((size) => {
           const isActive = selected === size.id;
           return (
             <button
@@ -299,7 +310,7 @@ const AccessibilitySettings = () => {
               >
                 Aa
               </span>
-              <span className="text-xs font-medium">{size.label}</span>
+              <span className="text-xs font-medium">{sizeLabels[size.id]}</span>
               {isActive && (
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
               )}
@@ -309,9 +320,9 @@ const AccessibilitySettings = () => {
       </div>
 
       <div className="mt-4 p-4 rounded-xl bg-gray-800/30 border border-gray-700/50">
-        <p className="text-gray-300 text-sm font-medium mb-1">Preview</p>
+        <p className="text-gray-300 text-sm font-medium mb-1">{t('preview')}</p>
         <p className="text-gray-400">
-          This is how body text will look across the site. Headings and labels scale with it.
+          {t('previewBodyText')}
         </p>
       </div>
     </div>

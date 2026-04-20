@@ -1,0 +1,164 @@
+services:
+  db:
+    image: postgres:16.4-alpine
+    container_name: postgres_container
+    hostname: ${POSTGRES_HOST}
+    env_file:
+      - .env.prod
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT}:${POSTGRES_PORT}"
+    restart: unless-stopped
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./db_init_scripts:/docker-entrypoint-initdb.d
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api_server:
+    env_file:
+      - .env.prod
+    build:
+      context: api_server
+      dockerfile: Dockerfile
+      args:
+        PORT: ${API_SERVER_PORT}
+    image: api_server_image
+    container_name: api_server_container
+    ports:
+      - "127.0.0.1:${API_SERVER_PORT}:${API_SERVER_PORT}"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${API_SERVER_PORT}/health"]
+      interval: 120s
+      timeout: 5s
+      retries: 3
+
+  ollama:
+    build:
+      context: llm
+      dockerfile: Dockerfile
+    container_name: ollama_container
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    networks:
+      - app_network
+
+  llm_server:
+    env_file:
+      - .env.prod
+    build:
+      context: llm/server
+      dockerfile: Dockerfile
+      args:
+        PORT: ${LLM_SERVER_PORT}
+    image: llm_server_image
+    container_name: llm_server_container
+    environment:
+      - OLLAMA_HOST=ollama_container
+      - OLLAMA_PORT=11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
+      - LLM_SERVER_PORT=${LLM_SERVER_PORT}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GROQ_HINT_MODEL=${GROQ_HINT_MODEL:-llama-3.3-70b-versatile}
+      - API_SERVER_HOST=api_server_container
+      - API_SERVER_PORT=${API_SERVER_PORT}
+    ports:
+      - "127.0.0.1:${LLM_SERVER_PORT}:${LLM_SERVER_PORT}"
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${LLM_SERVER_PORT}/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  rustfs:
+    image: rustfs/rustfs
+    container_name: rustfs_container
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - rustfs_data:/data
+    environment:
+      - RUSTFS_VOLUMES=/data
+      - RUSTFS_ROOT_USER=${S3_ACCESS_KEY}
+      - RUSTFS_ROOT_PASSWORD=${S3_SECRET_KEY}
+    restart: unless-stopped
+    networks:
+      - app_network
+
+  whisper_server:
+    build:
+      context: whisper_server
+      dockerfile: Dockerfile
+    image: whisper_server_image
+    container_name: whisper_server_container
+    environment:
+      - WHISPER_MODEL=${WHISPER_MODEL}
+      - WHISPER_PORT=${WHISPER_PORT}
+    ports:
+      - "127.0.0.1:${WHISPER_PORT:-8001}:${WHISPER_PORT:-8001}"
+    volumes:
+      - whisper_cache:/root/.cache/whisper
+    restart: unless-stopped
+    networks:
+      - app_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${WHISPER_PORT:-8001}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  pg_data:
+  ollama_data:
+  rustfs_data:
+  whisper_cache:

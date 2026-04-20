@@ -9,6 +9,7 @@ import { auth, db } from '@/utils/firebase';
 import { useTranslation } from "react-i18next";
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { API_BASE, getAuthHeaders } from '../config/api';
+import { isKauEmail, KAU_DOMAIN_ERROR } from '../utils/kauDomain';
 
 const Login = () => {
   const { t, i18n } = useTranslation();
@@ -18,6 +19,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [showKauModal, setShowKauModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -25,21 +27,27 @@ const Login = () => {
     switch (errorCode) {
       case "auth/invalid-credential":
       case "auth/user-not-found":
-        return "Account not found. Please sign up first.";
+        return t("errAccountNotFound");
       case "auth/wrong-password":
-        return "Incorrect password. Please try again.";
+        return t("errWrongPassword");
       case "auth/invalid-email":
-        return "Please enter a valid email address.";
+        return t("errInvalidEmail");
       case "auth/network-request-failed":
-        return "Network error. Please check your connection.";
+        return t("errNetwork");
       default:
-        return "An error occurred. Please try again.";
+        return t("errGeneric");
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!isKauEmail(email)) {
+      setShowKauModal(true);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -61,6 +69,17 @@ const Login = () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+
+      if (!isKauEmail(user.email)) {
+        try {
+          await user.delete();
+        } catch {
+          await auth.signOut();
+        }
+        setShowKauModal(true);
+        setLoading(false);
+        return;
+      }
 
       // Firestore reference
       const userRef = doc(db, "users", user.uid);
@@ -275,6 +294,35 @@ const Login = () => {
           </div>
         </div>
       </div>
+
+      {showKauModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          onClick={() => setShowKauModal(false)}
+        >
+          <div
+            className="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl max-w-md w-full p-6 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-500/15 text-red-400">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">{t("kauModalTitle")}</h3>
+            <p className="text-sm text-gray-300 mb-6">{t("kauModalMessage")}</p>
+            <button
+              type="button"
+              onClick={() => setShowKauModal(false)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors duration-200 border-none cursor-pointer"
+            >
+              {t("ok")}
+            </button>
+          </div>
+        </div>
+      )}
 
       <style >{`
         @keyframes blob1 {

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { onAuthStateChanged } from 'firebase/auth'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { Loader } from 'lucide-react'
 import { auth, db } from '@/utils/firebase.js' // Ensure db is exported from your firebase config
 import { doc, getDoc } from "firebase/firestore";
 import { useTranslation } from 'react-i18next';
+import { isKauEmail } from '@/utils/kauDomain';
 
 import Login from '@/pages/Login.jsx'
 import SignUp from '@/pages/SignUp.jsx'
@@ -27,6 +28,16 @@ function App() {
   useEffect(() => {
     // Fetches user role from firestore upon auth state change
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser && !isKauEmail(currentUser.email)) {
+        try {
+          await currentUser.delete();
+        } catch {
+          await signOut(auth);
+        }
+        setUser(null);
+        setLoading(false);
+        return;
+      }
       if (currentUser) {
         try {
           const docRef = doc(db, "users", currentUser.uid);

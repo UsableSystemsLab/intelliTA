@@ -12,6 +12,7 @@ import LoadingScreen from './LoadingScreen';
 import ErrorScreen from './ErrorScreen';
 import SubmissionResultOverlay from './SubmissionResultOverlay';
 import { Play, FileText, Clock, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useCheckpoints } from '@/components/Activity/useCheckpoints';
 
 
@@ -129,6 +130,7 @@ const getLanguageFromFileName = (fileName) => {
 };
 
 export default function Maincontent({ user }) {
+    const { t } = useTranslation();
     const { courseId, activityId } = useParams();
     const navigate = useNavigate();
     const videoRef = useRef(null);
@@ -558,7 +560,7 @@ export default function Maincontent({ user }) {
                             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
                         >
                             <ArrowLeft className="w-5 h-5" />
-                            <span className="text-sm">Back to Course</span>
+                            <span className="text-sm">{t('backToCourse')}</span>
                         </button>
                         <div className="w-px h-6 bg-gray-700" />
                         <h1 className="text-lg font-semibold text-white">{activity.title}</h1>
@@ -577,13 +579,13 @@ export default function Maincontent({ user }) {
                                     </div>
                                     <div>
                                         <h2 className="text-xl font-bold text-white">{activity.title}</h2>
-                                        <p className="text-sm text-gray-400">Lab Activity</p>
+                                        <p className="text-sm text-gray-400">{t('labActivity')}</p>
                                     </div>
                                 </div>
                                 {activity.end_date && (
                                     <div className="flex items-center gap-2 text-gray-400 text-sm">
                                         <Clock className="w-4 h-4" />
-                                        <span>Due: {new Date(activity.end_date).toLocaleDateString()}</span>
+                                        <span>{t('due')} {new Date(activity.end_date).toLocaleDateString()}</span>
                                     </div>
                                 )}
                             </div>
@@ -593,14 +595,14 @@ export default function Maincontent({ user }) {
                                 className="w-full mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all duration-200 shadow-lg shadow-blue-500/20"
                             >
                                 <Play className="w-5 h-5" />
-                                Start Solving
+                                {t('startSolving')}
                             </button>
                         </div>
 
                         {/* Markdown Instructions */}
                         <div className="bg-gray-900/30 border border-gray-800 rounded-xl overflow-hidden">
                             <div className="px-6 py-4 border-b border-gray-800 bg-gray-900/50">
-                                <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">Instructions</h3>
+                                <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">{t('instructions')}</h3>
                             </div>
                             <div className="px-6 py-6">
                                 {markdownContent ? (
@@ -641,7 +643,7 @@ export default function Maincontent({ user }) {
                                         {markdownContent}
                                     </ReactMarkdown>
                                 ) : (
-                                    <p className="text-gray-500 italic">No instructions available for this activity.</p>
+                                    <p className="text-gray-500 italic">{t('noInstructions')}</p>
                                 )}
                             </div>
                         </div>
