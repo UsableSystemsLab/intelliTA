@@ -224,7 +224,7 @@ export default function Maincontent({ user }) {
             const targetFile = files.find(f => f.name === fileName) || activeFile;
             const res = await fetch(`${LLM_BASE}/hint/generate`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
                 body: JSON.stringify({
                     firebase_uid: user?.uid || 'anonymous',
                     activity_id: parseInt(activityId) || 0,

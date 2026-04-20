@@ -131,7 +131,8 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
             setIsLoadingHistory(true);
             try {
                 const res = await fetch(
-                    `${LLM_SERVER_URL}/hint/history?firebase_uid=${encodeURIComponent(user.uid)}&activity_id=${activityId}`
+                    `${LLM_SERVER_URL}/hint/history?firebase_uid=${encodeURIComponent(user.uid)}&activity_id=${activityId}`,
+                    { headers: await getAuthHeaders(auth.currentUser) },
                 );
                 if (res.ok) {
                     const history = await res.json();
@@ -204,7 +205,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
 
             const res = await fetch(`${LLM_SERVER_URL}/hint/chat`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
                 body: JSON.stringify(body),
                 signal: controller.signal,
             });

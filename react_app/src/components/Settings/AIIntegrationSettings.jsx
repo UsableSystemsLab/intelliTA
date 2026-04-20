@@ -45,7 +45,7 @@ const AIIntegrationSettings = ({ user }) => {
       // Step 1: Validate key via LLM server
       const validateRes = await fetch(`${LLM_SERVER_URL}/validate-key`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
         body: JSON.stringify({
           base_url: baseUrl.trim(),
           api_key: apiKey.trim(),
