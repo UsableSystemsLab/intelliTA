@@ -14,7 +14,6 @@ const sizeIds = [
   { id: 'xl',  px: 20, preview: 'text-lg' },
 ];
 
-// Kept for backward-compatible imports of `applySize`.
 const sizes = sizeIds;
 
 function getSavedSize() {
@@ -53,7 +52,7 @@ function applyTheme(theme) {
   localStorage.setItem(THEME_KEY, theme);
 }
 
-const isSTTSupported = 'speechSynthesis' in window;
+const isTTSSupported = 'speechSynthesis' in window;
 
 const AccessibilitySettings = () => {
   const { t } = useTranslation();
@@ -65,6 +64,14 @@ const AccessibilitySettings = () => {
   const [ttsRate, setTtsRate] = useState(() => parseFloat(localStorage.getItem(TTS_RATE_KEY)) || 1.0);
   const [ttsPitch, setTtsPitch] = useState(() => parseFloat(localStorage.getItem(TTS_PITCH_KEY)) || 1.0);
   const [voices, setVoices] = useState([]);
+
+  useEffect(() => {
+    if (!isTTSSupported) return;
+    const loadVoices = () => setVoices(window.speechSynthesis.getVoices());
+    loadVoices();
+    window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+  }, []);
 
   const sizeLabels = {
     sm: t('sizeSmall'),
@@ -170,7 +177,7 @@ const AccessibilitySettings = () => {
       </div>
 
       {/* Text-to-Speech */}
-      {isSTTSupported && (
+      {isTTSSupported && (
         <div className="space-y-3">
           <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
             <Volume2 className="w-4 h-4" />
