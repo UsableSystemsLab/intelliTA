@@ -1,10 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Send, Bot, Loader2, Square, Volume2, VolumeX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { X, Send, Bot, Loader2, Square, Volume2, VolumeX, Mic, MicOff } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { API_BASE as NODE_API_URL, LLM_BASE as LLM_SERVER_URL, getAuthHeaders } from '../../config/api';
 import { auth } from '@/utils/firebase.js';
 import useTTS, { TTS_ENABLED_KEY } from '@/utils/useTTS.js';
+import useSTT, { STT_LANG_KEY } from '@/utils/useSTT.js';
+
+const STT_LANGUAGES = [
+    { code: 'en-US', label: 'EN' },
+    { code: 'ar-SA', label: 'AR' },
+];
 
 const LOCAL_MODELS = [
     { id: 'qwen2.5-coder:7b', label: 'Qwen Coder' },
@@ -116,9 +122,40 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
     const [isStreaming, setIsStreaming] = useState(false);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const [historyLoaded, setHistoryLoaded] = useState(false);
+    const [sttLang, setSttLang] = useState(
+        () => (typeof window !== 'undefined' && localStorage.getItem(STT_LANG_KEY)) || 'en-US'
+    );
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
     const abortControllerRef = useRef(null);
+
+    const { isSupported: sttSupported, isListening, interim, transcript, error: sttError, start: startSTT, stop: stopSTT, clearError: clearSTTError } = useSTT(sttLang);
+
+    // Push finalized STT transcript into the textarea (replaces existing content).
+    useEffect(() => {
+        if (transcript) setInput(transcript);
+    }, [transcript]);
+
+    // Stop listening when sidebar closes.
+    useEffect(() => {
+        if (!isOpen && isListening) stopSTT();
+    }, [isOpen, isListening, stopSTT]);
+
+    const handleSttToggle = useCallback(() => {
+        if (isListening) {
+            stopSTT();
+        } else {
+            clearSTTError();
+            setInput('');
+            startSTT();
+        }
+    }, [isListening, startSTT, stopSTT, clearSTTError]);
+
+    const handleSttLangChange = useCallback((code) => {
+        if (isListening) stopSTT();
+        setSttLang(code);
+        try { localStorage.setItem(STT_LANG_KEY, code); } catch { /* noop */ }
+    }, [isListening, stopSTT]);
 
     // Fetch external models when sidebar opens
     useEffect(() => {
@@ -195,6 +232,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
     }, [initialInput, onInitialInputConsumed]);
 
     const handleSend = useCallback(async () => {
+        if (isListening) stopSTT();
         const text = input.trim();
         if (!text || isStreaming) return;
 
@@ -319,7 +357,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
             });
             setIsStreaming(false);
         }
-    }, [input, isStreaming, user, activityId, activityContext, selectedModel, availableModels]);
+    }, [input, isStreaming, user, activityId, activityContext, selectedModel, availableModels, isListening, stopSTT]);
 
     return (
         <>
@@ -402,35 +440,82 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
                 <div className="p-3 border-t border-gray-700 shrink-0 bg-gray-900">
                     <textarea
                         ref={inputRef}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
+                        value={isListening && interim ? `${input}${input ? ' ' : ''}${interim}` : input}
+                        onChange={(e) => { if (!isListening) setInput(e.target.value); }}
                         onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                        placeholder="Ask for a hint..."
+                        placeholder={isListening ? 'Listening…' : 'Ask for a hint...'}
                         rows={input.includes('\n') ? Math.min(input.split('\n').length, 6) : 1}
                         disabled={isStreaming}
                         className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-base text-white placeholder-gray-500 outline-none focus:border-blue-500 transition-colors resize-none disabled:opacity-50 mb-2"
                     />
-                    <div className="flex items-center justify-between">
-                        <select
-                            value={selectedModel}
-                            onChange={(e) => setSelectedModel(e.target.value)}
-                            className="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg px-2 py-1 outline-none focus:border-blue-500 transition-colors cursor-pointer"
-                        >
-                            {availableModels.some((m) => !m.isExternal) && (
-                                <optgroup label="Local Models">
-                                    {availableModels.filter((m) => !m.isExternal).map((m) => (
-                                        <option key={m.id} value={m.id}>{m.label}</option>
+                    {sttError && (
+                        <div className="mb-2 text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded px-2 py-1 flex items-center justify-between">
+                            <span>
+                                {sttError === 'permission-denied'
+                                    ? 'Microphone permission denied. Enable it in your browser settings.'
+                                    : sttError === 'network'
+                                        ? 'Speech recognition unavailable — check your connection.'
+                                        : `Speech error: ${sttError}`}
+                            </span>
+                            <button onClick={clearSTTError} className="ml-2 text-red-300 hover:text-red-100">
+                                <X className="w-3 h-3" />
+                            </button>
+                        </div>
+                    )}
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                            <select
+                                value={selectedModel}
+                                onChange={(e) => setSelectedModel(e.target.value)}
+                                className="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg px-2 py-1 outline-none focus:border-blue-500 transition-colors cursor-pointer"
+                            >
+                                {availableModels.some((m) => !m.isExternal) && (
+                                    <optgroup label="Local Models">
+                                        {availableModels.filter((m) => !m.isExternal).map((m) => (
+                                            <option key={m.id} value={m.id}>{m.label}</option>
+                                        ))}
+                                    </optgroup>
+                                )}
+                                {availableModels.some((m) => m.isExternal) && (
+                                    <optgroup label="External Models">
+                                        {availableModels.filter((m) => m.isExternal).map((m) => (
+                                            <option key={m.id} value={m.id}>{m.label}</option>
+                                        ))}
+                                    </optgroup>
+                                )}
+                            </select>
+                            {sttSupported && (
+                                <select
+                                    value={sttLang}
+                                    onChange={(e) => handleSttLangChange(e.target.value)}
+                                    className="bg-gray-800 border border-gray-700 text-gray-300 text-sm rounded-lg px-2 py-1 outline-none focus:border-blue-500 transition-colors cursor-pointer"
+                                    title="Voice input language"
+                                >
+                                    {STT_LANGUAGES.map((l) => (
+                                        <option key={l.code} value={l.code}>{l.label}</option>
                                     ))}
-                                </optgroup>
+                                </select>
                             )}
-                            {availableModels.some((m) => m.isExternal) && (
-                                <optgroup label="External Models">
-                                    {availableModels.filter((m) => m.isExternal).map((m) => (
-                                        <option key={m.id} value={m.id}>{m.label}</option>
-                                    ))}
-                                </optgroup>
-                            )}
-                        </select>
+                            <button
+                                type="button"
+                                onClick={handleSttToggle}
+                                disabled={!sttSupported || isStreaming}
+                                title={
+                                    !sttSupported
+                                        ? 'Speech input not supported in this browser'
+                                        : isListening
+                                            ? 'Stop recording'
+                                            : 'Start voice input'
+                                }
+                                className={`p-2 border rounded-lg transition-colors ${
+                                    isListening
+                                        ? 'bg-red-600 hover:bg-red-500 border-red-500 text-white'
+                                        : 'bg-gray-800 hover:bg-gray-700 border-gray-700 text-gray-300'
+                                } disabled:opacity-40 disabled:cursor-not-allowed`}
+                            >
+                                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                            </button>
+                        </div>
                         {isStreaming ? (
                             <button
                                 onClick={() => abortControllerRef.current?.abort()}

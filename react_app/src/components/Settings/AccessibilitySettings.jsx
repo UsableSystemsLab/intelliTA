@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ALargeSmall, Contrast, Sun, Moon, Volume2 } from 'lucide-react';
+import { ALargeSmall, Contrast, Volume2, Sun, Moon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { TTS_ENABLED_KEY, TTS_VOICE_KEY, TTS_RATE_KEY, TTS_PITCH_KEY } from '@/utils/useTTS.js';
 
@@ -14,7 +14,6 @@ const sizeIds = [
   { id: 'xl',  px: 20, preview: 'text-lg' },
 ];
 
-// Kept for backward-compatible imports of `applySize`.
 const sizes = sizeIds;
 
 function getSavedSize() {
@@ -40,7 +39,6 @@ function applyHighContrast(enabled) {
   localStorage.setItem(HIGH_CONTRAST_KEY, String(enabled));
 }
 
-const isSTTSupported = 'speechSynthesis' in window;
 function getTheme() {
   return localStorage.getItem(THEME_KEY) || 'dark';
 }
@@ -54,19 +52,21 @@ function applyTheme(theme) {
   localStorage.setItem(THEME_KEY, theme);
 }
 
+const isTTSSupported = 'speechSynthesis' in window;
+
 const AccessibilitySettings = () => {
   const { t } = useTranslation();
   const [selected, setSelected] = useState(getSavedSize);
   const [highContrast, setHighContrast] = useState(getHighContrast);
+  const [theme, setTheme] = useState(getTheme);
   const [ttsEnabled, setTtsEnabled] = useState(() => localStorage.getItem(TTS_ENABLED_KEY) !== 'false');
   const [ttsVoice, setTtsVoice] = useState(() => localStorage.getItem(TTS_VOICE_KEY) || '');
   const [ttsRate, setTtsRate] = useState(() => parseFloat(localStorage.getItem(TTS_RATE_KEY)) || 1.0);
   const [ttsPitch, setTtsPitch] = useState(() => parseFloat(localStorage.getItem(TTS_PITCH_KEY)) || 1.0);
   const [voices, setVoices] = useState([]);
-  const [theme, setTheme] = useState(getTheme);
 
   useEffect(() => {
-    if (!isSTTSupported) return;
+    if (!isTTSSupported) return;
     const loadVoices = () => setVoices(window.speechSynthesis.getVoices());
     loadVoices();
     window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
@@ -169,7 +169,7 @@ const AccessibilitySettings = () => {
       </div>
 
       {/* Text-to-Speech */}
-      {isSTTSupported && (
+      {isTTSSupported && (
         <div className="space-y-3">
           <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
             <Volume2 className="w-4 h-4" />
