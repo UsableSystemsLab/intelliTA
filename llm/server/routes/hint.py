@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from fastapi.responses import StreamingResponse
 from openai import AsyncOpenAI, APIStatusError, APIConnectionError, AuthenticationError, NotFoundError
 import httpx
 import json
 import logging
+
+from auth import require_bearer_token
 
 logger = logging.getLogger("uvicorn")
 
@@ -36,10 +38,10 @@ from prompts import (
 router = APIRouter()
 
 
-async def fetch_external_key(firebase_uid: str, key_id: int) -> dict | None:
+async def fetch_external_key(firebase_uid: str, key_id: int, auth_header: str) -> dict | None:
     """Fetch raw API key details from the Node API server."""
     try:
-        headers = {"Authorization": "Bearer 1111"}
+        headers = {"Authorization": auth_header}
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(f"{NODE_API_URL}/users/{firebase_uid}/api-keys/{key_id}/raw", headers=headers)
             resp.raise_for_status()
@@ -110,7 +112,10 @@ async def is_programming_related_external(message: str, history: list[dict], bas
 
 
 @router.post("/hint/chat")
-async def hint_chat(request: HintChatRequest):
+async def hint_chat(
+    request: HintChatRequest,
+    auth_header: str = Depends(require_bearer_token),
+):
     conversation_id = await get_or_create_conversation(
         request.firebase_uid, request.activity_id
     )
@@ -125,7 +130,7 @@ async def hint_chat(request: HintChatRequest):
     use_external = False
     ext_key_data = None
     if request.external_key_id is not None:
-        ext_key_data = await fetch_external_key(request.firebase_uid, request.external_key_id)
+        ext_key_data = await fetch_external_key(request.firebase_uid, request.external_key_id, auth_header)
         if ext_key_data:
             use_external = True
         else:
@@ -246,7 +251,10 @@ async def hint_chat(request: HintChatRequest):
 
 
 @router.post("/validate-key")
-async def validate_key(request: ValidateKeyRequest):
+async def validate_key(
+    request: ValidateKeyRequest,
+    auth_header: str = Depends(require_bearer_token),
+):
     """Validate an API key by making a minimal test call."""
     try:
         client = AsyncOpenAI(api_key=request.api_key, base_url=request.base_url)
@@ -263,7 +271,10 @@ async def validate_key(request: ValidateKeyRequest):
 
 
 @router.post("/hint/generate")
-async def hint_generate(request: HintGenerateRequest):
+async def hint_generate(
+    request: HintGenerateRequest,
+    auth_header: str = Depends(require_bearer_token),
+):
     """Generate a focused hint for a checkpoint challenge (non-streaming)."""
     prompt = HINT_WRAPPER.format(
         checkpoint_instruction=request.checkpoint_instruction,
@@ -294,6 +305,7 @@ async def hint_generate(request: HintGenerateRequest):
 async def hint_history(
     firebase_uid: str = Query(...),
     activity_id: int = Query(...),
+    auth_header: str = Depends(require_bearer_token),
 ):
     conversation_id = await get_or_create_conversation(firebase_uid, activity_id)
     messages = await get_messages(conversation_id)

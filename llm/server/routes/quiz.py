@@ -2,8 +2,9 @@ import asyncio
 import json
 import logging
 import httpx
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from auth import require_bearer_token
 from config import GROQ_HINT_MODEL, NODE_API_URL
 from groq_client import get_groq_client
 from models import QuizSuggestRequest
@@ -11,8 +12,6 @@ from models import QuizSuggestRequest
 logger = logging.getLogger("uvicorn")
 
 router = APIRouter()
-
-_AUTH_HEADERS = {"Authorization": "Bearer 1111"}
 
 DEFAULT_BUCKET_MINUTES = 5
 MIN_BUCKET_MINUTES = 1
@@ -96,13 +95,17 @@ def _slice_text_proportional(full_text: str, start_s: int, end_s: int, total_s: 
 
 
 @router.post("/quiz/suggest")
-async def suggest_quiz_questions(request: QuizSuggestRequest):
+async def suggest_quiz_questions(
+    request: QuizSuggestRequest,
+    auth_header: str = Depends(require_bearer_token),
+):
+    forward_headers = {"Authorization": auth_header}
 # Fetch transcript meta data
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             meta_resp = await client.get(
                 f"{NODE_API_URL}/transcripts/activities/{request.activity_id}",
-                headers=_AUTH_HEADERS,
+                headers=forward_headers,
             )
     except Exception as e:
         logger.error(f"Failed to reach Node API: {e}")
@@ -134,7 +137,7 @@ async def suggest_quiz_questions(request: QuizSuggestRequest):
         async with httpx.AsyncClient(timeout=60.0) as client:
             content_resp = await client.get(
                 f"{NODE_API_URL}/transcripts/{transcript_id}/content",
-                headers=_AUTH_HEADERS,
+                headers=forward_headers,
             )
     except Exception as e:
         logger.error(f"Failed to fetch transcript content: {e}")
