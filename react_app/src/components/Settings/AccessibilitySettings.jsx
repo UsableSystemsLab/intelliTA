@@ -80,6 +80,14 @@ const AccessibilitySettings = () => {
     xl: t('sizeExtraLarge'),
   };
 
+  useEffect(() => {
+    if (!isSTTSupported) return;
+    const loadVoices = () => setVoices(window.speechSynthesis.getVoices());
+    loadVoices();
+    window.speechSynthesis.addEventListener('voiceschanged', loadVoices);
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', loadVoices);
+  }, []);
+
   const handleSelect = (id) => {
     setSelected(id);
     applySize(id);
