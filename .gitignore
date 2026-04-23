@@ -13,7 +13,7 @@ node_modules/
 .pnp.js
 
 # testing
-/coverage
+/react_app/coverage
 
 # production
 /build
