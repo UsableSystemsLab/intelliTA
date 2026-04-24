@@ -9,11 +9,11 @@ Rules you MUST follow:
 - If you are unsure about something specific to the activity, say so honestly rather than guessing.
 {activity_context}"""
 
-SHORT_WRAPPER = """[INSTRUCTION: Reply in 1-3 plain sentences. No bullet points, no numbered lists, no code blocks.]
+SHORT_WRAPPER = """[INSTRUCTION: Reply in 1-3 sentences. You may use inline code spans (`like_this`) for identifiers and **bold** for key terms. No bullet points, no numbered lists, no fenced code blocks.]
 
 {message}"""
 
-LONG_WRAPPER = """[INSTRUCTION: The student shared a longer piece of code. Explain what each method does briefly. Use plain text. You may write up to 6-8 sentences. No bullet points, no numbered lists, no code blocks. Do NOT explain line by line syntax, just summarize what each part does in plain words.]
+LONG_WRAPPER = """[INSTRUCTION: The student shared a longer piece of code. Explain what each method does briefly. You may use inline code spans (`like_this`) for identifiers and **bold** for key terms, but write as prose — up to 6-8 sentences, no bullet points, no numbered lists, no fenced code blocks. Do NOT explain line by line syntax, just summarize what each part does in plain words.]
 
 {message}"""
 
