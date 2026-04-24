@@ -32,6 +32,475 @@
   background-color: #111827;
 }
 
+/* ── Light Theme ── */
+.light-theme {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+/* Backgrounds */
+.light-theme .bg-gray-900 {
+  background-color: #ffffff !important;
+}
+
+.light-theme .bg-gray-800,
+.light-theme .bg-gray-800\/50,
+.light-theme .bg-gray-800\/30,
+.light-theme .bg-gray-800\/80 {
+  background-color: #f9fafb !important;
+}
+
+.light-theme .bg-gray-700,
+.light-theme .bg-gray-700\/50 {
+  background-color: #f3f4f6 !important;
+}
+
+.light-theme .bg-gray-900\/95,
+.light-theme .bg-gray-900\/80,
+.light-theme .bg-gray-900\/50 {
+  background-color: rgba(255, 255, 255, 0.97) !important;
+}
+
+/* Text */
+.light-theme .text-gray-100,
+.light-theme .text-gray-200 {
+  color: #111827 !important;
+}
+
+.light-theme .text-gray-300 {
+  color: #374151 !important;
+}
+
+.light-theme .text-gray-400 {
+  color: #6b7280 !important;
+}
+
+.light-theme .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+.light-theme .text-gray-600 {
+  color: #6b7280 !important;
+}
+
+.light-theme .text-white {
+  color: #111827 !important;
+}
+
+/* Borders */
+.light-theme .border-gray-700,
+.light-theme .border-gray-700\/50,
+.light-theme .border-gray-800,
+.light-theme .border-gray-800\/50 {
+  border-color: #e5e7eb !important;
+}
+
+.light-theme .border-gray-600 {
+  border-color: #d1d5db !important;
+}
+
+/* Cards & selected states */
+.light-theme .bg-blue-600\/20,
+.light-theme .bg-blue-600\/10,
+.light-theme .bg-blue-900\/20 {
+  background-color: #eff6ff !important;
+}
+
+/* Hover states */
+.light-theme .hover\:bg-gray-800:hover,
+.light-theme .hover\:bg-gray-700\/50:hover {
+  background-color: #f3f4f6 !important;
+}
+
+/* Course cards — visible border and slight lift on white bg */
+.light-theme .group.bg-gray-800 {
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+}
+
+.light-theme .group.bg-gray-800:hover {
+  border-color: #2563eb !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1) !important;
+}
+
+/* Card decorative blur — hide in light mode */
+.light-theme .group .bg-blue-500\/10.rounded-full.blur-2xl {
+  opacity: 0 !important;
+}
+
+/* Card icon container */
+.light-theme .group .bg-gray-700\/50.rounded-xl {
+  background-color: #eff6ff !important;
+}
+
+/* Card "Go to Activities" button */
+.light-theme .group .bg-gray-700.hover\:bg-blue-600 {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.light-theme .group .bg-gray-700.hover\:bg-blue-600:hover {
+  background-color: #1d4ed8 !important;
+}
+
+/* Card hover shadow override — no blue glow */
+.light-theme .group:hover .group-hover\:shadow-lg {
+  box-shadow: none !important;
+}
+
+/* Status badge in light mode */
+.light-theme .bg-gray-900.border.border-gray-700 {
+  background-color: #f9fafb !important;
+  border-color: #d1d5db !important;
+}
+
+/* Pagination buttons */
+.light-theme .bg-gray-800.hover\:bg-blue-600 {
+  background-color: #f3f4f6 !important;
+  color: #374151 !important;
+}
+
+.light-theme .bg-gray-800.hover\:bg-blue-600:hover {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+/* Background page decorative blurs — hide */
+.light-theme .bg-blue-500\/5.rounded-full.blur-3xl,
+.light-theme .bg-purple-500\/5.rounded-full.blur-3xl {
+  opacity: 0 !important;
+}
+
+/* Code frame — keep dark in light mode */
+.light-theme .bg-gray-900.text-green-400.font-mono {
+  background-color: #111827 !important;
+  color: #4ade80 !important;
+}
+
+.light-theme .bg-gray-800\/50.backdrop-blur-sm.shadow-2xl {
+  background-color: #1f2937 !important;
+  border-color: #374151 !important;
+}
+
+.light-theme .bg-gray-800\/30.border-b.border-gray-700\/50 {
+  background-color: #1a2332 !important;
+  border-bottom-color: #374151 !important;
+}
+
+.light-theme .bg-gray-800\/30.border-b .text-gray-500 {
+  color: #6b7280 !important;
+}
+
+/* Activity preview page — light mode */
+.light-theme .bg-\[\#0d1117\] {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+/* Preview header bar */
+.light-theme .bg-\[\#0d1117\] .bg-gray-900\/50.border-b {
+  background-color: #f9fafb !important;
+  border-bottom-color: #e5e7eb !important;
+}
+
+.light-theme .bg-\[\#0d1117\] .text-white {
+  color: #111827 !important;
+}
+
+.light-theme .bg-\[\#0d1117\] .text-gray-400 {
+  color: #6b7280 !important;
+}
+
+.light-theme .bg-\[\#0d1117\] .text-gray-300 {
+  color: #374151 !important;
+}
+
+.light-theme .bg-\[\#0d1117\] .text-gray-200 {
+  color: #374151 !important;
+}
+
+.light-theme .bg-\[\#0d1117\] .text-gray-500 {
+  color: #9ca3af !important;
+}
+
+/* Activity info card */
+.light-theme .bg-\[\#0d1117\] .bg-gray-900\/80.border-gray-800 {
+  background-color: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+
+.light-theme .bg-\[\#0d1117\] .bg-blue-500\/20 {
+  background-color: #dbeafe !important;
+}
+
+/* Divider line */
+.light-theme .bg-\[\#0d1117\] .bg-gray-700 {
+  background-color: #e5e7eb !important;
+}
+
+/* Instructions section */
+.light-theme .bg-\[\#0d1117\] .bg-gray-900\/30.border-gray-800 {
+  background-color: #f9fafb !important;
+  border-color: #e5e7eb !important;
+}
+
+.light-theme .bg-\[\#0d1117\] .bg-gray-900\/50.border-b.border-gray-800 {
+  background-color: #f3f4f6 !important;
+  border-bottom-color: #e5e7eb !important;
+}
+
+/* Markdown content overrides */
+.light-theme .bg-\[\#0d1117\] .border-gray-700 {
+  border-color: #e5e7eb !important;
+}
+
+.light-theme .bg-\[\#0d1117\] .text-blue-400 {
+  color: #2563eb !important;
+}
+
+.light-theme .bg-\[\#0d1117\] .text-blue-300 {
+  color: #2563eb !important;
+}
+
+/* Inline code */
+.light-theme .bg-\[\#0d1117\] code.bg-gray-800 {
+  background-color: #f3f4f6 !important;
+  color: #2563eb !important;
+}
+
+/* Code blocks */
+.light-theme .bg-\[\#0d1117\] pre.bg-gray-800 {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+/* Blockquote */
+.light-theme .bg-\[\#0d1117\] blockquote.bg-gray-800\/50 {
+  background-color: #f3f4f6 !important;
+  color: #6b7280 !important;
+}
+
+/* Landing page tags */
+.light-theme .bg-blue-600\/10.border-blue-500\/20 {
+  background-color: #dbeafe !important;
+  border-color: #93c5fd !important;
+  color: #1d4ed8 !important;
+}
+
+.light-theme .bg-purple-500\/10.border-purple-500\/20 {
+  background-color: #ede9fe !important;
+  border-color: #a78bfa !important;
+  color: #6d28d9 !important;
+}
+
+.light-theme .bg-blue-500\/10.border-blue-500\/20 {
+  background-color: #dbeafe !important;
+  border-color: #93c5fd !important;
+  color: #1d4ed8 !important;
+}
+
+/* Language toggle button */
+.light-theme .border-gray-600\/50.rounded-full {
+  border-color: #d1d5db !important;
+  color: #374151 !important;
+}
+
+.light-theme .border-gray-600\/50.rounded-full:hover {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+  border-color: #9ca3af !important;
+}
+
+/* Nav header — scrolled state */
+.light-theme .bg-gray-900\/80.backdrop-blur-xl {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  border-bottom-color: #e5e7eb !important;
+}
+
+/* Nav user avatar ring */
+.light-theme .bg-gray-600.cursor-pointer {
+  background-color: #d1d5db !important;
+}
+
+/* Nav dropdown menu */
+.light-theme .bg-gray-900\/95.backdrop-blur-xl.border-gray-800 {
+  background-color: rgba(255, 255, 255, 0.97) !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Dropdown items hover */
+.light-theme .hover\:bg-gray-800.hover\:text-white:hover {
+  background-color: #f3f4f6 !important;
+  color: #111827 !important;
+}
+
+/* Dropdown logout hover */
+.light-theme .text-red-400.hover\:bg-gray-800:hover {
+  background-color: #fef2f2 !important;
+}
+
+/* Input fields */
+.light-theme input,
+.light-theme textarea,
+.light-theme select {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+  border-color: #d1d5db !important;
+}
+
+.light-theme input::placeholder,
+.light-theme textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Sidebar */
+.light-theme aside {
+  background-color: #ffffff !important;
+  border-right-color: #e5e7eb !important;
+}
+
+/* Flatten all gradients to solid colors */
+.light-theme .bg-gradient-to-r,
+.light-theme .bg-gradient-to-br,
+.light-theme .bg-gradient-to-tr,
+.light-theme .bg-gradient-to-bl,
+.light-theme .bg-gradient-to-b {
+  background-image: none !important;
+}
+
+/* Solid blue buttons  */
+.light-theme .bg-gradient-to-r.from-blue-600,
+.light-theme .bg-gradient-to-r.from-blue-500 {
+  background-color: #2563eb !important;
+}
+.light-theme .bg-gradient-to-r.from-blue-600:hover,
+.light-theme .bg-gradient-to-r.from-blue-500:hover {
+  background-color: #1d4ed8 !important;
+}
+
+/* Solid green buttons  */
+.light-theme .bg-gradient-to-r.from-green-600 {
+  background-color: #16a34a !important;
+}
+.light-theme .bg-gradient-to-r.from-green-600:hover {
+  background-color: #15803d !important;
+}
+
+/* Solid red buttons  */
+.light-theme .bg-gradient-to-r.from-red-600 {
+  background-color: #dc2626 !important;
+}
+.light-theme .bg-gradient-to-r.from-red-600:hover {
+  background-color: #b91c1c !important;
+}
+
+/* Gradient text — use solid blue */
+.light-theme .bg-gradient-to-r.from-blue-400.bg-clip-text {
+  background-image: none !important;
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
+}
+
+/* Settings heading gradient text */
+.light-theme .bg-gradient-to-r.from-blue-400.to-purple-400.bg-clip-text {
+  background-image: none !important;
+  color: #2563eb !important;
+  -webkit-text-fill-color: #2563eb !important;
+}
+
+/* Decorative blobs / glow — hide in light mode */
+.light-theme .bg-gradient-to-tr.from-\[\#ff80b5\],
+.light-theme .bg-gradient-to-bl.from-\[\#9089fc\] {
+  opacity: 0 !important;
+}
+
+/* Subtle background overlays — remove */
+.light-theme .bg-gradient-to-b.from-blue-500\/5 {
+  background-image: none !important;
+  background-color: transparent !important;
+}
+
+/* Member avatar fallback */
+.light-theme .bg-gradient-to-br.from-blue-500.to-purple-600 {
+  background-color: #2563eb !important;
+}
+
+/* Video player buttons */
+.light-theme .bg-gradient-to-r.from-blue-600.to-purple-600 {
+  background-color: #2563eb !important;
+}
+.light-theme .bg-gradient-to-r.from-blue-600.to-purple-600:hover {
+  background-color: #1d4ed8 !important;
+}
+
+/* Video progress bar */
+.light-theme .bg-gradient-to-r.from-blue-500.to-purple-500 {
+  background-color: #2563eb !important;
+}
+
+/* Code editor button */
+.light-theme .bg-gradient-to-br.from-blue-500.to-violet-500 {
+  background-color: #2563eb !important;
+}
+
+/* Submission overlay header */
+.light-theme .bg-gradient-to-r.from-blue-600.to-indigo-600 {
+  background-color: #2563eb !important;
+}
+
+/* Checkpoint icon bg */
+.light-theme .bg-gradient-to-br.from-blue-500\/20.to-purple-500\/20 {
+  background-color: #eff6ff !important;
+}
+
+/* Colored shadows — remove in light mode */
+.light-theme [class*="shadow-blue-500\/"],
+.light-theme [class*="shadow-green-500\/"],
+.light-theme [class*="shadow-violet-500\/"] {
+  --tw-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+  --tw-shadow-colored: none !important;
+}
+
+/* Shadows — standard light-mode shadows */
+.light-theme .shadow-lg {
+  --tw-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.light-theme .shadow-2xl {
+  --tw-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Keep white text on colored buttons */
+.light-theme .bg-gradient-to-r.from-blue-600 .text-white,
+.light-theme .bg-gradient-to-r.from-green-600 .text-white,
+.light-theme .bg-gradient-to-r.from-red-600 .text-white,
+.light-theme .bg-gradient-to-r.text-white {
+  color: #ffffff !important;
+}
+
+/* Landing page feature icon boxes — solid bg */
+.light-theme .bg-gradient-to-br.from-blue-500.to-blue-600,
+.light-theme .bg-gradient-to-br.from-blue-400.to-purple-500,
+.light-theme .bg-gradient-to-br.from-purple-500.to-purple-600,
+.light-theme .bg-gradient-to-br.from-blue-400.to-blue-600,
+.light-theme .bg-gradient-to-br.from-blue-500.to-purple-500,
+.light-theme .bg-gradient-to-br.from-purple-400.to-purple-600 {
+  background-color: #2563eb !important;
+}
+
+/* Decorative blur glow — remove */
+.light-theme .bg-gradient-to-r.from-blue-500\/10.to-purple-500\/10 {
+  background-color: transparent !important;
+}
+
+/* Login/SignUp page background */
+.light-theme .bg-gradient-to-br.from-gray-900.to-gray-900 {
+  background-color: #f9fafb !important;
+  background-image: none !important;
+}
+
 /* ── High-Contrast Mode ── */
 .high-contrast {
   background-color: #000000 !important;

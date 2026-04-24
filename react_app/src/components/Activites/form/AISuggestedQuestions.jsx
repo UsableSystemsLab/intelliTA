@@ -545,7 +545,7 @@ export default function AISuggestedQuestions({ activityId, videoUrl, videoDurati
 
     const resp = await fetch(`${LLM_SERVER}/quiz/suggest`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
       body: JSON.stringify(body),
     });
     if (!resp.ok) throw new Error(`Server error ${resp.status}`);

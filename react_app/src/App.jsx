@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { onAuthStateChanged } from 'firebase/auth'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { Loader } from 'lucide-react'
 import { auth, db } from '@/utils/firebase.js' // Ensure db is exported from your firebase config
 import { doc, getDoc } from "firebase/firestore";
 import { useTranslation } from 'react-i18next';
+import { isKauEmail } from '@/utils/kauDomain';
 
 import Login from '@/pages/Login.jsx'
 import SignUp from '@/pages/SignUp.jsx'
@@ -15,7 +16,7 @@ import CreateCourse from "@/pages/CreateCourse.jsx";
 import Settings from "@/pages/Settings.jsx";
 import Activity from './pages/Activity' // Added from incoming branch
 import '@/styles/App.css'
-import { applySize, FONT_SIZE_KEY, applyHighContrast, HIGH_CONTRAST_KEY } from '@/components/Settings/AccessibilitySettings'
+import { applySize, FONT_SIZE_KEY, applyHighContrast, HIGH_CONTRAST_KEY, applyTheme, THEME_KEY } from '@/components/Settings/AccessibilitySettings'
 import ProtectedRoutes from '@/utils/ProtectedRoutes'
 
 function App() {
@@ -27,6 +28,16 @@ function App() {
   useEffect(() => {
     // Fetches user role from firestore upon auth state change
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser && !isKauEmail(currentUser.email)) {
+        try {
+          await currentUser.delete();
+        } catch {
+          await signOut(auth);
+        }
+        setUser(null);
+        setLoading(false);
+        return;
+      }
       if (currentUser) {
         try {
           const docRef = doc(db, "users", currentUser.uid);
@@ -56,6 +67,7 @@ function App() {
   useEffect(() => {
     applySize(localStorage.getItem(FONT_SIZE_KEY) || 'md');
     applyHighContrast(localStorage.getItem(HIGH_CONTRAST_KEY) === 'true');
+    applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
   }, []);
 
   useEffect(() => {
