@@ -86,11 +86,32 @@ const StatusBadge = ({ status, t }) => {
 };
 
 
-const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLinkUpdated, navigate, t }) => {
+const ActivityCard = ({ activity, courseId, isInstructor, githubVerified, userId, onDelete, onEdit, onLinkUpdated, navigate, t }) => {
     const [showLinkInput, setShowLinkInput] = useState(false);
     const [linkValue, setLinkValue] = useState("");
     const [savingLink, setSavingLink] = useState(false);
     const status = getActivityStatus(activity.start_date, activity.end_date);
+
+    const acceptanceKey = `gh_accepted:${userId || "anon"}:${activity.activity_id}`;
+    const [assignmentAccepted, setAssignmentAccepted] = useState(() => {
+        try { return localStorage.getItem(acceptanceKey) === "1"; } catch { return false; }
+    });
+
+    const requiresGithub = !isInstructor && !!activity.github_classroom_url;
+    const step1Done = !requiresGithub || githubVerified;
+    const step2Done = !requiresGithub || assignmentAccepted;
+    const canStart = step1Done && step2Done;
+
+    const markAccepted = () => {
+        try { localStorage.setItem(acceptanceKey, "1"); } catch { /* ignore */ }
+        setAssignmentAccepted(true);
+    };
+
+    const startDisabledReason = !step1Done
+        ? t("connectGitHubFirstTooltip")
+        : !step2Done
+        ? t("acceptAssignmentFirstTooltip")
+        : "";
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -197,8 +218,8 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
                     </a>
                 )}
 
-                {/* GitHub Classroom Assignment Link */}
-                {activity.github_classroom_url ? (
+                {/* GitHub Classroom Assignment Link / Student Readiness Checklist */}
+                {activity.github_classroom_url && isInstructor ? (
                     <a
                         href={activity.github_classroom_url}
                         target="_blank"
@@ -207,12 +228,52 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
                         className="inline-flex items-center justify-center w-full px-4 py-3 mb-2 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-all duration-300"
                     >
                         <Github className="w-5 h-5 mr-2" />
-                        <span>
-                          {isInstructor
-                            ? t("viewClassroomAssignment")
-                            : t("githubClassroom")}
-                        </span>
+                        <span>{t("viewClassroomAssignment")}</span>
                     </a>
+                ) : activity.github_classroom_url && !isInstructor ? (
+                    <div className="mb-2 p-3 bg-gray-900/50 border border-gray-700 rounded-xl" onClick={(e) => e.stopPropagation()}>
+                        <p className="text-xs font-semibold text-gray-300 mb-2">{t("readyChecklistTitle")}</p>
+                        <ul className="space-y-1.5 mb-3">
+                            <li className={`flex items-center gap-2 text-xs ${step1Done ? "text-green-400" : "text-gray-400"}`}>
+                                {step1Done
+                                    ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+                                    : <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />}
+                                <span>{t("stepConnectGitHub")}</span>
+                            </li>
+                            <li className={`flex items-center gap-2 text-xs ${step2Done ? "text-green-400" : "text-gray-400"}`}>
+                                {step2Done
+                                    ? <CheckCircle2 className="w-4 h-4 shrink-0" />
+                                    : <AlertCircle className="w-4 h-4 shrink-0 text-amber-400" />}
+                                <span>{t("stepAcceptAssignment")}</span>
+                            </li>
+                        </ul>
+                        {step1Done && !step2Done && (
+                            <div className="flex flex-col gap-2">
+                                <a
+                                    href={activity.github_classroom_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center w-full px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-xs font-medium transition-colors"
+                                >
+                                    <Github className="w-4 h-4 mr-2" />
+                                    {t("openAssignmentOnGitHub")}
+                                </a>
+                                <button
+                                    onClick={markAccepted}
+                                    className="inline-flex items-center justify-center w-full px-3 py-2 bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 text-green-400 rounded-lg text-xs font-medium transition-colors"
+                                >
+                                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                                    {t("markAsAccepted")}
+                                </button>
+                            </div>
+                        )}
+                        {step2Done && (
+                            <p className="flex items-center gap-1.5 text-xs text-green-400">
+                                <ShieldCheck className="w-4 h-4" />
+                                {t("assignmentAccepted")}
+                            </p>
+                        )}
+                    </div>
                 ) : isInstructor && (
                     <div className="mb-2" onClick={(e) => e.stopPropagation()}>
                         {showLinkInput ? (
@@ -253,12 +314,18 @@ const ActivityCard = ({ activity, courseId, isInstructor, onDelete, onEdit, onLi
 
                 {/* Action Button */}
                 <button
-                    onClick={() => navigate(`/courses/${courseId}/activities/${activity.activity_id}`)}
-                    className="inline-flex items-center justify-center w-full px-4 py-3 bg-gray-700 hover:bg-blue-600 text-white rounded-xl font-medium transition-all duration-300 group-hover:shadow-lg group-hover:shadow-blue-500/25"
+                    onClick={() => canStart && navigate(`/courses/${courseId}/activities/${activity.activity_id}`)}
+                    disabled={!canStart}
+                    title={startDisabledReason}
+                    className={`inline-flex items-center justify-center w-full px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
+                        canStart
+                            ? "bg-gray-700 hover:bg-blue-600 text-white group-hover:shadow-lg group-hover:shadow-blue-500/25"
+                            : "bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700"
+                    }`}
                 >
                     <PlayCircle className="w-5 h-5 mr-2" />
                     <span>{t('startActivity')}</span>
-                    <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
+                    {canStart && <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />}
                 </button>
             </div>
         </div>
@@ -381,6 +448,7 @@ export default function Maincontent({ user }) {
     const [generating, setGenerating] = useState(false);
     const [showMembersModal, setShowMembersModal] = useState(false);
     const [showGitHubModal, setShowGitHubModal] = useState(false);
+    const [githubStatus, setGithubStatus] = useState(null);
     const [githubUsername, setGithubUsername] = useState(() => {
         const p = new URLSearchParams(window.location.search);
         return p.get("github") === "verified" ? p.get("username") : null;
@@ -429,6 +497,14 @@ export default function Maincontent({ user }) {
                 if (activitiesRes.ok) {
                     const activitiesData = await activitiesRes.json();
                     setActivities(activitiesData);
+                }
+
+                // Fetch course GitHub status (for instructor classroom warning)
+                const ghRes = await fetch(`${API_BASE}/courses/${courseId}/github`, {
+                    headers: await getAuthHeaders(auth.currentUser),
+                });
+                if (ghRes.ok) {
+                    setGithubStatus(await ghRes.json());
                 }
 
                 // Fetch student GitHub status
@@ -647,6 +723,25 @@ export default function Maincontent({ user }) {
                 </div>
             </div>
 
+            {/* Instructor classroom-not-selected warning */}
+            {isInstructor() && githubStatus?.connected && !githubStatus?.github_classroom_id && (
+                <div className="max-w-7xl mx-auto px-6 pt-4">
+                    <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300">
+                        <AlertCircle className="w-5 h-5 shrink-0" />
+                        <div className="flex-1 text-sm">
+                            <p className="font-semibold text-red-200">{t('noClassroomLinkedTitle')}</p>
+                            <p className="text-red-300/80">{t('noClassroomLinkedBody')}</p>
+                        </div>
+                        <button
+                            onClick={() => setShowGitHubModal(true)}
+                            className="shrink-0 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-200 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            {t('selectClassroom')}
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* GitHub callback message */}
             {githubMsg && (
                 <div className={`max-w-7xl mx-auto px-6 pt-4`}>
@@ -705,6 +800,8 @@ export default function Maincontent({ user }) {
                                 activity={activity}
                                 courseId={courseId}
                                 isInstructor={isInstructor()}
+                                githubVerified={githubVerified}
+                                userId={user?.uid}
                                 onDelete={handleDeleteActivity}
                                 onEdit={handleEditActivity}
                                 onLinkUpdated={handleActivityUpdated}
@@ -756,7 +853,15 @@ export default function Maincontent({ user }) {
             {showGitHubModal && (
                 <GitHubCourseModal
                     courseId={courseId}
-                    onClose={() => setShowGitHubModal(false)}
+                    onClose={async () => {
+                        setShowGitHubModal(false);
+                        try {
+                            const res = await fetch(`${API_BASE}/courses/${courseId}/github`, {
+                                headers: await getAuthHeaders(auth.currentUser),
+                            });
+                            if (res.ok) setGithubStatus(await res.json());
+                        } catch { /* ignore */ }
+                    }}
                 />
             )}
 
