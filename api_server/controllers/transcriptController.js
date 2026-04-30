@@ -41,7 +41,11 @@ const TranscriptController = {
 
       // Fetch from S3
       const url = new URL(transcriptUrl);
-      const key = url.pathname.replace(`/${S3_BUCKET}/`, "");
+      const pathParts = url.pathname.split("/").filter(Boolean);
+      const bucketIdx = pathParts.indexOf(S3_BUCKET);
+      const key = bucketIdx !== -1
+        ? pathParts.slice(bucketIdx + 1).join("/")
+        : pathParts.join("/");
       const response = await s3.send(new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }));
       const content = await response.Body.transformToString();
 
