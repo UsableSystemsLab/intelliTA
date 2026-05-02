@@ -2,9 +2,16 @@ import Editor from "@monaco-editor/react";
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from "react-markdown";
 import FileExplorer from './FileExplorer';
-import { Terminal, Code2, ChevronDown, ChevronUp, FileText, Sparkles } from 'lucide-react';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { Terminal, Code2, ChevronDown, ChevronUp, FileText, Sparkles, Eye } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import Breadcrumb from '../shared/Breadcrumb';
+import PreviewPane from './PreviewPane';
+
+const WEB_EXTS = ['html', 'css', 'js'];
+const isWebFile = (name) => {
+    const ext = name?.split('.').pop()?.toLowerCase();
+    return WEB_EXTS.includes(ext);
+};
 
 // Markdown Preview Component
 function MarkdownPreview({ content }) {
@@ -64,6 +71,20 @@ export default function CodeEditorSection({
 }) {
     const { t } = useTranslation();
     const [consoleExpanded, setConsoleExpanded] = useState(true);
+    const isWebProject = useMemo(
+        () => files.length > 0 && files.every((f) => isWebFile(f.name)),
+        [files]
+    );
+    const [bottomTab, setBottomTab] = useState('console');
+    const [previewFloating, setPreviewFloating] = useState(false);
+    useEffect(() => {
+        if (isWebProject) setBottomTab('preview');
+        else setBottomTab('console');
+    }, [isWebProject]);
+    const handleFloatingChange = useCallback((isFloating) => {
+        setPreviewFloating(isFloating);
+        if (isFloating) setConsoleExpanded(false);
+    }, []);
     const editorRef = useRef(null);
     const monacoRef = useRef(null);
     const [floatingBtn, setFloatingBtn] = useState(null); // { top, left }
@@ -217,30 +238,76 @@ export default function CodeEditorSection({
                         </button>
                     )}
 
-                    {/* Console / Output Panel */}
-                    <div className={`border-t border-gray-800 bg-[#0d1117] flex flex-col transition-all duration-200 ${consoleExpanded ? 'h-28' : 'h-10'}`}>
-                        {/* Console Header */}
-                        <button 
-                            onClick={() => setConsoleExpanded(!consoleExpanded)}
-                            className="h-10 flex items-center justify-between px-4 hover:bg-gray-800/50 transition-colors shrink-0"
-                        >
-                            <div className="flex items-center gap-2 text-gray-500">
-                                <Terminal className="w-4 h-4" />
-                                <span className="text-xs font-medium uppercase tracking-wider">{t('consoleLabel')}</span>
-                                {feedback && (
-                                    <span className={`ml-2 w-2 h-2 rounded-full ${feedback.type === 'success' ? 'bg-emerald-400' : feedback.type === 'error' ? 'bg-red-400' : 'bg-blue-400'}`}></span>
+                    {/* Console / Preview Panel */}
+                    <div
+                        className={`border-t border-gray-800 bg-[#0d1117] flex flex-col transition-all duration-200 ${
+                            consoleExpanded
+                                ? bottomTab === 'preview'
+                                    ? 'h-96'
+                                    : 'h-28'
+                                : 'h-10'
+                        }`}
+                    >
+                        {/* Tab / Header bar */}
+                        <div className="h-10 flex items-center justify-between pr-2 shrink-0 border-b border-gray-800/60">
+                            <div className="flex items-stretch h-full">
+                                <button
+                                    onClick={() => {
+                                        if (bottomTab === 'console' && consoleExpanded) setConsoleExpanded(false);
+                                        else { setBottomTab('console'); setConsoleExpanded(true); }
+                                    }}
+                                    className={`flex items-center gap-2 px-4 text-xs font-medium uppercase tracking-wider transition-colors ${
+                                        bottomTab === 'console'
+                                            ? 'text-gray-200 bg-gray-800/40'
+                                            : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/30'
+                                    }`}
+                                >
+                                    <Terminal className="w-4 h-4" />
+                                    <span>{t('consoleTab')}</span>
+                                    {feedback && (
+                                        <span
+                                            className={`ml-1 w-2 h-2 rounded-full ${
+                                                feedback.type === 'success'
+                                                    ? 'bg-emerald-400'
+                                                    : feedback.type === 'error'
+                                                    ? 'bg-red-400'
+                                                    : 'bg-blue-400'
+                                            }`}
+                                        ></span>
+                                    )}
+                                </button>
+                                {isWebProject && (
+                                    <button
+                                        onClick={() => {
+                                            if (bottomTab === 'preview' && consoleExpanded) setConsoleExpanded(false);
+                                            else { setBottomTab('preview'); setConsoleExpanded(true); }
+                                        }}
+                                        className={`flex items-center gap-2 px-4 text-xs font-medium uppercase tracking-wider transition-colors ${
+                                            bottomTab === 'preview'
+                                                ? 'text-gray-200 bg-gray-800/40'
+                                                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/30'
+                                        }`}
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                        <span>{t('previewTab')}</span>
+                                    </button>
                                 )}
                             </div>
-                            {consoleExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-gray-600" />
-                            ) : (
-                                <ChevronUp className="w-4 h-4 text-gray-600" />
-                            )}
-                        </button>
-                        
-                        {/* Console Content */}
-                        {consoleExpanded && (
-                            <div className="flex-1 overflow-auto px-4 pb-3 font-mono text-xs">
+                            <button
+                                onClick={() => setConsoleExpanded(!consoleExpanded)}
+                                className="p-1.5 rounded hover:bg-gray-800/50 transition-colors"
+                            >
+                                {consoleExpanded ? (
+                                    <ChevronDown className="w-4 h-4 text-gray-600" />
+                                ) : (
+                                    <ChevronUp className="w-4 h-4 text-gray-600" />
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Panel Content */}
+                        {consoleExpanded && bottomTab === 'console' && (
+                            <div className="flex-1 overflow-auto px-4 py-2 font-mono text-xs">
                                 <div className={`${feedback?.type === 'success' ? 'text-emerald-400' : feedback?.type === 'error' ? 'text-red-400' : 'text-gray-400'}`}>
                                     {feedback ? (
                                         <span className="flex items-center gap-2">
@@ -260,6 +327,19 @@ export default function CodeEditorSection({
                                         <span>{t('waitingForSolution')} <strong>{activeCheckpoint.title}</strong></span>
                                     </div>
                                 )}
+                            </div>
+                        )}
+                        {isWebProject && (
+                            <div
+                                className="flex-1 min-h-0"
+                                style={{
+                                    display:
+                                        !previewFloating && consoleExpanded && bottomTab === 'preview'
+                                            ? 'block'
+                                            : 'none',
+                                }}
+                            >
+                                <PreviewPane files={files} onFloatingChange={handleFloatingChange} />
                             </div>
                         )}
                     </div>
