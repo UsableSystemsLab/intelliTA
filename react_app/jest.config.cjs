@@ -28,6 +28,8 @@ module.exports = {
     '^firebase/firestore$': '<rootDir>/src/__mocks__/firebase-firestore.js',
 
     '^react-i18next$': '<rootDir>/src/__mocks__/react-i18next.js',
+
+    '^react-markdown$': '<rootDir>/src/__mocks__/react-markdown.jsx',
   },
   collectCoverage: false,
   collectCoverageFrom: [

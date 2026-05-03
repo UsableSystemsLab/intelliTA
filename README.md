@@ -1,5 +1,8 @@
 # Full Stack Dockerized Web Application Template (React, Node.js, PostgreSQL, and pgAdmin)
 
+[![codecov](https://codecov.io/gh/UsableSystemsLab/intelliTA/branch/unitTesting/graph/badge.svg?token=E7xyOxv7mt)](https://codecov.io/gh/UsableSystemsLab/intelliTA)
+[![Tests](https://github.com/UsableSystemsLab/intelliTA/actions/workflows/test.yml/badge.svg?branch=unitTesting)](https://github.com/UsableSystemsLab/intelliTA/actions/workflows/test.yml)
+
 This project provides a starter template for a full stack web application using Docker Compose. It uses React, Node.js, PostgreSQL, and pgAdmin, offering a complete development environment.
 
  #### Features
