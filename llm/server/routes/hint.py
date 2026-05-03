@@ -4,6 +4,7 @@ from openai import AsyncOpenAI, APIStatusError, APIConnectionError, Authenticati
 import httpx
 import json
 import logging
+import re
 
 from auth import require_bearer_token
 
@@ -100,11 +101,16 @@ async def is_programming_related_external(message: str, history: list[dict], bas
             model=model,
             messages=[{"role": "user", "content": prompt_text}],
             temperature=0.1,
-            max_tokens=10,
+            max_tokens=128,
         )
-        answer = resp.choices[0].message.content.strip().upper()
-        result = answer.startswith("YES")
-        logger.info(f"External classifier: '{message}' | answer: '{answer}' | on-topic: {result}")
+        msg = resp.choices[0].message
+        text = (msg.content or "").strip()
+        if not text:
+            extras = msg.model_dump() if hasattr(msg, "model_dump") else {}
+            text = (extras.get("reasoning") or extras.get("reasoning_content") or "").strip()
+        matches = re.findall(r"\b(YES|NO)\b", text.upper())
+        result = bool(matches) and matches[-1] == "YES"
+        logger.info(f"External classifier: '{message}' | answer: '{text[:200]}' | on-topic: {result}")
         return result
     except Exception as e:
         logger.warning(f"External classifier failed: {e}")
