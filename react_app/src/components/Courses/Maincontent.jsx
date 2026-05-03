@@ -162,7 +162,7 @@ export default function Maincontent({ user }) {
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl" />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
           <div className="mb-4">
             <Breadcrumb items={[{ label: t("courses") }]} />
           </div>
@@ -186,7 +186,7 @@ export default function Maincontent({ user }) {
                 <input
                   type="text"
                   placeholder={t("enterToken")}
-                  className="bg-transparent text-white px-3 py-2 outline-none w-40 sm:w-56 placeholder-gray-500"
+                  className="bg-transparent text-white px-3 py-2 outline-none w-28 sm:w-56 min-w-0 placeholder-gray-500"
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value)}
                 />
@@ -222,7 +222,7 @@ export default function Maincontent({ user }) {
       )}
 
       {/* Content Section */}
-      <div className="max-w-7xl mx-auto px-6 py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         {/* Course Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading && <p className="text-white text-xl col-span-full">{t("loadingCourses")}</p>}

@@ -1,6 +1,6 @@
 import Nav from '@/components/Courses/Nav';
 import SettingsLayout from '@/components/Settings/SettingsLayout';
-import Footer from '@/components/Courses/Footer';
+import Footer from '@/components/shared/Footer';
 
 import Sidebar from '@/components/Courses/Sidebar';
 

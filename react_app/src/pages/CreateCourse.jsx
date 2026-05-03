@@ -1,6 +1,6 @@
 import Nav from "@/components/Courses/Nav";
 import Sidebar from "@/components/Courses/Sidebar";
-import Footer from "@/components/Courses/Footer";
+import Footer from "@/components/shared/Footer";
 import CreateCourseMain from "@/components/CreateCourse/Maincontent";
 
 export default function CreateCourse({ user }) {
