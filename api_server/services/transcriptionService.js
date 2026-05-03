@@ -26,9 +26,9 @@ class TranscriptionService {
     const url = new URL(videoUrl);
     // Extract key from URL path (remove leading slash and bucket name)
     const pathParts = url.pathname.split("/").filter(Boolean);
-    // Remove bucket name if present in path
-    const key = pathParts[0] === S3_BUCKET
-      ? pathParts.slice(1).join("/")
+    const bucketIdx = pathParts.indexOf(S3_BUCKET);
+    const key = bucketIdx !== -1
+      ? pathParts.slice(bucketIdx + 1).join("/")
       : pathParts.join("/");
 
     const response = await s3.send(
