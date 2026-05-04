@@ -12,15 +12,18 @@ import {
   Unplug,
   ChevronDown,
   BookOpen,
+  HelpCircle,
 } from "lucide-react";
 import { API_BASE, getAuthHeaders } from "../../config/api";
 import { auth } from "@/utils/firebase.js";
+import GitHubSetupInstructions from "../shared/GitHubSetupInstructions";
 
 const GitHubCourseModal = ({ courseId, onClose }) => {
   const { t } = useTranslation();
   const [clientId, setClientId] = useState("");
   const [clientSecret, setClientSecret] = useState("");
   const [showSecret, setShowSecret] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -370,7 +373,7 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
             <div className="space-y-4">
               <div className="flex items-start gap-3 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
                 <Info className="w-5 h-5 text-blue-400 mt-0.5 shrink-0" />
-                <div className="text-sm text-gray-300 leading-relaxed">
+                <div className="text-sm text-gray-300 leading-relaxed flex-1">
                   <p>
                     {t('createA')}{" "}
                     <span className="text-blue-400 font-medium">{t('gitHubOAuthApp')}</span>{" "}
@@ -384,6 +387,15 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
                   </p>
                 </div>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setShowInstructions(true)}
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm text-blue-300 hover:text-blue-200 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-xl transition-colors"
+              >
+                <HelpCircle className="w-4 h-4" />
+                {t('howToSetUp')}
+              </button>
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-300">{t('clientId')}</label>
@@ -431,6 +443,13 @@ const GitHubCourseModal = ({ courseId, onClose }) => {
           {success && <p className="text-sm text-green-400 mt-4">{success}</p>}
         </div>
       </div>
+
+      {showInstructions && (
+        <GitHubSetupInstructions
+          callbackUrl={`${API_BASE}/github/callback`}
+          onClose={() => setShowInstructions(false)}
+        />
+      )}
     </div>
   );
 };

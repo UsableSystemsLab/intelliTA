@@ -122,7 +122,7 @@ const Login = () => {
   };
 
   return (
-    <div className="fixed inset-0 w-screen h-screen bg-gradient-to-br from-gray-900 to-gray-900 flex items-center justify-center p-4 sm:p-8 overflow-hidden">
+    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 to-gray-900 flex items-center justify-center p-4 sm:p-8 pt-24 sm:pt-8 overflow-x-hidden relative">
       {/* Animated gradient blob 1 */}
       <div className="absolute left-[calc(50%-11rem)] top-[10%] w-[36.125rem] aspect-[1155/678] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 rounded-full blur-[80px] animate-blob1" />
 
@@ -132,7 +132,7 @@ const Login = () => {
       {/* Back button to home */}
       <Link
         to="/"
-        className="fixed top-8 left-8 flex items-center justify-center w-10 h-10 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white cursor-pointer transition-all duration-200 hover:bg-gray-700 hover:-translate-x-0.5 z-10"
+        className="fixed top-4 left-4 sm:top-8 sm:left-8 flex items-center justify-center w-10 h-10 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white cursor-pointer transition-all duration-200 hover:bg-gray-700 hover:-translate-x-0.5 z-10"
       >
         <svg
           width="20"
@@ -151,14 +151,14 @@ const Login = () => {
       {/* Logo on the right */}
       <Link
         to="/"
-        className="fixed top-8 right-8 flex items-center gap-2 h-10 no-underline z-10"
+        className="fixed top-4 right-4 sm:top-8 sm:right-8 flex items-center gap-2 h-10 no-underline z-10"
       >
         <img
           src="https://intellita-media-storage.s3.us-east-1.amazonaws.com/logos/IntelliTA.svg"
           alt="IntelliTA Logo"
-          className="w-20 h-20 object-contain"
+          className="w-12 h-12 sm:w-20 sm:h-20 object-contain"
         />
-        <h1 className="text-2xl font-bold text-white tracking-tight italic leading-none">
+        <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight italic leading-none">
           IntelliTA
         </h1>
       </Link>

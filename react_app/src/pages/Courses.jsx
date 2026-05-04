@@ -1,6 +1,6 @@
 import Nav from '@/components/Courses/Nav';
 import Maincontent from '@/components/Courses/Maincontent';
-import Footer from '@/components/Courses/Footer';
+import Footer from '@/components/shared/Footer';
 import Sidebar from '@/components/Courses/Sidebar';
 export default function Courses({ user }) {
     return(  
@@ -8,9 +8,11 @@ export default function Courses({ user }) {
             <Nav user={ user } />
             <div className='flex relative overflow-hidden bg-transparent min-h-screen'>
              <Sidebar />
-            <Maincontent user={user} />
+             <div className="flex-1 flex flex-col min-w-0">
+                <Maincontent user={user} />
+                <Footer />
+             </div>
             </div>
-            <Footer />
         </>
     );
 }

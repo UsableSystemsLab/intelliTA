@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { AlertCircle, Loader, Info, Github, Eye, EyeOff, Copy } from "lucide-react";
+import { AlertCircle, Loader, Info, Github, Eye, EyeOff, Copy, HelpCircle } from "lucide-react";
 import Breadcrumb from "../shared/Breadcrumb";
+import GitHubSetupInstructions from "../shared/GitHubSetupInstructions";
 import { API_BASE, getAuthHeaders } from "../../config/api";
 import { auth } from "@/utils/firebase.js";
 
@@ -18,6 +19,7 @@ export default function CreateCourseMain({ user }) {
   const [clientSecret, setClientSecret] = useState("");
   const [showSecret, setShowSecret] = useState(false);
   const [copiedCallback, setCopiedCallback] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -214,10 +216,20 @@ export default function CreateCourseMain({ user }) {
 
         {/* GitHub Organization — Required */}
         <div className="mb-8 p-5 rounded-xl border border-gray-600 bg-gray-900/50">
-          <h2 className="text-lg font-semibold text-white mb-1 flex items-center gap-2">
-            <Github className="w-5 h-5 text-white" />
-            {t("githubOrganization")} <span className="text-red-400 text-sm font-normal ml-1">{t("required")}</span>
-          </h2>
+          <div className="flex items-start justify-between gap-3 mb-1">
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Github className="w-5 h-5 text-white" />
+              {t("githubOrganization")} <span className="text-red-400 text-sm font-normal ml-1">{t("required")}</span>
+            </h2>
+            <button
+              type="button"
+              onClick={() => setShowInstructions(true)}
+              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-blue-300 hover:text-blue-200 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 rounded-lg transition-colors"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              {t("howToSetUp")}
+            </button>
+          </div>
           <p className="text-sm text-gray-400 mb-4">
             {t("githubOrgInfo")}
           </p>
@@ -297,6 +309,13 @@ export default function CreateCourseMain({ user }) {
           </button>
         </div>
       </div>
+
+      {showInstructions && (
+        <GitHubSetupInstructions
+          callbackUrl={callbackUrl}
+          onClose={() => setShowInstructions(false)}
+        />
+      )}
     </main>
   );
 }
