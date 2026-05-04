@@ -3,7 +3,7 @@ import { screen } from '@testing-library/react';
 import { renderWithProviders } from '../../__tests__/helpers/renderWithProviders';
 import Footer from './Footer';
 
-describe('Courses Footer', () => {
+describe('shared Footer', () => {
   test('renders the IntelliTA brand name (logo + copyright)', () => {
     renderWithProviders(<Footer />);
     expect(screen.getAllByText('IntelliTA')).toHaveLength(2);

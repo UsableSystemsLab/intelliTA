@@ -11,7 +11,7 @@ jest.mock('@/components/Landing-page/HomeMain', () => {
   M.displayName = 'MockHomeMain';
   return M;
 });
-jest.mock('@/components/Landing-page/HomeFooter', () => {
+jest.mock('@/components/shared/Footer', () => {
   const M = () => <footer data-testid="home-footer" />;
   M.displayName = 'MockHomeFooter';
   return M;
