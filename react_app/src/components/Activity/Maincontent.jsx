@@ -14,6 +14,8 @@ import SubmissionResultOverlay from './SubmissionResultOverlay';
 import { Play, FileText, Clock, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCheckpoints } from '@/components/Activity/useCheckpoints';
+import { runCode as runCodeApi } from '@/utils/runCode';
+import { getRunConfig, isRunnable } from '@/utils/languageRunMap';
 
 
 const DEFAULT_FILES = [
@@ -164,6 +166,8 @@ export default function Maincontent({ user }) {
     const [captionsEnabled, setCaptionsEnabled] = useState(false);
     const [captionLang, setCaptionLang] = useState('en');
     const [chapters, setChapters] = useState([]);
+    const [runState, setRunState] = useState('idle');
+    const [runOutput, setRunOutput] = useState(null);
 
     const handleAskAI = useCallback((text) => {
         setSelectedCodeForChat(text);
@@ -490,6 +494,61 @@ export default function Maincontent({ user }) {
         setActiveFile(prev => ({ ...prev, content: newContent }));
     };
 
+    const handleRun = useCallback(async () => {
+        if (runState === 'running') return;
+
+        const runnableFiles = files.filter((f) => f.name !== 'README.md');
+
+        // Pick run target: active file if runnable, else first runnable file in project
+        let target = isRunnable(activeFile?.name) ? activeFile : runnableFiles.find((f) => isRunnable(f.name));
+        if (!target) {
+            setRunOutput({ error: 'No runnable file (Python, Java, or JavaScript).', exitCode: -1 });
+            setRunState('done');
+            return;
+        }
+
+        const cfg = getRunConfig(target.name);
+        if (!cfg) {
+            setRunOutput({ error: `Unsupported language for ${target.name}.`, exitCode: -1 });
+            setRunState('done');
+            return;
+        }
+
+        // For Java, send all .java files so multi-class projects compile together.
+        // For others, send just the target file.
+        let payloadFiles;
+        if (cfg.language === 'java') {
+            payloadFiles = runnableFiles.filter((f) => f.name.toLowerCase().endsWith('.java'));
+            if (payloadFiles.length === 0) payloadFiles = [target];
+            // Ensure file containing main() is first if we can detect it
+            const mainIdx = payloadFiles.findIndex((f) => /public\s+static\s+void\s+main\s*\(/.test(f.content || ''));
+            if (mainIdx > 0) {
+                const [mainFile] = payloadFiles.splice(mainIdx, 1);
+                payloadFiles.unshift(mainFile);
+            }
+        } else {
+            payloadFiles = [target];
+        }
+
+        setRunState('running');
+        setRunOutput(null);
+
+        try {
+            const result = await runCodeApi({
+                courseId,
+                activityId,
+                files: payloadFiles,
+                language: cfg.language,
+                version: cfg.version,
+            });
+            setRunOutput(result);
+            setRunState('done');
+        } catch (err) {
+            setRunOutput({ error: err.message || 'Run failed', exitCode: -1 });
+            setRunState('done');
+        }
+    }, [runState, files, activeFile, courseId, activityId]);
+
     const handleSubmit = async () => {
         if (!user) {
             setFeedback({ type: 'error', message: "You must be logged in to submit." });
@@ -680,6 +739,9 @@ export default function Maincontent({ user }) {
                     courseId={courseId}
                     activityTitle={activity.title}
                     onAskAI={handleAskAI}
+                    onRun={handleRun}
+                    runState={runState}
+                    runOutput={runOutput}
                 />
 
                 <VideoSection

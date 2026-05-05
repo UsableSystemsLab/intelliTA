@@ -2,10 +2,11 @@ import Editor from "@monaco-editor/react";
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from "react-markdown";
 import FileExplorer from './FileExplorer';
-import { Terminal, Code2, ChevronDown, ChevronUp, FileText, Sparkles, Eye } from 'lucide-react';
+import { Terminal, Code2, ChevronDown, ChevronUp, FileText, Sparkles, Eye, Play, Loader2 } from 'lucide-react';
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import Breadcrumb from '../shared/Breadcrumb';
 import PreviewPane from './PreviewPane';
+import { isRunnable } from '../../utils/languageRunMap';
 
 const WEB_EXTS = ['html', 'css', 'js'];
 const isWebFile = (name) => {
@@ -67,10 +68,36 @@ export default function CodeEditorSection({
     courseName,
     courseId,
     activityTitle,
-    onAskAI
+    onAskAI,
+    onRun,
+    runState,
+    runOutput,
 }) {
     const { t } = useTranslation();
     const [consoleExpanded, setConsoleExpanded] = useState(true);
+    const [panelHeight, setPanelHeight] = useState(160);
+    const isResizingRef = useRef(false);
+
+    const handleResizeMouseDown = useCallback((e) => {
+        e.preventDefault();
+        isResizingRef.current = true;
+        const startY = e.clientY;
+        const startH = panelHeight;
+        const containerH = editorContainerRef.current?.getBoundingClientRect().height || window.innerHeight;
+        const onMove = (ev) => {
+            if (!isResizingRef.current) return;
+            const delta = startY - ev.clientY;
+            const next = Math.max(40, Math.min(containerH - 80, startH + delta));
+            setPanelHeight(next);
+        };
+        const onUp = () => {
+            isResizingRef.current = false;
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+    }, [panelHeight]);
     const isWebProject = useMemo(
         () => files.length > 0 && files.every((f) => isWebFile(f.name)),
         [files]
@@ -185,6 +212,26 @@ export default function CodeEditorSection({
                     <span className="text-xs text-gray-600">
                         {activeFile?.name}
                     </span>
+                    {(isRunnable(activeFile?.name) || isWebProject) && onRun && (
+                        <button
+                            onClick={() => {
+                                if (runState === 'running') return;
+                                setBottomTab('console');
+                                setConsoleExpanded(true);
+                                onRun();
+                            }}
+                            disabled={runState === 'running'}
+                            className="ml-2 flex items-center gap-1.5 px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-900 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors"
+                            title={t('runCode') || 'Run'}
+                        >
+                            {runState === 'running' ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                                <Play className="w-3.5 h-3.5" />
+                            )}
+                            <span>{runState === 'running' ? (t('running') || 'Running…') : (t('run') || 'Run')}</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -240,14 +287,17 @@ export default function CodeEditorSection({
 
                     {/* Console / Preview Panel */}
                     <div
-                        className={`border-t border-gray-800 bg-[#0d1117] flex flex-col transition-all duration-200 ${
-                            consoleExpanded
-                                ? bottomTab === 'preview'
-                                    ? 'h-96'
-                                    : 'h-28'
-                                : 'h-10'
-                        }`}
+                        className="border-t border-gray-800 bg-[#0d1117] flex flex-col relative"
+                        style={{ height: consoleExpanded ? `${panelHeight}px` : '40px' }}
                     >
+                        {/* Resize handle */}
+                        {consoleExpanded && (
+                            <div
+                                onMouseDown={handleResizeMouseDown}
+                                className="absolute top-0 left-0 right-0 h-1 -translate-y-1/2 cursor-row-resize hover:bg-blue-500/40 z-10"
+                                title="Drag to resize"
+                            />
+                        )}
                         {/* Tab / Header bar */}
                         <div className="h-10 flex items-center justify-between pr-2 shrink-0 border-b border-gray-800/60">
                             <div className="flex items-stretch h-full">
@@ -325,6 +375,39 @@ export default function CodeEditorSection({
                                     <div className="text-amber-400 mt-1 flex items-center gap-2">
                                         <span className="text-gray-600">{"›"}</span>
                                         <span>{t('waitingForSolution')} <strong>{activeCheckpoint.title}</strong></span>
+                                    </div>
+                                )}
+                                {runState === 'running' && (
+                                    <div className="text-blue-400 mt-2 flex items-center gap-2">
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        <span>{t('running') || 'Running…'}</span>
+                                    </div>
+                                )}
+                                {runState === 'done' && runOutput && (
+                                    <div className="mt-2 space-y-1">
+                                        {runOutput.compileStderr && (
+                                            <>
+                                                <div className="text-amber-400">{t('compileError') || 'Compile error:'}</div>
+                                                <pre className="text-red-400 whitespace-pre-wrap break-words">{runOutput.compileStderr}</pre>
+                                            </>
+                                        )}
+                                        {runOutput.stdout && (
+                                            <pre className="text-gray-200 whitespace-pre-wrap break-words">{runOutput.stdout}</pre>
+                                        )}
+                                        {runOutput.stderr && (
+                                            <pre className="text-red-400 whitespace-pre-wrap break-words">{runOutput.stderr}</pre>
+                                        )}
+                                        {runOutput.error && (
+                                            <pre className="text-red-400 whitespace-pre-wrap break-words">{runOutput.error}</pre>
+                                        )}
+                                        {!runOutput.error && (
+                                            <div className={runOutput.exitCode === 0 ? 'text-emerald-400' : 'text-red-400'}>
+                                                {runOutput.exitCode === 0 ? '✓' : '✗'} {(t('exitedWithCode') || 'Exited with code')} {runOutput.exitCode}
+                                                {typeof runOutput.durationMs === 'number' && (
+                                                    <span className="text-gray-500"> ({runOutput.durationMs}ms)</span>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
