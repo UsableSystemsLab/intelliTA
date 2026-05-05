@@ -6,6 +6,8 @@ import QuizController from "../controllers/quizController.js";
 import VideoProgressController from "../controllers/videoProgressController.js";
 import StudentAnswerController from "../controllers/studentAnswerController.js";
 import VideoChapterController from "../controllers/videoChapterController.js";
+import RunController from "../controllers/runController.js";
+import rateLimitRun from "../middlewares/rateLimitRun.js";
 
 /**
  * @swagger
@@ -170,6 +172,9 @@ router.put("/:activityId/progress", VideoProgressController.upsertProgress);
 // Student answers
 router.post("/:activityId/answers", StudentAnswerController.recordAnswer);
 router.get("/:activityId/answers", StudentAnswerController.getAnswers);
+
+// Code execution (Piston)
+router.post("/:activityId/run", rateLimitRun, RunController.runCode);
 
 // Video chapters
 router.get("/:activityId/chapters", VideoChapterController.getChapters);

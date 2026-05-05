@@ -40,6 +40,7 @@ export default function VideoSection({
     const [hoverTime, setHoverTime] = useState(null);
     const [hoverX, setHoverX] = useState(0);
     const [hoveredChapter, setHoveredChapter] = useState(null);
+    const [videoFocused, setVideoFocused] = useState(false);
 
     const containerRef = useRef(null);
     const timelineRef = useRef(null);
@@ -142,8 +143,22 @@ export default function VideoSection({
         return () => document.removeEventListener('fullscreenchange', handler);
     }, []);
 
+    // Track focus: video shortcuts only active after clicking inside the video container
+    useEffect(() => {
+        const handleMouseDown = (e) => {
+            if (containerRef.current && containerRef.current.contains(e.target)) {
+                setVideoFocused(true);
+            } else {
+                setVideoFocused(false);
+            }
+        };
+        document.addEventListener('mousedown', handleMouseDown);
+        return () => document.removeEventListener('mousedown', handleMouseDown);
+    }, []);
+
     // --- Keyboard shortcuts ---
     useEffect(() => {
+        if (!videoFocused) return;
         const handleKeyDown = (e) => {
             // Don't capture when typing in inputs
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
@@ -181,7 +196,7 @@ export default function VideoSection({
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isPlaying, currentTime, duration, activeCheckpoint, onPlay, onPause, onSeek]);
+    }, [videoFocused, isPlaying, currentTime, duration, activeCheckpoint, onPlay, onPause, onSeek, onToggleCaptions]);
 
     // --- Timeline hover preview ---
     const handleTimelineHover = useCallback((e) => {
