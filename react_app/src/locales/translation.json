@@ -473,7 +473,16 @@
     "clickToAddStarterCode": "انقر لإضافة الكود الاولي",
     "files": "ملفات",
     "file": "ملف",
-    "submitBtn": "إرسال"
+    "submitBtn": "إرسال",
+    "previewTab": "المعاينة",
+    "consoleTab": "وحدة التحكم",
+    "runLabel": "تشغيل",
+    "clearLogsLabel": "مسح السجل",
+    "addHtmlHint": "أضف ملف index.html لمشاهدة المعاينة",
+    "pressRunHint": "اضغط تشغيل لعرض الصفحة",
+    "runCount": "تشغيل #{{n}}",
+    "popOut": "فتح في نافذة",
+    "popIn": "إعادة إلى الداخل"
   },
 
   "en": {
@@ -949,6 +958,15 @@
     "clickToAddStarterCode": "Click to add starter code",
     "files": "files",
     "file": "file",
-    "submitBtn": "Submit"
+    "submitBtn": "Submit",
+    "previewTab": "Preview",
+    "consoleTab": "Console",
+    "runLabel": "Run",
+    "clearLogsLabel": "Clear logs",
+    "addHtmlHint": "Add an index.html file to see the preview",
+    "pressRunHint": "Press Run to render your page",
+    "runCount": "Run #{{n}}",
+    "popOut": "Pop out",
+    "popIn": "Pop in"
   }
 }
