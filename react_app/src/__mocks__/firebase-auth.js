@@ -33,6 +33,18 @@ export const sendPasswordResetEmail = jest.fn(() => Promise.resolve());
 
 export const updateProfile = jest.fn(() => Promise.resolve());
 
+export const updatePassword = jest.fn(() => Promise.resolve());
+
+export const reauthenticateWithCredential = jest.fn(() => Promise.resolve());
+
+export const deleteUser = jest.fn(() => Promise.resolve());
+
+export class EmailAuthProvider {
+  static credential(email, password) {
+    return { email, password, _provider: 'password' };
+  }
+}
+
 export class GoogleAuthProvider {
   constructor() {
     this.providerId = 'google.com';
