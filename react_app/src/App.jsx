@@ -15,6 +15,11 @@ import CourseLabs from "@/pages/CourseLabs.jsx";
 import CreateCourse from "@/pages/CreateCourse.jsx";
 import Settings from "@/pages/Settings.jsx";
 import Activity from './pages/Activity' // Added from incoming branch
+import TestExamples from '@/pages/TestExamples.jsx'
+import LabGuide from '@/pages/LabGuide.jsx'
+import DocsLayout from '@/components/Docs/DocsLayout'
+import DocsLanding from '@/components/Docs/DocsLanding'
+import DocsGitHubGuide from '@/components/Docs/DocsGitHubGuide'
 import '@/styles/App.css'
 import { applySize, FONT_SIZE_KEY, applyHighContrast, HIGH_CONTRAST_KEY, applyTheme, THEME_KEY } from '@/components/Settings/AccessibilitySettings'
 import ProtectedRoutes from '@/utils/ProtectedRoutes'
@@ -90,6 +95,18 @@ function App() {
         <Route path="/" element={<Home user={user} />} />
         <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
         <Route path="/signup" element={!user ? <SignUp /> : <Navigate to="/" />} />
+
+        {/* Docs portal */}
+        <Route element={<DocsLayout user={user} />}>
+          <Route path="/docs" element={<DocsLanding />} />
+          <Route path="/docs/labs" element={<LabGuide user={user} />} />
+          <Route path="/docs/tests" element={<TestExamples user={user} />} />
+          <Route path="/docs/github" element={<DocsGitHubGuide />} />
+        </Route>
+
+        {/* Legacy redirects */}
+        <Route path="/docs/test-examples" element={<Navigate to="/docs/tests" replace />} />
+        <Route path="/docs/lab-guides" element={<Navigate to="/docs/labs" replace />} />
 
         {/* Protected Routes */}
         <Route element={<ProtectedRoutes user={user} />}>

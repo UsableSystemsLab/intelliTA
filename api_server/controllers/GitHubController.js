@@ -39,6 +39,26 @@ function verifyState(state) {
   return data;
 }
 
+// assignment description that Classroom seeds.
+const INTELLITA_README_START = "<!-- intellita-grade:start -->";
+const INTELLITA_README_END = "<!-- intellita-grade:end -->";
+
+function mergeIntelliTASection(existingReadme, sectionBody) {
+  const wrapped = `${INTELLITA_README_START}\n${sectionBody}\n${INTELLITA_README_END}`;
+  if (
+    existingReadme.includes(INTELLITA_README_START) &&
+    existingReadme.includes(INTELLITA_README_END)
+  ) {
+    const startIdx = existingReadme.indexOf(INTELLITA_README_START);
+    const endIdx = existingReadme.indexOf(INTELLITA_README_END) + INTELLITA_README_END.length;
+    return existingReadme.slice(0, startIdx) + wrapped + existingReadme.slice(endIdx);
+  }
+  // No managed section yet — prepend so the grade is the first thing visible.
+  return existingReadme.trim()
+    ? `${wrapped}\n\n---\n\n${existingReadme}`
+    : `${wrapped}\n`;
+}
+
 /**
  * Create a GitHub repo and push files using the Git Trees API.
  * @param {string} token - Decrypted GitHub access token
@@ -669,21 +689,36 @@ const GitHubController = {
   async linkAssignment(req, res) {
     try {
       const { activityId } = req.params;
-      const { assignment_id } = req.body;
-
-      if (!assignment_id) {
-        return res.status(400).json({ message: "assignment_id is required" });
-      }
+      const { assignment_id, invite_link } = req.body;
 
       const activity = await Activity.findOne({ where: { activity_id: activityId } });
       if (!activity) {
         return res.status(404).json({ message: "Activity not found" });
       }
 
-      activity.github_assignment_id = assignment_id;
+      // null/empty unlinks; otherwise expect a positive integer.
+      const newId = assignment_id == null || assignment_id === ""
+        ? null
+        : Number(assignment_id);
+      if (newId !== null && (!Number.isInteger(newId) || newId <= 0)) {
+        return res.status(400).json({ message: "assignment_id must be a positive integer or null" });
+      }
+
+      activity.github_assignment_id = newId;
+      // Mirror the assignment's invite link to github_classroom_url so the
+      // student's readiness checklist + "Open assignment on GitHub" button work.
+      if (newId === null) {
+        activity.github_classroom_url = null;
+      } else if (typeof invite_link === "string" && invite_link.trim()) {
+        activity.github_classroom_url = invite_link.trim();
+      }
       await activity.save();
 
-      res.json({ message: "Assignment linked", github_assignment_id: assignment_id });
+      res.json({
+        message: newId === null ? "Assignment unlinked" : "Assignment linked",
+        github_assignment_id: newId,
+        github_classroom_url: activity.github_classroom_url,
+      });
     } catch (error) {
       res.status(500).json({ message: "Error linking assignment", error: error.message });
     }
@@ -796,7 +831,7 @@ const GitHubController = {
    * @param {Array<{name: string, content: string}>} files - Code files from the web editor
    * @returns {{ commitUrl: string, repoUrl: string }}
    */
-  async pushStudentCode(instructorToken, assignmentId, studentGithubUsername, files) {
+  async pushStudentCode(instructorToken, assignmentId, studentGithubUsername, files, options = {}) {
     const octokit = new Octokit({ auth: instructorToken });
 
     // 1. Find the student's accepted assignment repo
@@ -833,9 +868,28 @@ const GitHubController = {
     });
     const baseTreeSha = commitData.tree.sha;
 
+    // 3b. If a README grade section was requested, fetch the existing README
+    //     and splice the section in (so we never clobber the assignment text).
+    let filesToWrite = files;
+    if (options.gradeReadmeSection) {
+      let existingReadme = "";
+      try {
+        const { data } = await octokit.rest.repos.getContent({
+          owner, repo, path: "README.md",
+        });
+        if (data && !Array.isArray(data) && data.content) {
+          existingReadme = Buffer.from(data.content, "base64").toString("utf-8");
+        }
+      } catch {
+        // No README exists yet — create one.
+      }
+      const mergedReadme = mergeIntelliTASection(existingReadme, options.gradeReadmeSection);
+      filesToWrite = [...files, { name: "README.md", content: mergedReadme }];
+    }
+
     // 4. Create blobs for each file
     const treeItems = await Promise.all(
-      files.map(async (file) => {
+      filesToWrite.map(async (file) => {
         const { data: blob } = await octokit.rest.git.createBlob({
           owner, repo,
           content: Buffer.from(file.content, "utf-8").toString("base64"),

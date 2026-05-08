@@ -158,7 +158,9 @@ export default function Maincontent({ user }) {
     const [isHintOpen, setIsHintOpen] = useState(false);
     const [selectedCodeForChat, setSelectedCodeForChat] = useState('');
     const [checkpointHintText, setCheckpointHintText] = useState('');
+    const [checkpointHintIsPass, setCheckpointHintIsPass] = useState(false);
     const [isLoadingCheckpointHint, setIsLoadingCheckpointHint] = useState(false);
+    const [isLoadingVerify, setIsLoadingVerify] = useState(false);
     const [quizQuestions, setQuizQuestions] = useState([]);
     const [answeredQuestions, setAnsweredQuestions] = useState([]);
     const [captionSegmentsEn, setCaptionSegmentsEn] = useState([]);
@@ -183,7 +185,7 @@ export default function Maincontent({ user }) {
         fetch(`${API_BASE}/courses/${courseId}/activities/${activityId}/answers`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
-            body: JSON.stringify({ firebaseId: user.uid, question_id, answer })
+            body: JSON.stringify({ firebaseId: user.uid, question_id, answer, is_correct })
         }).catch(() => {});
     }, [user, courseId, activityId]);
 
@@ -196,7 +198,8 @@ export default function Maincontent({ user }) {
         skipCheckpoint,
         nextCheckpoint,
         prevCheckpoint,
-        retryCheckpoint
+        retryCheckpoint,
+        markCheckpointPassed
     } = useCheckpoints({
         currentTime,
         files,
@@ -224,35 +227,83 @@ export default function Maincontent({ user }) {
         if (!activeCheckpoint || isLoadingCheckpointHint) return;
         setIsLoadingCheckpointHint(true);
         try {
-            const fileName = activeCheckpoint.fileName || activeFile.name;
-            const targetFile = files.find(f => f.name === fileName) || activeFile;
-            const res = await fetch(`${LLM_BASE}/hint/generate`, {
+            const numericCheckpointId = typeof activeCheckpoint.id === 'string' && activeCheckpoint.id.startsWith('quiz_')
+                ? parseInt(activeCheckpoint.id.replace('quiz_', ''), 10)
+                : activeCheckpoint.id;
+            const res = await fetch(`${LLM_BASE}/hint/check-and-generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
                 body: JSON.stringify({
                     firebase_uid: user?.uid || 'anonymous',
                     activity_id: parseInt(activityId) || 0,
-                    checkpoint_instruction: activeCheckpoint.instruction,
-                    student_code: targetFile.content,
-                    file_name: targetFile.name,
+                    checkpoint_id: numericCheckpointId,
+                    files: files.map(f => ({ name: f.name, content: f.content })),
                 }),
             });
             if (res.ok) {
                 const data = await res.json();
-                setCheckpointHintText(data.hint || 'No hint available.');
+                console.log('[DEBUG hint/check-and-generate] checkpoint_id:', numericCheckpointId, 'response:', data);
+                if (data.correct) {
+                    setCheckpointHintIsPass(true);
+                    setCheckpointHintText("Your code passes this checkpoint's test. Try the next step.");
+                    markCheckpointPassed();
+                } else {
+                    setCheckpointHintIsPass(false);
+                    setCheckpointHintText(data.hint || 'No hint available.');
+                }
             } else {
+                setCheckpointHintIsPass(false);
                 setCheckpointHintText('Failed to generate hint. Please try again.');
             }
         } catch {
+            setCheckpointHintIsPass(false);
             setCheckpointHintText('Hint service is unavailable. Please try again later.');
         } finally {
             setIsLoadingCheckpointHint(false);
         }
-    }, [activeCheckpoint, isLoadingCheckpointHint, activeFile, files, user, activityId]);
+    }, [activeCheckpoint, isLoadingCheckpointHint, files, user, activityId]);
+
+    const handleVerifySolution = useCallback(async () => {
+        if (!activeCheckpoint || isLoadingVerify) return;
+        setIsLoadingVerify(true);
+        try {
+            const numericCheckpointId = typeof activeCheckpoint.id === 'string' && activeCheckpoint.id.startsWith('quiz_')
+                ? parseInt(activeCheckpoint.id.replace('quiz_', ''), 10)
+                : activeCheckpoint.id;
+            const res = await fetch(`${LLM_BASE}/hint/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
+                body: JSON.stringify({
+                    firebase_uid: user?.uid || 'anonymous',
+                    activity_id: parseInt(activityId) || 0,
+                    checkpoint_id: numericCheckpointId,
+                    files: files.map(f => ({ name: f.name, content: f.content })),
+                }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.correct) {
+                    markCheckpointPassed();
+                } else {
+                    setFeedback({ type: 'error', message: data.message || 'Incorrect. Try again or use a hint.' });
+                    setTimeout(() => setFeedback(null), 4000);
+                }
+            } else {
+                setFeedback({ type: 'error', message: 'Verification failed. Please try again.' });
+                setTimeout(() => setFeedback(null), 3000);
+            }
+        } catch {
+            setFeedback({ type: 'error', message: 'Verification service is unavailable.' });
+            setTimeout(() => setFeedback(null), 3000);
+        } finally {
+            setIsLoadingVerify(false);
+        }
+    }, [activeCheckpoint, isLoadingVerify, files, user, activityId, markCheckpointPassed, setFeedback]);
 
     // Clear hint when checkpoint changes
     useEffect(() => {
         setCheckpointHintText('');
+        setCheckpointHintIsPass(false);
     }, [activeCheckpoint?.id]);
 
     useEffect(() => {
@@ -561,6 +612,15 @@ export default function Maincontent({ user }) {
             const verifiedCount = challenges.filter(cp => cp.status === 'verified').length;
             const calculatedScore = totalCount > 0 ? Math.round((verifiedCount / totalCount) * 100) : 100;
 
+            const checkpointsPayload = checkpoints.map(cp => ({
+                id: typeof cp.id === 'string' && cp.id.startsWith('quiz_')
+                    ? parseInt(cp.id.replace('quiz_', ''), 10)
+                    : cp.id,
+                title: cp.title || cp.question || '',
+                type: cp.type,
+                passed: cp.status === 'verified',
+            }));
+
             const url = `${API_BASE}/courses/${courseId}/activities/${activityId}/submit`;
             const res = await fetch(url, {
                 method: 'POST',
@@ -572,6 +632,7 @@ export default function Maincontent({ user }) {
                     firebaseId: user.uid,
                     score: calculatedScore,
                     files: files.map(f => ({ name: f.name, content: f.content })),
+                    checkpoints: checkpointsPayload,
                 })
             });
 
@@ -778,12 +839,14 @@ export default function Maincontent({ user }) {
                         <CheckpointOverlay
                             activeCheckpoint={activeCheckpoint}
                             feedback={feedback}
-                            onCheckSolution={checkSolution}
+                            onCheckSolution={handleVerifySolution}
                             onSubmitQuizAnswer={submitQuizAnswer}
                             onSkip={skipCheckpoint}
                             onHint={handleCheckpointHint}
                             hintText={checkpointHintText}
+                            hintIsPass={checkpointHintIsPass}
                             isLoadingHint={isLoadingCheckpointHint}
+                            isLoadingVerify={isLoadingVerify}
                         />
                     )}
                 />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { CheckCircle, FastForward, Code2, Lightbulb, Loader2, HelpCircle, ToggleLeft, PenLine } from 'lucide-react';
+import { CheckCircle, CheckCircle2, FastForward, Code2, Lightbulb, Loader2, HelpCircle, ToggleLeft, PenLine } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const mdComponents = {
@@ -130,7 +130,7 @@ function FillBlankBody({ checkpoint, onSubmit }) {
     );
 }
 
-function ChallengeBody({ checkpoint, onCheckSolution }) {
+function ChallengeBody({ checkpoint, onCheckSolution, isLoadingVerify }) {
     const { t } = useTranslation();
     return (
         <>
@@ -139,10 +139,15 @@ function ChallengeBody({ checkpoint, onCheckSolution }) {
             </div>
             <button
                 onClick={onCheckSolution}
-                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
+                disabled={isLoadingVerify}
+                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                <CheckCircle className="w-5 h-5" />
-                {t('verifySolution')}
+                {isLoadingVerify ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                    <CheckCircle className="w-5 h-5" />
+                )}
+                {isLoadingVerify ? t('verifying') || 'Verifying...' : t('verifySolution')}
             </button>
         </>
     );
@@ -167,7 +172,9 @@ export default function CheckpointOverlay({
     onSkip,
     onHint,
     hintText,
-    isLoadingHint
+    hintIsPass = false,
+    isLoadingHint,
+    isLoadingVerify = false
 }) {
     const { t } = useTranslation();
 
@@ -207,7 +214,7 @@ export default function CheckpointOverlay({
 
                     {/* Type-specific body */}
                     {type === 'challenge' && (
-                        <ChallengeBody checkpoint={activeCheckpoint} onCheckSolution={onCheckSolution} />
+                        <ChallengeBody checkpoint={activeCheckpoint} onCheckSolution={onCheckSolution} isLoadingVerify={isLoadingVerify} />
                     )}
                     {type === 'mcq' && (
                         <McqBody checkpoint={activeCheckpoint} onSubmit={onSubmitQuizAnswer} />
@@ -245,7 +252,17 @@ export default function CheckpointOverlay({
                         </button>
                     </div>
 
-                    {hintText && (
+                    {hintText && hintIsPass && (
+                        <div className="mt-4 p-3 rounded-xl text-sm text-left bg-emerald-500/10 text-emerald-200 border border-emerald-500/30">
+                            <div className="flex items-center gap-2 mb-1.5 text-emerald-400 font-semibold">
+                                <CheckCircle2 className="w-4 h-4" />
+                                Checkpoint passed
+                            </div>
+                            {hintText}
+                        </div>
+                    )}
+
+                    {hintText && !hintIsPass && (
                         <div className="mt-4 p-3 rounded-xl text-sm text-left bg-amber-500/10 text-amber-200 border border-amber-500/30">
                             <div className="flex items-center gap-2 mb-1.5 text-amber-400 font-semibold">
                                 <Lightbulb className="w-4 h-4" />

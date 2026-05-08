@@ -18,7 +18,7 @@ import GitHubController from "./GitHubController.js";
  * @param {string|null} mdContent          - Raw markdown string
  * @param {string|null} starterCodeContent - Raw JSON string of [{name, content}]
  */
-async function _createGitHubRepo(activity, courseId, title, mdContent, starterCodeContent) {
+async function _createGitHubRepo(activity, courseId, title, mdContent, starterCodeContent, testsManifest) {
   const connection = await GitHubConnection.findOne({ where: { course_id: courseId } });
   if (!connection || !connection.github_token) {
     console.log(`[GitHub] No connected token for course ${courseId} — skipping`);
@@ -72,6 +72,16 @@ async function _createGitHubRepo(activity, courseId, title, mdContent, starterCo
       console.warn(`[GitHub] Could not parse starter code JSON: ${err.message}`);
     }
   }
+  // Test files travel into the assignment repo so the GH Classroom autograder
+  // runs the same bytes Piston runs at hint time. Manifest paths are kept as-is
+  // (test_main.py, MainTest.java, etc.) — students see them as visible tests.
+  if (testsManifest && Array.isArray(testsManifest.test_files)) {
+    for (const tf of testsManifest.test_files) {
+      if (tf.path && tf.content != null) {
+        files.push({ path: tf.path, content: String(tf.content) });
+      }
+    }
+  }
 
   let repoFullName = null;
   if (files.length > 0) {
@@ -93,6 +103,65 @@ async function _createGitHubRepo(activity, courseId, title, mdContent, starterCo
   if (Object.keys(updates).length > 0) {
     await activity.update(updates);
   }
+}
+
+function escapeMarkdownCell(s) {
+  return String(s ?? "").replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
+}
+
+function renderSubmissionMarkdown(grade) {
+  const rows = grade.checkpoints.length === 0
+    ? "| — | — | — | — |"
+    : grade.checkpoints.map((c, i) =>
+        `| ${i + 1} | ${escapeMarkdownCell(c.title)} | ${c.type} | ${c.passed ? "Pass" : "Fail"} |`
+      ).join("\n");
+
+  return `# intelliTA Submission
+
+**Activity:** ${escapeMarkdownCell(grade.activity_title)}
+**Score:** ${grade.score} / ${grade.max_score}
+**Submitted:** ${grade.submitted_at}
+
+## Checkpoints
+
+| # | Title | Type | Result |
+|---|-------|------|--------|
+${rows}
+`;
+}
+
+function buildGradeArtifacts(activity, score, checkpoints) {
+  const submittedAt = new Date().toISOString();
+  // ':' is invalid in Windows paths and ugly in URLs; use a filesystem-safe form.
+  const safeTs = submittedAt.replace(/:/g, "-");
+
+  const grade = {
+    activity_id: activity.activity_id,
+    activity_title: activity.title || "",
+    score: typeof score === "number" ? score : Number(score) || 0,
+    max_score: 100,
+    submitted_at: submittedAt,
+    checkpoints: Array.isArray(checkpoints)
+      ? checkpoints.map(c => ({
+          id: c.id,
+          title: c.title || "",
+          type: c.type,
+          passed: !!c.passed,
+        }))
+      : [],
+  };
+
+  const json = JSON.stringify(grade, null, 2);
+  const md = renderSubmissionMarkdown(grade);
+
+  return {
+    files: [
+      { name: "intellita/grade.json",                 content: json },
+      { name: "intellita/SUBMISSION.md",              content: md },
+      { name: `intellita/submissions/${safeTs}.json`, content: json },
+    ],
+    readmeSection: md,
+  };
 }
 
 const ActivityController = {
@@ -131,6 +200,8 @@ const ActivityController = {
       const starter_code_url = req.body.starter_code_url;
       const quiz_url = req.body.quiz_url;
       const github_classroom_url = req.body.github_classroom_url;
+      const tests_url = req.body.tests_url;
+      const tests_language = req.body.tests_language;
 
       // Basic validation
       if (!title || !start_date || !end_date) {
@@ -147,6 +218,8 @@ const ActivityController = {
         starter_code_url: starter_code_url || null,
         quiz_url: quiz_url || null,
         github_classroom_url: github_classroom_url || null,
+        tests_url: tests_url || null,
+        tests_language: tests_language || null,
       });
 
       // Queue transcription if video was uploaded
@@ -159,7 +232,8 @@ const ActivityController = {
       if (req.body.create_github_repo === "true") {
         const mdContent = req.body._md_content || null;
         const starterCodeContent = req.body._starter_code_content || null;
-        _createGitHubRepo(newActivity, courseId, title, mdContent, starterCodeContent).catch(err =>
+        const testsManifest = req.body._tests_manifest_parsed || null;
+        _createGitHubRepo(newActivity, courseId, title, mdContent, starterCodeContent, testsManifest).catch(err =>
           console.error("[GitHub] Repo creation failed:", err.message)
         );
       }
@@ -188,7 +262,7 @@ const ActivityController = {
   async updateActivity(req, res) {
     try {
       const { activityId } = req.params;
-      const { title, start_date, end_date, video_url, md_file_url, starter_code_url, quiz_url, github_classroom_url } = req.body;
+      const { title, start_date, end_date, video_url, md_file_url, starter_code_url, quiz_url, github_classroom_url, tests_url, tests_language } = req.body;
 
       const activity = await Activity.findOne({
         where: { activity_id: activityId }
@@ -207,6 +281,8 @@ const ActivityController = {
       if (starter_code_url !== undefined) activity.starter_code_url = starter_code_url;
       if (quiz_url !== undefined) activity.quiz_url = quiz_url;
       if (github_classroom_url !== undefined) activity.github_classroom_url = github_classroom_url;
+      if (tests_url !== undefined) activity.tests_url = tests_url;
+      if (tests_language !== undefined) activity.tests_language = tests_language;
 
       await activity.save();
 
@@ -238,7 +314,7 @@ const ActivityController = {
   async submitActivity(req, res) {
     try {
       const { activityId, courseId } = req.params;
-      const { userId, firebaseId, score, files } = req.body;
+      const { userId, firebaseId, score, files, checkpoints } = req.body;
 
       if (!activityId) return res.status(400).json({ message: "Activity ID is required" });
       if (!userId && !firebaseId) return res.status(400).json({ message: "User ID or Firebase ID is required" });
@@ -280,11 +356,13 @@ const ActivityController = {
         try {
           const activity = await Activity.findOne({ where: { activity_id: activityId } });
           if (!user.github_username || !user.github_verified) {
-            // Student hasn't verified GitHub — skip push
+            console.warn(`[GitHub Push] Skipped: user ${user.id} has no verified GitHub link (github_username=${user.github_username ?? "null"}, github_verified=${user.github_verified ?? false})`);
           } else {
             const cId = courseId || activity.course_id;
             const connection = await GitHubConnection.findOne({ where: { course_id: cId } });
-            if (connection?.github_token) {
+            if (!connection?.github_token) {
+              console.warn(`[GitHub Push] Skipped: course ${cId} has no GitHubConnection token`);
+            } else {
               const token = await decryptApiKey(connection.github_token);
 
               let assignmentId = activity.github_assignment_id;
@@ -297,10 +375,17 @@ const ActivityController = {
                 }
               }
 
-              if (assignmentId) {
+              if (!assignmentId) {
+                console.warn(`[GitHub Push] Skipped: activity ${activityId} has no resolvable Classroom assignment (classroom_id=${connection.github_classroom_id ?? "null"}, repo_url=${activity.github_repo_url ?? "null"})`);
+              } else {
+                console.log(`[GitHub Push] Pushing for user=${user.github_username} assignment=${assignmentId}`);
+                const { files: artifactFiles, readmeSection } = buildGradeArtifacts(activity, score ?? submission.score, checkpoints);
                 githubResult = await GitHubController.pushStudentCode(
-                  token, assignmentId, user.github_username, files
+                  token, assignmentId, user.github_username,
+                  [...files, ...artifactFiles],
+                  { gradeReadmeSection: readmeSection },
                 );
+                console.log(`[GitHub Push] Success: ${githubResult.commitUrl}`);
               }
             }
           }
@@ -309,6 +394,8 @@ const ActivityController = {
           // Don't fail the submission — just log the error
           githubResult = { error: ghErr.message };
         }
+      } else {
+        console.warn("[GitHub Push] Skipped: no files in request body");
       }
 
       const response = {

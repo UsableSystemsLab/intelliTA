@@ -84,9 +84,11 @@ export function useCheckpoints({
     }, [initialCheckpoints]);
 
     const syncCodeToTime = useCallback((targetTime, autoMark = false) => {
-        let newFiles = JSON.parse(JSON.stringify(INITIAL_FILES));
+        let newFiles = [...files];
+        
         checkpoints.forEach(cp => {
-            if (cp.type === 'auto_code' && cp.time <= targetTime) {
+            // Only apply auto_code changes if they haven't been applied yet
+            if (cp.type === 'auto_code' && cp.time <= targetTime && cp.status === 'pending') {
                 newFiles = newFiles.map(f =>
                     f.name === cp.fileName ? { ...f, content: cp.newContent } : f
                 );
@@ -105,7 +107,7 @@ export function useCheckpoints({
                 return c;
             }));
         }
-    }, [INITIAL_FILES, checkpoints, activeFile.name, setFiles, setActiveFile]);
+    }, [files, checkpoints, activeFile.name, setFiles, setActiveFile]);
 
     useEffect(() => {
         const timeDelta = Math.abs(currentTime - prevTimeRef.current);
@@ -162,30 +164,41 @@ export function useCheckpoints({
         }
     }, [currentTime, checkpoints, activeCheckpoint, files, activeFile, onFeedback, onPause, setActiveFile, setFiles, syncCodeToTime]);
 
-    // For challenge/coding types — check code in editor
-    const checkSolution = () => {
+    const markCheckpointPassed = () => {
         if (!activeCheckpoint) return;
-        const isCorrect = activeCheckpoint.check(files);
 
-        // Record answer to backend for coding quiz questions
         const quizId = activeCheckpoint.id;
         if (typeof quizId === 'string' && quizId.startsWith('quiz_') && onAnswerRecorded) {
             const numericId = parseInt(quizId.replace('quiz_', ''), 10);
             const fileName = activeCheckpoint.fileName || activeFile?.name;
             const code = files.find(f => f.name === fileName)?.content || '';
-            onAnswerRecorded({ question_id: numericId, answer: code, is_correct: isCorrect });
+            onAnswerRecorded({ question_id: numericId, answer: code, is_correct: true });
         }
 
+        onFeedback({ type: 'success', message: 'Correct! Continuing lesson...' });
+        setCheckpoints(prev => prev.map(cp => cp.id === activeCheckpoint.id ? { ...cp, status: 'verified' } : cp));
+        setActiveCheckpoint(null);
+        setShowHint(false);
+        setTimeout(() => {
+            onFeedback(null);
+            onPlay();
+        }, 1000);
+    };
+
+    const checkSolution = () => {
+        if (!activeCheckpoint) return;
+        const isCorrect = activeCheckpoint.check(files);
+        
         if (isCorrect) {
-            onFeedback({ type: 'success', message: 'Correct! Continuing lesson...' });
-            setCheckpoints(prev => prev.map(cp => cp.id === activeCheckpoint.id ? { ...cp, status: 'verified' } : cp));
-            setActiveCheckpoint(null);
-            setShowHint(false);
-            setTimeout(() => {
-                onFeedback(null);
-                onPlay();
-            }, 1000);
+            markCheckpointPassed();
         } else {
+            const quizId = activeCheckpoint.id;
+            if (typeof quizId === 'string' && quizId.startsWith('quiz_') && onAnswerRecorded) {
+                const numericId = parseInt(quizId.replace('quiz_', ''), 10);
+                const fileName = activeCheckpoint.fileName || activeFile?.name;
+                const code = files.find(f => f.name === fileName)?.content || '';
+                onAnswerRecorded({ question_id: numericId, answer: code, is_correct: false });
+            }
             onFeedback({ type: 'error', message: 'Incorrect. Try again or use a hint.' });
             setTimeout(() => onFeedback(null), 3000);
         }
@@ -280,6 +293,7 @@ export function useCheckpoints({
         jumpToCheckpoint,
         nextCheckpoint,
         prevCheckpoint,
-        retryCheckpoint
+        retryCheckpoint,
+        markCheckpointPassed
     };
 }

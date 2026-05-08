@@ -58,6 +58,14 @@ const Activity = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    tests_url: {
+      type: DataTypes.STRING(500),
+      allowNull: true,
+    },
+    tests_language: {
+      type: DataTypes.ENUM("python", "javascript", "java"),
+      allowNull: true,
+    },
   },
   {
     tableName: "activities",

@@ -1,4 +1,4 @@
-import Nav from "@/components/Courses/Nav";
+import Nav from "@/components/Landing-page/Nav";
 import Maincontent from "@/components/Activity/Maincontent";
 
 export default function Activity({ user }) {

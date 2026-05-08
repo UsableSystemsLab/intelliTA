@@ -662,3 +662,196 @@
   background-color: #333333 !important;
   border-color: #FFFFFF !important;
 }
+
+/* Docs light theme 
+
+
+/* Page surface */
+.light-theme .docs-root {
+  background-color: #ffffff !important;
+  color: #1f2937 !important;
+}
+.light-theme .docs-root.bg-gray-950,
+.light-theme .docs-root .bg-gray-950 {
+  background-color: #ffffff !important;
+}
+.light-theme .docs-root .bg-gray-950\/40 {
+  background-color: #f8fafc !important;
+}
+
+/* Headings & body text */
+.light-theme .docs-root .text-white {
+  color: #0f172a !important;
+}
+.light-theme .docs-root .text-gray-200,
+.light-theme .docs-root .text-gray-100 {
+  color: #1f2937 !important;
+}
+.light-theme .docs-root .text-gray-300 {
+  color: #374151 !important;
+}
+.light-theme .docs-root .text-gray-400 {
+  color: #4b5563 !important;
+}
+.light-theme .docs-root .text-gray-500 {
+  color: #6b7280 !important;
+}
+.light-theme .docs-root .text-gray-600 {
+  color: #9ca3af !important;
+}
+
+/* Card surfaces */
+.light-theme .docs-root .bg-gray-900\/40,
+.light-theme .docs-root .bg-gray-900\/60,
+.light-theme .docs-root .bg-gray-900\/80 {
+  background-color: #f9fafb !important;
+}
+.light-theme .docs-root .bg-gray-800\/30,
+.light-theme .docs-root .bg-gray-800\/40,
+.light-theme .docs-root .bg-gray-800\/50 {
+  background-color: #f3f4f6 !important;
+}
+
+/* Borders */
+.light-theme .docs-root .border-gray-700,
+.light-theme .docs-root .border-gray-700\/40,
+.light-theme .docs-root .border-gray-700\/50,
+.light-theme .docs-root .border-gray-700\/60,
+.light-theme .docs-root .border-gray-800,
+.light-theme .docs-root .border-gray-800\/50 {
+  border-color: #e5e7eb !important;
+}
+.light-theme .docs-root .divide-gray-800 > * + * {
+  border-color: #e5e7eb !important;
+}
+
+/* Hover surfaces */
+.light-theme .docs-root .hover\:bg-gray-800\/30:hover,
+.light-theme .docs-root .hover\:bg-gray-800\/40:hover {
+  background-color: #f3f4f6 !important;
+}
+
+/* Sidebar — active link */
+.light-theme .docs-root .text-blue-300 {
+  color: #1d4ed8 !important;
+}
+.light-theme .docs-root .bg-blue-500\/10 {
+  background-color: #dbeafe !important;
+}
+.light-theme .docs-root .bg-blue-400 {
+  background-color: #2563eb !important;
+}
+
+/* Accent text */
+.light-theme .docs-root .text-blue-400 {
+  color: #2563eb !important;
+}
+.light-theme .docs-root .text-emerald-400 {
+  color: #047857 !important;
+}
+.light-theme .docs-root .text-purple-400 {
+  color: #6d28d9 !important;
+}
+.light-theme .docs-root .text-amber-400 {
+  color: #b45309 !important;
+}
+
+/* Notes / callouts — info */
+.light-theme .docs-root .bg-blue-500\/5 {
+  background-color: #eff6ff !important;
+}
+.light-theme .docs-root .border-blue-500\/20,
+.light-theme .docs-root .border-blue-500\/30 {
+  border-color: #93c5fd !important;
+}
+.light-theme .docs-root .bg-blue-500\/10 {
+  background-color: #dbeafe !important;
+}
+.light-theme .docs-root .bg-blue-500\/15 {
+  background-color: #bfdbfe !important;
+}
+
+/* Notes / callouts — warning */
+.light-theme .docs-root .bg-amber-500\/5,
+.light-theme .docs-root .bg-amber-500\/10 {
+  background-color: #fffbeb !important;
+}
+.light-theme .docs-root .border-amber-500\/15,
+.light-theme .docs-root .border-amber-500\/20,
+.light-theme .docs-root .border-amber-500\/30 {
+  border-color: #fcd34d !important;
+}
+.light-theme .docs-root .text-amber-300 {
+  color: #92400e !important;
+}
+
+/* Notes / callouts — success */
+.light-theme .docs-root .bg-emerald-500\/5 {
+  background-color: #ecfdf5 !important;
+}
+.light-theme .docs-root .border-emerald-500\/20,
+.light-theme .docs-root .border-emerald-500\/40 {
+  border-color: #6ee7b7 !important;
+}
+
+/* DocsLanding category cards — flatten gradients to subtle tints */
+.light-theme .docs-root .bg-gradient-to-br.from-emerald-500\/15 {
+  background-image: none !important;
+  background-color: #ecfdf5 !important;
+}
+.light-theme .docs-root .bg-gradient-to-br.from-purple-500\/15 {
+  background-image: none !important;
+  background-color: #f5f3ff !important;
+}
+.light-theme .docs-root .bg-gradient-to-br.from-gray-500\/15 {
+  background-image: none !important;
+  background-color: #f9fafb !important;
+}
+.light-theme .docs-root .border-emerald-500\/20,
+.light-theme .docs-root .border-emerald-500\/40 {
+  border-color: #6ee7b7 !important;
+}
+.light-theme .docs-root .border-purple-500\/20,
+.light-theme .docs-root .border-purple-500\/40 {
+  border-color: #c4b5fd !important;
+}
+.light-theme .docs-root .border-gray-500\/20,
+.light-theme .docs-root .border-gray-400\/40 {
+  border-color: #d1d5db !important;
+}
+
+/* GitHub guide — header icon container */
+.light-theme .docs-root .bg-gradient-to-br.from-gray-700.to-gray-900 {
+  background-image: none !important;
+  background-color: #1f2937 !important;
+}
+
+/* GitHub guide — step bubble */
+.light-theme .docs-root .bg-gradient-to-br.from-blue-500\/20.to-indigo-700\/20 {
+  background-image: none !important;
+  background-color: #dbeafe !important;
+}
+
+/* Submission flow — solid step bubbles */
+.light-theme .docs-root .bg-gradient-to-br.from-blue-500.to-indigo-700 {
+  background-image: none !important;
+  background-color: #2563eb !important;
+}
+
+/* Inline / monospace code */
+.light-theme .docs-root code.bg-gray-800 {
+  background-color: #f3f4f6 !important;
+  color: #1d4ed8 !important;
+  border-color: #e5e7eb !important;
+}
+.light-theme .docs-root .font-mono.bg-gray-900\/80 {
+  background-color: #f9fafb !important;
+  color: #1f2937 !important;
+}
+
+/* Sidebar override — global ".light-theme aside" forces white; we want the
+   docs sidebar to look subtly distinct from the page surface. */
+.light-theme .docs-root aside {
+  background-color: #f8fafc !important;
+  border-right-color: #e5e7eb !important;
+}
