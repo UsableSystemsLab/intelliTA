@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { X, Plus } from "lucide-react";
-import { FILE_LANGUAGES, OTHER_LANGUAGE } from "./fileLanguages";
+import { FILE_LANGUAGES } from "./fileLanguages";
 
 export default function NewFileModal({
   isOpen,
@@ -11,35 +11,25 @@ export default function NewFileModal({
   initial = null, // { basename, path, languageId } when renaming
   title = "New file",
 }) {
-  const allLanguages = useMemo(() => [...FILE_LANGUAGES, OTHER_LANGUAGE], []);
-
   const [languageId, setLanguageId] = useState(lockedLanguageId || initial?.languageId || FILE_LANGUAGES[0].id);
   const [basename, setBasename] = useState(initial?.basename || "");
-  const [pathPrefix, setPathPrefix] = useState(initial?.path || "");
-  const [otherFilename, setOtherFilename] = useState(initial?.basename ? `${initial.basename}.${initial.extension || ""}` : "");
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!isOpen) return;
     setLanguageId(lockedLanguageId || initial?.languageId || FILE_LANGUAGES[0].id);
     setBasename(initial?.basename || "");
-    setPathPrefix(initial?.path || "");
-    setOtherFilename(initial?.basename || "");
     setError("");
   }, [isOpen, initial, lockedLanguageId]);
 
   if (!isOpen) return null;
 
-  const lang = allLanguages.find((l) => l.id === languageId) || FILE_LANGUAGES[0];
-  const isOther = lang.id === OTHER_LANGUAGE.id;
+  const lang = FILE_LANGUAGES.find((l) => l.id === languageId) || FILE_LANGUAGES[0];
 
   const buildFinalName = () => {
-    if (isOther) return otherFilename.trim();
     const cleanBase = basename.trim();
     if (!cleanBase) return "";
-    const cleanPath = pathPrefix.trim().replace(/^\/+|\/+$/g, "");
-    const filename = `${cleanBase}.${lang.extension}`;
-    return cleanPath ? `${cleanPath}/${filename}` : filename;
+    return `${cleanBase}.${lang.extension}`;
   };
 
   const handleConfirm = () => {
@@ -77,9 +67,6 @@ export default function NewFileModal({
           {!lockedLanguageId && (
             <div>
               <label className="text-xs font-medium text-gray-400 mb-1 block">File type</label>
-              <p className="text-xs text-gray-500 mb-2">
-                These are the types we fully support — pick <span className="text-gray-300">Other</span> if you need a different file type.
-              </p>
               <select
                 value={languageId}
                 onChange={(e) => setLanguageId(e.target.value)}
@@ -90,7 +77,6 @@ export default function NewFileModal({
                     {l.label} (.{l.extension})
                   </option>
                 ))}
-                <option value={OTHER_LANGUAGE.id}>{OTHER_LANGUAGE.label} (custom extension)</option>
               </select>
             </div>
           )}
@@ -101,54 +87,21 @@ export default function NewFileModal({
             </div>
           )}
 
-          {!isOther && (
-            <>
-              <div>
-                <label className="text-xs font-medium text-gray-400 mb-1 block">Filename</label>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="text"
-                    value={basename}
-                    onChange={(e) => setBasename(e.target.value)}
-                    placeholder="main"
-                    autoFocus
-                    onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
-                    className="flex-1 min-w-0 px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-green-500"
-                  />
-                  <span className="text-sm text-gray-500 px-2 select-none">.{lang.extension}</span>
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-gray-400 mb-1 block">
-                  Path <span className="text-gray-600 font-normal">(optional)</span>
-                </label>
-                <input
-                  type="text"
-                  value={pathPrefix}
-                  onChange={(e) => setPathPrefix(e.target.value)}
-                  placeholder="src/"
-                  onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
-                  className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-green-500"
-                />
-              </div>
-            </>
-          )}
-
-          {isOther && (
-            <div>
-              <label className="text-xs font-medium text-gray-400 mb-1 block">Full filename</label>
+          <div>
+            <label className="text-xs font-medium text-gray-400 mb-1 block">Filename</label>
+            <div className="flex items-center gap-1">
               <input
                 type="text"
-                value={otherFilename}
-                onChange={(e) => setOtherFilename(e.target.value)}
-                placeholder="requirements.txt"
+                value={basename}
+                onChange={(e) => setBasename(e.target.value)}
+                placeholder="main"
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && handleConfirm()}
-                className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-green-500"
+                className="flex-1 min-w-0 px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-green-500"
               />
-              <p className="text-xs text-gray-500 mt-1">Type the filename including its extension.</p>
+              <span className="text-sm text-gray-500 px-2 select-none">.{lang.extension}</span>
             </div>
-          )}
+          </div>
 
           {error && (
             <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
