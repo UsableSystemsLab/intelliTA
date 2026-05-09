@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 
 export default function DocsTOC({ items = [] }) {
+  const { t } = useTranslation();
   const [activeId, setActiveId] = useState(items[0]?.id || null);
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export default function DocsTOC({ items = [] }) {
   return (
     <aside className="hidden xl:block w-56 shrink-0 sticky top-24 self-start max-h-[calc(100vh-7rem)] overflow-y-auto">
       <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.18em] mb-3 px-3">
-        On this page
+        {t("docs.onThisPage")}
       </p>
       <ul className="space-y-0.5 border-l border-gray-800">
         {items.map((item) => {

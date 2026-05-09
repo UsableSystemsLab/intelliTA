@@ -142,7 +142,9 @@ services:
     networks:
       - app_network
     tmpfs:
-      - /piston/jobs
+      - /piston/jobs:size=512m
+    volumes:
+      - piston_packages:/piston/packages
     logging:
       driver: "json-file"
       options:
@@ -191,3 +193,4 @@ volumes:
   ollama_data:
   rustfs_data:
   whisper_cache:
+  piston_packages:
