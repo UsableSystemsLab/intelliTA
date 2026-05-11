@@ -2,13 +2,16 @@ name: CI / CD
 
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
     branches: [main]
 
 jobs:
   test-react:
     runs-on: ubuntu-latest
+    concurrency:
+      group: test-react-${{ github.ref }}
+      cancel-in-progress: true
     defaults:
       run:
         working-directory: react_app
@@ -34,6 +37,9 @@ jobs:
 
   test-api:
     runs-on: ubuntu-latest
+    concurrency:
+      group: test-api-${{ github.ref }}
+      cancel-in-progress: true
     defaults:
       run:
         working-directory: api_server
@@ -61,6 +67,9 @@ jobs:
     needs: [test-react, test-api]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
 
     steps:
       - name: Deploy via SSH
