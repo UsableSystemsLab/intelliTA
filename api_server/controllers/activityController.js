@@ -272,6 +272,13 @@ const ActivityController = {
         return res.status(404).json({ message: "Activity not found" });
       }
 
+      // Detect changes to fields that affect student progress (checkpoints/code/tests).
+      const contentChanged =
+        (video_url !== undefined && video_url !== activity.video_url) ||
+        (quiz_url !== undefined && quiz_url !== activity.quiz_url) ||
+        (starter_code_url !== undefined && starter_code_url !== activity.starter_code_url) ||
+        (tests_url !== undefined && tests_url !== activity.tests_url);
+
       // Update only provided fields
       if (title !== undefined) activity.title = title;
       if (start_date !== undefined) activity.start_date = start_date;
@@ -283,6 +290,8 @@ const ActivityController = {
       if (github_classroom_url !== undefined) activity.github_classroom_url = github_classroom_url;
       if (tests_url !== undefined) activity.tests_url = tests_url;
       if (tests_language !== undefined) activity.tests_language = tests_language;
+
+      if (contentChanged) activity.content_updated_at = new Date();
 
       await activity.save();
 

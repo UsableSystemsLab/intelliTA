@@ -66,6 +66,10 @@ const Activity = sequelize.define(
       type: DataTypes.ENUM("python", "javascript", "java"),
       allowNull: true,
     },
+    content_updated_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "activities",

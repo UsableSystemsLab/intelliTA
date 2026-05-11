@@ -11,6 +11,7 @@ import HintChatSidebar from './HintChatSidebar';
 import LoadingScreen from './LoadingScreen';
 import ErrorScreen from './ErrorScreen';
 import SubmissionResultOverlay from './SubmissionResultOverlay';
+import ActivityResetModal from './ActivityResetModal';
 import { Play, FileText, Clock, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCheckpoints } from '@/components/Activity/useCheckpoints';
@@ -170,6 +171,8 @@ export default function Maincontent({ user }) {
     const [chapters, setChapters] = useState([]);
     const [runState, setRunState] = useState('idle');
     const [runOutput, setRunOutput] = useState(null);
+    const [showResetModal, setShowResetModal] = useState(false);
+    const [isAcknowledgingReset, setIsAcknowledgingReset] = useState(false);
 
     const handleAskAI = useCallback((text) => {
         setSelectedCodeForChat(text);
@@ -440,6 +443,7 @@ export default function Maincontent({ user }) {
                     }
 
                     // Load student's previous answers
+                    let loadedAnswers = [];
                     if (user?.uid) {
                         try {
                             const answersRes = await fetch(
@@ -448,7 +452,8 @@ export default function Maincontent({ user }) {
                             );
                             if (answersRes.ok) {
                                 const { answers } = await answersRes.json();
-                                setAnsweredQuestions(answers || []);
+                                loadedAnswers = answers || [];
+                                setAnsweredQuestions(loadedAnswers);
                             }
                         } catch (answersErr) {
                             console.error("Failed to fetch student answers:", answersErr);
@@ -456,6 +461,8 @@ export default function Maincontent({ user }) {
                     }
 
                     // Load video progress (store in ref, apply when video loads)
+                    let lastSeenContentUpdatedAt = null;
+                    let lastWatchedSeconds = 0;
                     if (user?.uid) {
                         try {
                             const progressRes = await fetch(
@@ -463,13 +470,25 @@ export default function Maincontent({ user }) {
                                 { headers: await getAuthHeaders(auth.currentUser) }
                             );
                             if (progressRes.ok) {
-                                const { last_watched_seconds } = await progressRes.json();
-                                if (last_watched_seconds > 5) {
-                                    savedProgressRef.current = last_watched_seconds;
+                                const progressData = await progressRes.json();
+                                lastWatchedSeconds = progressData.last_watched_seconds || 0;
+                                lastSeenContentUpdatedAt = progressData.last_seen_content_updated_at;
+                                if (lastWatchedSeconds > 5) {
+                                    savedProgressRef.current = lastWatchedSeconds;
                                 }
                             }
                         } catch (progressErr) {
                             console.error("Failed to fetch video progress:", progressErr);
+                        }
+                    }
+
+                    // Detect instructor edit since the student's last interaction.
+                    if (data.content_updated_at && user?.uid) {
+                        const hasPriorWork = loadedAnswers.length > 0 || lastWatchedSeconds > 0;
+                        const isNewer = !lastSeenContentUpdatedAt
+                            || new Date(data.content_updated_at) > new Date(lastSeenContentUpdatedAt);
+                        if (hasPriorWork && isNewer) {
+                            setShowResetModal(true);
                         }
                     }
                 } else {
@@ -502,6 +521,23 @@ export default function Maincontent({ user }) {
         return () => clearInterval(interval);
     }, [isYouTube, isPlaying, activeCheckpoint, duration]);
 
+
+    const acknowledgeActivityReset = useCallback(async () => {
+        if (isAcknowledgingReset) return;
+        setIsAcknowledgingReset(true);
+        try {
+            await fetch(`${API_BASE}/courses/${courseId}/activities/${activityId}/acknowledge-update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
+                body: JSON.stringify({ firebaseId: user.uid }),
+            });
+        } catch (err) {
+            console.error("Failed to acknowledge activity update:", err);
+        } finally {
+            setShowResetModal(false);
+            setIsAcknowledgingReset(false);
+        }
+    }, [isAcknowledgingReset, courseId, activityId, user]);
 
     const saveVideoProgress = useCallback(async (seconds) => {
         if (!user?.uid || !courseId || !activityId) return;
@@ -668,10 +704,18 @@ export default function Maincontent({ user }) {
         />
     );
 
+    const resetModal = showResetModal ? (
+        <ActivityResetModal
+            onAcknowledge={acknowledgeActivityReset}
+            isAcknowledging={isAcknowledgingReset}
+        />
+    ) : null;
+
     // Preview mode - show markdown instructions with Start button
     if (mode === 'preview') {
         return (
             <div className="flex-1 flex flex-col overflow-hidden bg-[#0d1117] text-gray-100 font-sans h-full">
+                {resetModal}
                 {/* Preview Header */}
                 <div className="h-14 border-b border-gray-800 bg-gray-900/50 flex items-center justify-between px-6 shrink-0">
                     <div className="flex items-center gap-4">
@@ -777,6 +821,7 @@ export default function Maincontent({ user }) {
     // Solve mode - show the lab IDE
     return (
         <div className="flex-1 flex flex-col overflow-hidden bg-[#0d1117] text-gray-100 font-sans h-full">
+            {resetModal}
             <ActivityHeader
                 activityTitle={activity.title}
                 onBack={() => navigate(`/courses`)}

@@ -168,6 +168,7 @@ router.post("/:activityId/quiz", QuizController.setQuiz);
 // Video progress
 router.get("/:activityId/progress", VideoProgressController.getProgress);
 router.put("/:activityId/progress", VideoProgressController.upsertProgress);
+router.post("/:activityId/acknowledge-update", VideoProgressController.acknowledgeUpdate);
 
 // Student answers
 router.post("/:activityId/answers", StudentAnswerController.recordAnswer);
