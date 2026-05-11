@@ -23,13 +23,13 @@ describe('LabGuide Maincontent', () => {
     );
   }
 
-  test('renders title and breadcrumb link to /courses', () => {
+  test('renders title and breadcrumb link to /docs', () => {
     const { container } = renderPage();
     expect(
       screen.getByRole('heading', { level: 1, name: /docs\.labs\.title/i })
     ).toBeInTheDocument();
     const hrefs = Array.from(container.querySelectorAll('a')).map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual(expect.arrayContaining(['/courses']));
+    expect(hrefs).toEqual(expect.arrayContaining(['/docs']));
   });
 
   test('renders all expected section anchors', () => {

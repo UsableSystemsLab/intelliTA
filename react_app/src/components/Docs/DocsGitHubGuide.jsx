@@ -80,7 +80,6 @@ export default function DocsGitHubGuide() {
     { id: "per-activity", label: `6. ${t("docs.github.step6Title")}` },
     { id: "students", label: t("docs.github.studentsTitle") },
     { id: "submit-flow", label: t("docs.github.submitTitle") },
-    { id: "troubleshooting", label: t("docs.github.troubleshootingTitle") },
   ];
 
   const oauthFields = [
@@ -152,14 +151,6 @@ export default function DocsGitHubGuide() {
     { t: t("docs.github.submitS4T"), b: t("docs.github.submitS4B") },
   ];
 
-  const faqs = [
-    { q: t("docs.github.tQ1"), a: t("docs.github.tA1") },
-    { q: t("docs.github.tQ2"), a: t("docs.github.tA2") },
-    { q: t("docs.github.tQ3"), a: t("docs.github.tA3") },
-    { q: t("docs.github.tQ4"), a: t("docs.github.tA4") },
-    { q: t("docs.github.tQ5"), a: t("docs.github.tA5") },
-  ];
-
   return (
     <div className="flex">
       <article className="flex-1 min-w-0 px-6 sm:px-10 lg:px-14 py-10 max-w-4xl">
@@ -167,8 +158,6 @@ export default function DocsGitHubGuide() {
           <Link to="/docs" className="hover:text-gray-300 transition-colors">
             {t("docs.breadcrumb")}
           </Link>
-          <span className="mx-2">/</span>
-          <span>{t("docs.github.section")}</span>
           <span className="mx-2">/</span>
           <span className="text-gray-300">{t("docs.github.title")}</span>
         </nav>
@@ -235,27 +224,6 @@ export default function DocsGitHubGuide() {
               </li>
             ))}
           </ol>
-        </section>
-
-        <section id="troubleshooting" className="scroll-mt-20 mb-10">
-          <h2 className="text-2xl font-semibold text-white mb-3 border-b border-gray-800 pb-2">
-            {t("docs.github.troubleshootingTitle")}
-          </h2>
-          <div className="space-y-2">
-            {faqs.map((item, i) => (
-              <details
-                key={i}
-                className="border border-gray-800 rounded open:bg-gray-900/40"
-              >
-                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-gray-200 hover:bg-gray-800/30 rounded">
-                  {item.q}
-                </summary>
-                <p className="px-4 pb-3 text-sm text-gray-400 leading-relaxed border-t border-gray-800/60 pt-3">
-                  {item.a}
-                </p>
-              </details>
-            ))}
-          </div>
         </section>
 
         <p className="text-sm text-gray-300 leading-relaxed mt-8">

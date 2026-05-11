@@ -25,7 +25,7 @@ describe('TestExamples Maincontent', () => {
       screen.getByRole('heading', { level: 1, name: /docs\.tests\.title/i })
     ).toBeInTheDocument();
     const hrefs = Array.from(container.querySelectorAll('a')).map((a) => a.getAttribute('href'));
-    expect(hrefs).toEqual(expect.arrayContaining(['/courses']));
+    expect(hrefs).toEqual(expect.arrayContaining(['/docs']));
   });
 
   test('renders the expected section anchors', () => {

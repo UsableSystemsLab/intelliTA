@@ -67,9 +67,4 @@ describe('DocsGitHubGuide', () => {
     expect(screen.getByRole('button', { name: /docs\.copied/i })).toBeInTheDocument();
   });
 
-  test('renders troubleshooting FAQ details elements', () => {
-    const { container } = renderGuide();
-    const detailsList = container.querySelectorAll('details');
-    expect(detailsList.length).toBeGreaterThanOrEqual(5);
-  });
 });

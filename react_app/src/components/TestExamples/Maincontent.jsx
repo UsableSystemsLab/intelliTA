@@ -221,11 +221,11 @@ export default function Maincontent() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 sm:p-8 lg:px-12 w-full max-w-5xl mx-auto">
-      <div className="text-xs text-gray-500 mb-4">
-        <Link to="/courses" className="hover:text-gray-300">{t('docs.tests.breadcrumbDash')}</Link>
+      <nav className="text-xs text-gray-500 mb-4" aria-label="Breadcrumb">
+        <Link to="/docs" className="hover:text-gray-300 transition-colors">{t('docs.breadcrumb')}</Link>
         <span className="mx-2">/</span>
-        <span>{t('docs.tests.breadcrumbDocs')}</span>
-      </div>
+        <span className="text-gray-300">{t('docs.tests.title')}</span>
+      </nav>
 
       <h1 className="text-3xl sm:text-4xl font-bold text-white tracking-tight">
         {t('docs.tests.title')}
