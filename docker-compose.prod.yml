@@ -126,6 +126,37 @@ services:
     networks:
       - app_network
 
+  piston_api:
+    build:
+      context: piston
+      dockerfile: Dockerfile
+      args:
+        PISTON_LANGS: ${PISTON_LANGS}
+    image: piston_api_image
+    container_name: piston_container
+    restart: unless-stopped
+    privileged: true
+    mem_limit: 2g
+    pids_limit: 512
+    cpus: 2
+    networks:
+      - app_network
+    tmpfs:
+      - /piston/jobs:size=512m
+    volumes:
+      - piston_packages:/piston/packages
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:2000/api/v2/runtimes',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   whisper_server:
     build:
       context: whisper_server
@@ -162,3 +193,4 @@ volumes:
   ollama_data:
   rustfs_data:
   whisper_cache:
+  piston_packages:

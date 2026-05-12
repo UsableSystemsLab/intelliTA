@@ -31,6 +31,27 @@ chat_messages = Table(
     Column("created_at", DateTime, server_default=text("NOW()")),
 )
 
+# Read-only references — managed by the Node API via Sequelize.
+activities = Table(
+    "activities", metadata,
+    Column("activity_id", Integer, primary_key=True),
+    Column("tests_url", String(500)),
+    Column("tests_language", String(20)),
+    extend_existing=True,
+)
+
+quiz_questions = Table(
+    "quiz_questions", metadata,
+    Column("id", Integer, primary_key=True),
+    Column("activity_id", Integer),
+    Column("type", String(20)),
+    Column("instruction", Text),
+    Column("file_name", String(255)),
+    Column("test_name", String(255)),
+    Column("test_class", String(255)),
+    extend_existing=True,
+)
+
 
 # Used to get check if there is a conversation or not, if not create new one
 async def get_or_create_conversation(firebase_uid: str, activity_id: int) -> int:
@@ -82,3 +103,40 @@ async def get_messages(conversation_id: int) -> list[dict]:
             }
             for row in result.fetchall()
         ]
+
+
+async def get_checkpoint_test_info(checkpoint_id: int) -> dict | None:
+    """Resolve a coding checkpoint to its activity-level test config.
+
+    Returns None if the checkpoint doesn't exist, isn't a coding type, or has
+    no test bound. Joins quiz_questions → activities so we get tests_url +
+    tests_language alongside the per-checkpoint test_name in one query.
+    """
+    async with engine.connect() as conn:
+        result = await conn.execute(
+            text(
+                """
+                SELECT q.id, q.activity_id, q.type, q.instruction, q.file_name,
+                       q.test_name, q.test_class,
+                       a.tests_url, a.tests_language
+                  FROM quiz_questions q
+                  JOIN activities a ON a.activity_id = q.activity_id
+                 WHERE q.id = :checkpoint_id
+                """
+            ),
+            {"checkpoint_id": checkpoint_id},
+        )
+        row = result.first()
+        if row is None:
+            return None
+        return {
+            "checkpoint_id": row.id,
+            "activity_id": row.activity_id,
+            "type": row.type,
+            "instruction": row.instruction,
+            "file_name": row.file_name,
+            "test_name": row.test_name,
+            "test_class": row.test_class,
+            "tests_url": row.tests_url,
+            "tests_language": row.tests_language,
+        }

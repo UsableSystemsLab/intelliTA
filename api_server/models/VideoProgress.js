@@ -32,6 +32,10 @@ const VideoProgress = sequelize.define(
             allowNull: false,
             defaultValue: 0,
         },
+        last_seen_content_updated_at: {
+            type: DataTypes.DATE,
+            allowNull: true,
+        },
     },
     {
         tableName: "video_progress",

@@ -15,6 +15,8 @@ function toQuizJson(rows) {
                 instruction: q.instruction,
                 fileName: q.file_name,
                 check: q.check_regex,
+                test_name: q.test_name,
+                test_class: q.test_class,
             };
         }
         const base = {
@@ -76,6 +78,8 @@ const QuizController = {
                 instruction: q.instruction || null,
                 file_name: q.fileName || null,
                 check_regex: q.check || null,
+                test_name: q.test_name || null,
+                test_class: q.test_class || null,
                 options: q.options || null,
                 correct_answer: q.correctAnswer !== undefined ? q.correctAnswer : null,
             }));

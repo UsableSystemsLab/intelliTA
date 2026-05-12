@@ -7,8 +7,15 @@ import logging
 import re
 
 from auth import require_bearer_token
+from database import get_checkpoint_test_info
+from manifest import fetch_manifest, find_test_file
+from piston import run_bound_test
 
 logger = logging.getLogger("uvicorn")
+
+# Truncate failure output before feeding it to the LLM so a long stack trace
+# doesn't blow the prompt budget. ~2 KB is plenty for an assertion message.
+_FAILURE_OUTPUT_BUDGET = 2000
 
 
 def _extract_api_error(e: Exception, model_name: str = "") -> str:
@@ -29,11 +36,15 @@ def _extract_api_error(e: Exception, model_name: str = "") -> str:
 
 from config import GROQ_HINT_MODEL, OLLAMA_BASE_URL, LONG_MESSAGE_THRESHOLD, MAX_HISTORY_MESSAGES, NODE_API_URL
 from database import get_or_create_conversation, save_message, get_messages
-from models import HintChatRequest, HintGenerateRequest, ValidateKeyRequest
+from models import (
+    HintChatRequest, HintGenerateRequest, ValidateKeyRequest,
+    HintCheckAndGenerateRequest,
+)
 from groq_client import get_groq_client
 from prompts import (
     SYSTEM_PROMPT_TEMPLATE, SHORT_WRAPPER, LONG_WRAPPER,
     CLASSIFY_PROMPT, OFF_TOPIC_RESPONSE, HINT_WRAPPER,
+    TEST_AWARE_HINT_WRAPPER,
 )
 
 router = APIRouter()
@@ -305,6 +316,176 @@ async def hint_generate(
     except Exception as e:
         logger.error(f"Hint generation failed: {e}")
         return {"hint": "Hint service is currently unavailable. Please try again later."}
+
+
+async def _generate_hint(prompt: str) -> str:
+    """Call the Groq hint model with a prebuilt prompt. Returns the hint text
+    or a user-facing fallback string on error."""
+    try:
+        client = get_groq_client()
+        resp = await client.chat.completions.create(
+            model=GROQ_HINT_MODEL,
+            messages=[
+                {"role": "system", "content": "You are a programming teaching assistant. Follow the instructions exactly."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.7,
+            max_tokens=400,
+            stream=False,
+        )
+        return resp.choices[0].message.content.strip()
+    except Exception as e:
+        logger.error(f"Hint generation failed: {e}")
+        return "Hint service is currently unavailable. Please try again later."
+
+
+def _pick_student_code(files: list, target_filename: str | None) -> tuple[str, str]:
+    """Pick the file that matches the checkpoint's bound filename. Falls back
+    to the first file. Returns (display_name, content)."""
+    if not files:
+        return ("", "")
+    if target_filename:
+        for f in files:
+            if f.name == target_filename or f.name.endswith("/" + target_filename):
+                return (f.name, f.content)
+    return (files[0].name, files[0].content)
+
+
+@router.post("/hint/verify")
+async def hint_verify(
+    request: HintCheckAndGenerateRequest,
+    auth_header: str = Depends(require_bearer_token),
+):
+    """Run the checkpoint's unit test and return pass/fail only (no hint)."""
+
+    info = await get_checkpoint_test_info(request.checkpoint_id)
+    if info is None:
+        return {"correct": False, "reason": "checkpoint_not_found", "message": "Checkpoint not found."}
+
+    if info["type"] != "coding":
+        return {"correct": False, "reason": "not_coding", "message": "Verify is only available for coding checkpoints."}
+
+    student_files = [{"name": f.name, "content": f.content} for f in request.files]
+    tests_url = info.get("tests_url")
+    tests_language = info.get("tests_language")
+    test_name = info.get("test_name")
+
+    if not (tests_url and tests_language and test_name):
+        return {"correct": False, "reason": "no_test_configured", "message": "No test is configured for this checkpoint."}
+
+    manifest = await fetch_manifest(tests_url)
+    if manifest is None:
+        return {"correct": False, "reason": "manifest_unavailable", "message": "Could not load test files."}
+
+    test_files_payload = [{"path": f.path, "content": f.content} for f in manifest.test_files]
+
+    result = await run_bound_test(
+        language=tests_language,
+        test_files=test_files_payload,
+        student_files=student_files,
+        test_name=test_name,
+        test_class=info.get("test_class"),
+    )
+
+    logger.info(f"Verify result — passed={result.passed} not_found={result.not_found}")
+
+    if result.passed:
+        return {"correct": True}
+
+    if result.not_found:
+        return {
+            "correct": False,
+            "reason": "test_not_found",
+            "message": "Test could not be found. Please contact your instructor.",
+        }
+
+    return {
+        "correct": False,
+        "reason": "test_failed",
+        "message": "Your solution did not pass the test. Try again or use a hint.",
+    }
+
+
+@router.post("/hint/check-and-generate")
+async def hint_check_and_generate(
+    request: HintCheckAndGenerateRequest,
+    auth_header: str = Depends(require_bearer_token),
+):
+    """Run the checkpoint's unit test against the student's code. If it
+    passes, no hint. If it fails, hand the test file + failure output to the
+    LLM so the hint is grounded in the actual contract that was violated."""
+
+    info = await get_checkpoint_test_info(request.checkpoint_id)
+    if info is None:
+        return {"correct": False, "hint": "This checkpoint isn't set up for hints yet.", "reason": "checkpoint_not_found"}
+
+    if info["type"] != "coding":
+        return {"correct": False, "hint": "Hints are only available for coding checkpoints.", "reason": "not_coding"}
+
+    student_files = [{"name": f.name, "content": f.content} for f in request.files]
+    student_display_name, student_code = _pick_student_code(request.files, info.get("file_name"))
+
+    tests_url = info.get("tests_url")
+    tests_language = info.get("tests_language")
+    test_name = info.get("test_name")
+
+    # Missing config → fall back to plain hint, no correctness gate.
+    if not (tests_url and tests_language and test_name):
+        logger.warning(f"Checkpoint {request.checkpoint_id} missing test config; falling back to plain hint")
+        prompt = HINT_WRAPPER.format(
+            checkpoint_instruction=info.get("instruction") or "",
+            student_code=student_code,
+            file_name=student_display_name,
+        )
+        return {"correct": False, "hint": await _generate_hint(prompt), "reason": "no_test_configured"}
+
+    manifest = await fetch_manifest(tests_url)
+    if manifest is None:
+        logger.warning(f"Manifest fetch failed for activity {request.activity_id}; falling back to plain hint")
+        prompt = HINT_WRAPPER.format(
+            checkpoint_instruction=info.get("instruction") or "",
+            student_code=student_code,
+            file_name=student_display_name,
+        )
+        return {"correct": False, "hint": await _generate_hint(prompt), "reason": "manifest_unavailable"}
+
+    test_files_payload = [{"path": f.path, "content": f.content} for f in manifest.test_files]
+
+    result = await run_bound_test(
+        language=tests_language,
+        test_files=test_files_payload,
+        student_files=student_files,
+        test_name=test_name,
+        test_class=info.get("test_class"),
+    )
+
+    logger.info(f"Piston result — passed={result.passed} not_found={result.not_found} output={result.output!r}")
+
+    if result.passed:
+        return {"correct": True}
+
+    # Test failed (or sandbox unavailable, or test missing). Build the
+    # test-aware prompt so the hint is grounded in what actually broke.
+    bound_file = find_test_file(manifest, test_name)
+    test_file_content = bound_file.content if bound_file else ""
+    failure_output = result.output[:_FAILURE_OUTPUT_BUDGET] if result.output else "(no output)"
+
+    prompt = TEST_AWARE_HINT_WRAPPER.format(
+        checkpoint_instruction=info.get("instruction") or "",
+        student_code=student_code,
+        file_name=student_display_name,
+        test_name=test_name,
+        test_language=tests_language,
+        test_file_content=test_file_content,
+        failure_output=failure_output,
+    )
+    hint = await _generate_hint(prompt)
+    return {
+        "correct": False,
+        "hint": hint,
+        "reason": "test_not_found" if result.not_found else "test_failed",
+        "debug_output": failure_output,
+    }
 
 
 @router.get("/hint/history")
