@@ -1,12 +1,75 @@
-name: Auto Deploy
+name: CI / CD
 
 on:
   push:
-    branches: [ main ]
+    branches: ['**']
+  pull_request:
+    branches: [main]
 
 jobs:
-  deploy:
+  test-react:
     runs-on: ubuntu-latest
+    concurrency:
+      group: test-react-${{ github.ref }}
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: react_app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: react_app/package-lock.json
+
+      - run: npm ci
+      - run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: react_app/coverage/lcov.info
+          flags: react_app
+          fail_ci_if_error: false
+
+  test-api:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: test-api-${{ github.ref }}
+      cancel-in-progress: true
+    defaults:
+      run:
+        working-directory: api_server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: api_server/package-lock.json
+
+      - run: npm ci
+      - run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: api_server/coverage/lcov.info
+          flags: api_server
+          fail_ci_if_error: false
+
+  deploy:
+    needs: [test-react, test-api]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
 
     steps:
       - name: Deploy via SSH
