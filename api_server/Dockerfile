@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.6
-FROM node:25-alpine3.22
+FROM node:22-alpine3.20
 RUN apk add --no-cache ffmpeg
 WORKDIR /app
 COPY package*.json ./

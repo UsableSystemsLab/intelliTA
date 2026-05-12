@@ -6,11 +6,9 @@ export COMPOSE_DOCKER_CLI_BUILD=1
 
 cd /var/www/intellita.courses/src
 
-PREV_SHA=$(git rev-parse HEAD)
-git pull origin main
 NEW_SHA=$(git rev-parse HEAD)
 
-if [ "$PREV_SHA" = "$NEW_SHA" ]; then
+if [ -z "${PREV_SHA:-}" ] || [ "$PREV_SHA" = "$NEW_SHA" ]; then
   CHANGED=""
 else
   CHANGED=$(git diff --name-only "$PREV_SHA" "$NEW_SHA")

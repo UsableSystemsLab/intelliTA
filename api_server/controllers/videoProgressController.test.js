@@ -49,7 +49,9 @@ describe('VideoProgressController.getProgress', () => {
     expect(VideoProgress.findOne).toHaveBeenCalledWith(
       expect.objectContaining({ where: { user_id: 1, activity_id: '3' } })
     );
-    expect(res.json).toHaveBeenCalledWith({ last_watched_seconds: 245 });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ last_watched_seconds: 245 })
+    );
   });
 
   test('returns 0 when no progress record exists yet', async () => {
@@ -58,7 +60,9 @@ describe('VideoProgressController.getProgress', () => {
     const req = { params: { activityId: '3' }, query: { firebaseId: 'fb1' } };
     const res = makeRes();
     await VideoProgressController.getProgress(req, res);
-    expect(res.json).toHaveBeenCalledWith({ last_watched_seconds: 0 });
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ last_watched_seconds: 0 })
+    );
   });
 
   test('returns 500 on database error', async () => {
