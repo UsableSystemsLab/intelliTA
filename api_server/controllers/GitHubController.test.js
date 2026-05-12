@@ -272,12 +272,32 @@ describe('GitHubController.saveClassroom', () => {
 
 
 describe('GitHubController.linkAssignment', () => {
-  test('returns 400 when assignment_id is missing', async () => {
+  test('unlinks the assignment when assignment_id is missing', async () => {
+    const activity = {
+      activity_id: 1,
+      github_assignment_id: 10,
+      github_classroom_url: 'https://classroom.github.com/a/abc',
+      save: jest.fn().mockResolvedValueOnce(undefined),
+    };
+    Activity.findOne.mockResolvedValueOnce(activity);
     const req = { params: { activityId: '1' }, body: {} };
     const res = makeRes();
     await GitHubController.linkAssignment(req, res);
+    expect(activity.github_assignment_id).toBeNull();
+    expect(activity.github_classroom_url).toBeNull();
+    expect(activity.save).toHaveBeenCalledTimes(1);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({ message: 'Assignment unlinked', github_assignment_id: null })
+    );
+  });
+
+  test('returns 400 when assignment_id is not a positive integer', async () => {
+    Activity.findOne.mockResolvedValueOnce({ activity_id: 1, save: jest.fn() });
+    const req = { params: { activityId: '1' }, body: { assignment_id: 'not-a-number' } };
+    const res = makeRes();
+    await GitHubController.linkAssignment(req, res);
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ message: 'assignment_id is required' });
+    expect(res.json).toHaveBeenCalledWith({ message: 'assignment_id must be a positive integer or null' });
   });
 
   test('returns 404 when activity is not found', async () => {
