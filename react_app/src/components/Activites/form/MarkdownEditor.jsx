@@ -1,10 +1,10 @@
 import { useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import ReactMarkdown from "react-markdown";
+import HugoMarkdown from "../../Markdown/HugoMarkdown";
 import {
   FileText, X, Edit3, Eye, Bold, Italic, List, ListOrdered,
   Link, Code, Quote, Heading1, Heading2, Heading3, ChevronDown,
-  Image, Minus, HelpCircle, GripVertical
+  Image, Minus, HelpCircle, Youtube, Github, Info, FileCode
 } from "lucide-react";
 
 function MarkdownModal({ isOpen, onClose, value, onChange }) {
@@ -116,6 +116,43 @@ function MarkdownModal({ isOpen, onClose, value, onChange }) {
     { type: 'button', icon: <Code className="w-4 h-4" />, label: 'Inline Code', action: () => insertFormatting('`', '`', 'code') },
     { type: 'button', icon: <Quote className="w-4 h-4" />, label: 'Quote', action: () => insertAtLineStart('> ') },
     { type: 'button', icon: <Minus className="w-4 h-4" />, label: 'Horizontal Rule', action: () => insertFormatting('\n---\n', '', '') },
+    { type: 'divider' },
+    {
+      type: 'button',
+      icon: <FileCode className="w-4 h-4" />,
+      label: 'Frontmatter',
+      action: () => insertFormatting(
+        '---\ntitle: "Lab Title"\ndate: ' + new Date().toISOString() + '\ntoc: true\ndraft: false\n---\n\n',
+        '',
+        ''
+      ),
+    },
+    {
+      type: 'button',
+      icon: <Youtube className="w-4 h-4" />,
+      label: 'YouTube Shortcode',
+      action: () => insertFormatting('{{< youtube id="', '?rel=0" title="Video title" >}}', 'VIDEO_ID'),
+    },
+    {
+      type: 'button',
+      icon: <Github className="w-4 h-4" />,
+      label: 'GitHub Classroom Shortcode',
+      action: () => insertFormatting(
+        '{{< githubclassroom "IT1 =https://classroom.github.com/a/XXX" "IT2 =https://classroom.github.com/a/XXX" >}}',
+        '',
+        ''
+      ),
+    },
+    {
+      type: 'button',
+      icon: <Info className="w-4 h-4" />,
+      label: 'Info Hint Box',
+      action: () => insertFormatting(
+        '<article class="message is-info">\n  <div class="message-body">\n     <strong>Hint:</strong> ',
+        '\n  </div>\n</article>\n',
+        'Your hint here.'
+      ),
+    },
   ];
 
   if (!isOpen) return null;
@@ -269,53 +306,7 @@ code block
             </div>
             <div className="flex-1 px-6 py-4 bg-gray-900/30 overflow-y-auto">
               {value ? (
-                <ReactMarkdown
-                  components={{
-                    h1: ({ children }) => <h1 className="text-2xl font-bold text-white mb-4 pb-2 border-b border-gray-700">{children}</h1>,
-                    h2: ({ children }) => <h2 className="text-xl font-semibold text-white mb-3 mt-6">{children}</h2>,
-                    h3: ({ children }) => <h3 className="text-lg font-semibold text-white mb-2 mt-4">{children}</h3>,
-                    p: ({ children }) => <p className="text-gray-300 mb-4 leading-relaxed">{children}</p>,
-                    ul: ({ children }) => <ul className="list-disc list-inside text-gray-300 mb-4 space-y-1">{children}</ul>,
-                    ol: ({ children }) => <ol className="list-decimal list-inside text-gray-300 mb-4 space-y-1">{children}</ol>,
-                    li: ({ children }) => <li className="text-gray-300">{children}</li>,
-                    strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
-                    em: ({ children }) => <em className="italic text-gray-200">{children}</em>,
-                    code: ({ children, className }) => {
-                      const isBlock = className?.includes("language-");
-                      if (isBlock) {
-                        return <code className="text-blue-300 text-sm font-mono">{children}</code>;
-                      }
-                      return (
-                        <code className="bg-gray-800 px-1.5 py-0.5 rounded text-blue-400 text-sm font-mono">{children}</code>
-                      );
-                    },
-                    pre: ({ children }) => (
-                      <pre className="bg-gray-800 p-4 rounded-lg overflow-x-auto mb-4 border border-gray-700">{children}</pre>
-                    ),
-                    a: ({ href, children }) => (
-                      <a href={href} className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">
-                        {children}
-                      </a>
-                    ),
-                    blockquote: ({ children }) => (
-                      <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-400 mb-4 bg-gray-800/50 py-2 rounded-r">{children}</blockquote>
-                    ),
-                    hr: () => <hr className="border-gray-700 my-6" />,
-                    img: ({ src, alt }) => (
-                      <img
-                        src={src}
-                        alt={alt}
-                        className="max-w-full h-auto rounded-lg my-4 border border-gray-700"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling && (e.target.nextSibling.style.display = 'block');
-                        }}
-                      />
-                    ),
-                  }}
-                >
-                  {value}
-                </ReactMarkdown>
+                <HugoMarkdown source={value} />
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-gray-500">
                   <FileText className="w-12 h-12 mb-3 opacity-50" />

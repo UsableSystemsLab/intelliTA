@@ -30,6 +30,9 @@ module.exports = {
     '^react-i18next$': '<rootDir>/src/__mocks__/react-i18next.js',
 
     '^react-markdown$': '<rootDir>/src/__mocks__/react-markdown.jsx',
+    '^remark-gfm$': '<rootDir>/src/__mocks__/remark-gfm.js',
+    '^rehype-raw$': '<rootDir>/src/__mocks__/rehype-raw.js',
+    '^rehype-highlight$': '<rootDir>/src/__mocks__/rehype-highlight.js',
   },
   collectCoverage: false,
   collectCoverageFrom: [

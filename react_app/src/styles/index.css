@@ -855,3 +855,42 @@
   background-color: #f8fafc !important;
   border-right-color: #e5e7eb !important;
 }
+
+/* === HugoMarkdown styles (highlight.js github-dark imported at top of file) === */
+
+/* Bulma .message blocks pasted from Hugo course content. We map the most
+   common variants to dark-friendly equivalents matching intelliTA's palette. */
+.hugo-markdown .message {
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  border: 1px solid;
+}
+.hugo-markdown .message .message-body {
+  padding: 0.75rem 1rem;
+  color: #e5e7eb;
+}
+.hugo-markdown .message.is-info {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+.hugo-markdown .message.is-warning {
+  background-color: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.4);
+}
+.hugo-markdown .message.is-danger {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+.hugo-markdown .message.is-success {
+  background-color: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+.hugo-markdown .message a {
+  color: #60a5fa;
+  text-decoration: underline;
+}
+/* hljs base — make sure it inherits the pre background */
+.hugo-markdown pre code.hljs {
+  background: transparent;
+  padding: 0;
+}

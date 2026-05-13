@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { API_BASE, LLM_BASE, getAuthHeaders } from '../../config/api';
 import { auth } from '@/utils/firebase.js';
-import ReactMarkdown from 'react-markdown';
+import HugoMarkdown from '../Markdown/HugoMarkdown';
 import ActivityHeader from './ActivityHeader';
 import VideoSection from './VideoSection';
 import CodeEditorSection from './CodeEditorSection';
@@ -770,42 +770,7 @@ export default function Maincontent({ user }) {
                             </div>
                             <div className="px-6 py-6">
                                 {markdownContent ? (
-                                    <ReactMarkdown
-                                        components={{
-                                            h1: ({ children }) => <h1 className="text-2xl font-bold text-white mb-4 pb-2 border-b border-gray-700">{children}</h1>,
-                                            h2: ({ children }) => <h2 className="text-xl font-semibold text-white mb-3 mt-6">{children}</h2>,
-                                            h3: ({ children }) => <h3 className="text-lg font-semibold text-white mb-2 mt-4">{children}</h3>,
-                                            p: ({ children }) => <p className="text-gray-300 mb-4 leading-relaxed">{children}</p>,
-                                            ul: ({ children }) => <ul className="list-disc list-inside text-gray-300 mb-4 space-y-1 ml-4">{children}</ul>,
-                                            ol: ({ children }) => <ol className="list-decimal list-inside text-gray-300 mb-4 space-y-1 ml-4">{children}</ol>,
-                                            li: ({ children }) => <li className="text-gray-300">{children}</li>,
-                                            strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
-                                            em: ({ children }) => <em className="italic text-gray-200">{children}</em>,
-                                            code: ({ children, className }) => {
-                                                const isBlock = className?.includes("language-");
-                                                if (isBlock) {
-                                                    return <code className="text-blue-300 text-sm font-mono">{children}</code>;
-                                                }
-                                                return (
-                                                    <code className="bg-gray-800 px-1.5 py-0.5 rounded text-blue-400 text-sm font-mono">{children}</code>
-                                                );
-                                            },
-                                            pre: ({ children }) => (
-                                                <pre className="bg-gray-800 p-4 rounded-lg overflow-x-auto mb-4 border border-gray-700">{children}</pre>
-                                            ),
-                                            a: ({ href, children }) => (
-                                                <a href={href} className="text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">
-                                                    {children}
-                                                </a>
-                                            ),
-                                            blockquote: ({ children }) => (
-                                                <blockquote className="border-l-4 border-blue-500 pl-4 italic text-gray-400 mb-4 bg-gray-800/50 py-2 rounded-r">{children}</blockquote>
-                                            ),
-                                            hr: () => <hr className="border-gray-700 my-6" />,
-                                        }}
-                                    >
-                                        {markdownContent}
-                                    </ReactMarkdown>
+                                    <HugoMarkdown source={markdownContent} />
                                 ) : (
                                     <p className="text-gray-500 italic">{t('noInstructions')}</p>
                                 )}
