@@ -8,6 +8,7 @@ module.exports = {
     '<rootDir>/controllers/**/*.test.js',
     '<rootDir>/middlewares/**/*.test.js',
     '<rootDir>/utils/**/*.test.js',
+    '<rootDir>/models/**/*.test.js',
   ],
   transform: {
     '^.+\\.js$': ['babel-jest', { configFile: path.resolve(__dirname, 'babel.config.cjs') }],
