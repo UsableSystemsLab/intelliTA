@@ -1,13 +1,7 @@
 import User from "../models/User.js";
 import QuizQuestion from "../models/QuizQuestion.js";
 import StudentAnswer from "../models/StudentAnswer.js";
-
-function verifyAnswer(type, submitted, correct) {
-    if (type === "fill_blank") {
-        return String(submitted).trim().toLowerCase() === String(correct).trim().toLowerCase();
-    }
-    return submitted === correct;
-}
+import { verifyAnswer } from "../utils/quizGrading.js";
 
 const StudentAnswerController = {
     async recordAnswer(req, res) {
