@@ -9,6 +9,7 @@ module.exports = {
     '<rootDir>/middlewares/**/*.test.js',
     '<rootDir>/utils/**/*.test.js',
     '<rootDir>/models/**/*.test.js',
+    '<rootDir>/services/**/*.test.js',
   ],
   transform: {
     '^.+\\.js$': ['babel-jest', { configFile: path.resolve(__dirname, 'babel.config.cjs') }],
@@ -22,6 +23,7 @@ module.exports = {
     'controllers/**/*.js',
     'middlewares/**/*.js',
     'utils/**/*.js',
+    'services/**/*.js',
     '!**/*.test.js',
   ],
   coverageDirectory: '<rootDir>/coverage',
