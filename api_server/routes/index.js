@@ -5,6 +5,9 @@ import ActivityRoutes from "./activityRoutes.js";
 import UserApiKeyRoutes from "./UserApiKeyRoutes.js";
 import TranscriptRoutes from "./transcript.routes.js";
 import GitHubCourseRoutes from "./GitHubCourseRoutes.js";
+import SubmissionRoutes from "./submissionRoutes.js";
+import RewardRoutes from "./rewardRoutes.js";
+import NotificationRoutes from "./notificationRoutes.js";
 
 const apiRoutes = (router) => {
   /**
@@ -49,6 +52,15 @@ const apiRoutes = (router) => {
 
   // Transcript routes
   router.use("/transcripts", TranscriptRoutes);
+
+  // Submissions (per-activity)
+  router.use("/courses/:courseId/activities/:activityId/submissions", SubmissionRoutes);
+
+  // Rewards + badges
+  router.use("/", RewardRoutes);
+
+  // Notifications
+  router.use("/", NotificationRoutes);
 
   router.use((req, res) => {
     res.status(404).json({ error: "Not Found" });
