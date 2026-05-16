@@ -605,8 +605,10 @@ export default function Maincontent({ user }) {
         // For others, send just the target file.
         let payloadFiles;
         if (cfg.language === 'java') {
-            payloadFiles = runnableFiles.filter((f) => f.name.toLowerCase().endsWith('.java'));
-            if (payloadFiles.length === 0) payloadFiles = [target];
+            payloadFiles = runnableFiles
+                .filter((f) => f.name.toLowerCase().endsWith('.java'))
+                .map((f) => ({ ...f, name: f.name.split('/').pop() }));
+            if (payloadFiles.length === 0) payloadFiles = [{ ...target, name: target.name.split('/').pop() }];
             // Ensure file containing main() is first if we can detect it
             const mainIdx = payloadFiles.findIndex((f) => /public\s+static\s+void\s+main\s*\(/.test(f.content || ''));
             if (mainIdx > 0) {
