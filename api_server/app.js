@@ -6,6 +6,7 @@ import apiRoutes from "./routes/index.js";
 import { postgresDB } from "./configs/postgresDB.js";
 import { ensureBucketExists } from "./configs/s3.js";
 import "./models/index.js";
+import seedBadges from "./services/seedBadges.js";
 import validateApiKey from "./middlewares/validateApiKey.js";
 import errorHandling from "./middlewares/errorHandling.js";
 import githubOAuthRoutes from "./routes/GitHubRoutes.js";
@@ -56,6 +57,9 @@ postgresDB()
   .then(async () => {
     // Ensure S3 bucket exists
     await ensureBucketExists();
+
+    // Seed the badge catalog if missing (idempotent).
+    await seedBadges();
 
     app.listen(port, () => {
       console.log(`Example app listening on port ${port}`);
