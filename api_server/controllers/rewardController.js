@@ -6,6 +6,7 @@ import UserBadge from "../models/UserBadge.js";
 import PointsLedger from "../models/PointsLedger.js";
 import Activity from "../models/Activity.js";
 import rewardPipeline from "../services/rewardPipeline.js";
+import { resolveUserParam } from "../utils/resolveUserParam.js";
 import {
     encodeCursor,
     decodeCursor,
@@ -16,7 +17,10 @@ import {
 const RewardController = {
     async getRewards(req, res) {
         try {
-            const userId = parseInt(req.params.userId, 10);
+            const userId = await resolveUserParam(req.params.userId);
+            if (!Number.isInteger(userId)) {
+                return res.status(400).json({ error: "Invalid user id" });
+            }
 
             const points = await UserPoints.findByPk(userId);
             const completed = await Submission.count({
@@ -41,7 +45,10 @@ const RewardController = {
 
     async getRewardsHistory(req, res) {
         try {
-            const userId = parseInt(req.params.userId, 10);
+            const userId = await resolveUserParam(req.params.userId);
+            if (!Number.isInteger(userId)) {
+                return res.status(400).json({ error: "Invalid user id" });
+            }
             const limit = clampLimit(req.query.limit);
             const cursor = decodeCursor(req.query.cursor);
 
@@ -83,7 +90,10 @@ const RewardController = {
 
     async getBadges(req, res) {
         try {
-            const userId = parseInt(req.params.userId, 10);
+            const userId = await resolveUserParam(req.params.userId);
+            if (!Number.isInteger(userId)) {
+                return res.status(400).json({ error: "Invalid user id" });
+            }
 
             const earned = await UserBadge.findAll({
                 where: { user_id: userId },

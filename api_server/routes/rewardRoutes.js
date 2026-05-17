@@ -2,10 +2,11 @@ import express from "express";
 import RewardController from "../controllers/rewardController.js";
 import { requireSelfOrInstructorOf } from "../middlewares/requireSelfOrInstructorOf.js";
 import { requireInstructor } from "../middlewares/requireInstructor.js";
+import { resolveUserParam } from "../utils/resolveUserParam.js";
 
 const router = express.Router();
 
-const targetFromParams = (req) => parseInt(req.params.userId, 10);
+const targetFromParams = (req) => resolveUserParam(req.params.userId);
 
 router.get(
     "/users/:userId/rewards",

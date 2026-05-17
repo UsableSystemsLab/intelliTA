@@ -22,6 +22,11 @@ jest.mock('./AIIntegrationSettings', () => {
   M.displayName = 'MockAI';
   return M;
 });
+jest.mock('./RewardsSection', () => {
+  const M = () => <div data-testid="rewards-section" />;
+  M.displayName = 'MockRewards';
+  return M;
+});
 
 import SettingsLayout from './SettingsLayout';
 
@@ -69,13 +74,13 @@ describe('SettingsLayout', () => {
     expect(screen.getByTestId('ai-integration-settings')).toBeInTheDocument();
   });
 
-  test('clicking Progress tab shows the comingSoon placeholder', async () => {
+  test('clicking Progress tab swaps to RewardsSection', async () => {
     const user = userEvent.setup();
     render(<SettingsLayout user={{}} setUser={jest.fn()} />);
 
     await user.click(screen.getByText('tabProgress'));
 
-    expect(screen.getByText('settingsComingSoon')).toBeInTheDocument();
+    expect(screen.getByTestId('rewards-section')).toBeInTheDocument();
   });
 
   test('renders the settings title and subtitle', () => {

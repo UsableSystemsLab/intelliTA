@@ -11,6 +11,15 @@ jest.mock("../utils/resolveCaller.js", () => ({
     __esModule: true,
     resolveCallerUserId: jest.fn(),
 }));
+jest.mock("../utils/resolveUserParam.js", () => ({
+    __esModule: true,
+    resolveUserParam: jest.fn(async (v) => {
+        if (v == null || v === "") return null;
+        const n = parseInt(v, 10);
+        return Number.isNaN(n) ? null : n;
+    }),
+    default: undefined,
+}));
 
 import { mockReq, mockRes } from "../__tests__/helpers/mockReqRes.js";
 import Notification from "../models/Notification.js";

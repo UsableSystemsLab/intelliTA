@@ -4,18 +4,18 @@ import ProfileSettings from './ProfileSettings';
 import AIIntegrationSettings from './AIIntegrationSettings';
 import AccessibilitySettings from './AccessibilitySettings';
 import SecuritySettings from './SecuritySettings';
+import RewardsSection from './RewardsSection';
 import { useTranslation } from 'react-i18next';
 
 const SettingsLayout = ({ user, setUser }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('profile');
-  const ProgressSettings = () => <div className="text-gray-400">{t('settingsComingSoon')}</div>;
   // define menu items so if we want to add new tab we can do it easily
   const menuItems = [
     { id: 'profile', label: t('tabProfile'), icon: User, component: ProfileSettings },
     { id: 'security', label: t('tabSecurity'), icon: Shield, component: SecuritySettings },
     { id: 'accessibility', label: t('tabAccessibility'), icon: PersonStanding, component: AccessibilitySettings },
-    { id: 'progress', label: t('tabProgress'), icon: Award, component: ProgressSettings },
+    { id: 'progress', label: t('tabProgress'), icon: Award, component: RewardsSection },
     { id: 'ai-integration', label: t('tabAIIntegration'), icon: Bot, component: AIIntegrationSettings },
   ];
 

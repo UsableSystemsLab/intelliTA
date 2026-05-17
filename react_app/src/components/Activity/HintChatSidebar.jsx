@@ -113,7 +113,7 @@ function TTSButton({ text, onSpeakStart }) {
     );
 }
 
-export default function HintChatSidebar({ isOpen, onClose, initialInput, onInitialInputConsumed, user, activityId, activityContext }) {
+export default function HintChatSidebar({ isOpen, onClose, initialInput, onInitialInputConsumed, user, activityId, activityContext, onHintUsed }) {
     const { t } = useTranslation();
     const [messages, setMessages] = useState([WELCOME_MESSAGE]);
     const [input, setInput] = useState('');
@@ -247,6 +247,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
         setMessages(prev => [...prev, { role: 'user', content: text }, { role: 'assistant', content: '', isStreaming: true }]);
         setInput('');
         setIsStreaming(true);
+        onHintUsed?.();
 
         // Abort any previous request
         abortControllerRef.current?.abort();
@@ -358,7 +359,7 @@ export default function HintChatSidebar({ isOpen, onClose, initialInput, onIniti
             });
             setIsStreaming(false);
         }
-    }, [input, isStreaming, user, activityId, activityContext, selectedModel, availableModels, isListening, stopSTT]);
+    }, [input, isStreaming, user, activityId, activityContext, selectedModel, availableModels, isListening, stopSTT, onHintUsed]);
 
     return (
         <>

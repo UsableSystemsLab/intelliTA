@@ -17,6 +17,8 @@ import { useTranslation } from 'react-i18next';
 import { useCheckpoints } from '@/components/Activity/useCheckpoints';
 import { runCode as runCodeApi } from '@/utils/runCode';
 import { getRunConfig, isRunnable } from '@/utils/languageRunMap';
+import useActiveTime from '@/utils/useActiveTime';
+import { emitFromRewardsResponse } from '@/components/Rewards/rewardsToastBus';
 
 
 const DEFAULT_FILES = [
@@ -139,6 +141,7 @@ export default function Maincontent({ user }) {
     const videoRef = useRef(null);
     const lastProgressSaveRef = useRef(0);
     const savedProgressRef = useRef(0);
+    const startedAtRef = useRef(null);
 
     const [activity, setActivity] = useState(null);
     const [courseName, setCourseName] = useState("");
@@ -173,6 +176,17 @@ export default function Maincontent({ user }) {
     const [runOutput, setRunOutput] = useState(null);
     const [showResetModal, setShowResetModal] = useState(false);
     const [isAcknowledgingReset, setIsAcknowledgingReset] = useState(false);
+    const [hintsUsed, setHintsUsed] = useState(0);
+    const [submissionTestResults, setSubmissionTestResults] = useState([]);
+    const [submissionRewards, setSubmissionRewards] = useState(null);
+    const { activeSeconds } = useActiveTime(mode === 'solve');
+    useEffect(() => {
+        if (mode === 'solve' && !startedAtRef.current) {
+            startedAtRef.current = new Date().toISOString();
+        }
+    }, [mode]);
+
+    const recordHintUsed = useCallback(() => setHintsUsed((n) => n + 1), []);
 
     const handleAskAI = useCallback((text) => {
         setSelectedCodeForChat(text);
@@ -253,6 +267,7 @@ export default function Maincontent({ user }) {
                 } else {
                     setCheckpointHintIsPass(false);
                     setCheckpointHintText(data.hint || 'No hint available.');
+                    recordHintUsed();
                 }
             } else {
                 setCheckpointHintIsPass(false);
@@ -264,7 +279,7 @@ export default function Maincontent({ user }) {
         } finally {
             setIsLoadingCheckpointHint(false);
         }
-    }, [activeCheckpoint, isLoadingCheckpointHint, files, user, activityId]);
+    }, [activeCheckpoint, isLoadingCheckpointHint, files, user, activityId, markCheckpointPassed, recordHintUsed]);
 
     const handleVerifySolution = useCallback(async () => {
         if (!activeCheckpoint || isLoadingVerify) return;
@@ -646,18 +661,19 @@ export default function Maincontent({ user }) {
             const challenges = checkpoints.filter(cp => cp.type === 'challenge');
             const totalCount = challenges.length;
             const verifiedCount = challenges.filter(cp => cp.status === 'verified').length;
-            const calculatedScore = totalCount > 0 ? Math.round((verifiedCount / totalCount) * 100) : 100;
+            const fallbackScore = totalCount > 0 ? Math.round((verifiedCount / totalCount) * 100) : 100;
 
-            const checkpointsPayload = checkpoints.map(cp => ({
-                id: typeof cp.id === 'string' && cp.id.startsWith('quiz_')
-                    ? parseInt(cp.id.replace('quiz_', ''), 10)
-                    : cp.id,
-                title: cp.title || cp.question || '',
-                type: cp.type,
-                passed: cp.status === 'verified',
+            const now = new Date();
+            const codeFiles = files
+                .filter((f) => f.name !== 'README.md')
+                .map((f) => ({ name: f.name, content: f.content, language: f.language }));
+            const quizAnswers = (answeredQuestions || []).map((a) => ({
+                question_id: a.question_id,
+                answer: a.answer,
+                is_correct: !!a.is_correct,
             }));
 
-            const url = `${API_BASE}/courses/${courseId}/activities/${activityId}/submit`;
+            const url = `${API_BASE}/courses/${courseId}/activities/${activityId}/submissions`;
             const res = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -666,17 +682,30 @@ export default function Maincontent({ user }) {
                 },
                 body: JSON.stringify({
                     firebaseId: user.uid,
-                    score: calculatedScore,
-                    files: files.map(f => ({ name: f.name, content: f.content })),
-                    checkpoints: checkpointsPayload,
+                    started_at: startedAtRef.current || new Date().toISOString(),
+                    active_seconds: activeSeconds,
+                    hints_used: hintsUsed,
+                    local_hour: now.getHours(),
+                    local_tz_offset: now.getTimezoneOffset(),
+                    code_files: codeFiles,
+                    quiz_answers: quizAnswers,
                 })
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
 
             if (res.ok) {
-                setSubmissionScore(calculatedScore);
+                const finalScore = data?.submission?.score != null
+                    ? data.submission.score
+                    : fallbackScore;
+                setSubmissionScore(finalScore);
+                setSubmissionTestResults(data?.test_results || []);
+                setSubmissionRewards(data?.rewards || null);
                 setShowResultOverlay(true);
+
+                emitFromRewardsResponse(data?.rewards);
+                window.dispatchEvent(new Event('gamification:refresh'));
+
                 const ghMsg = data.github?.commitUrl
                     ? ` Code pushed to GitHub.`
                     : data.github?.error
@@ -868,6 +897,8 @@ export default function Maincontent({ user }) {
                     score={submissionScore}
                     courseId={courseId}
                     onClose={() => setShowResultOverlay(false)}
+                    testResults={submissionTestResults}
+                    rewards={submissionRewards}
                 />
             )}
 
@@ -878,6 +909,7 @@ export default function Maincontent({ user }) {
                 onInitialInputConsumed={() => setSelectedCodeForChat('')}
                 user={user}
                 activityId={activityId}
+                onHintUsed={recordHintUsed}
                 activityContext={
                     (markdownContent ? `## Activity Instructions\n${markdownContent}\n\n` : '') +
                     files.filter(f => f.name !== 'README.md').map(f => `## File: ${f.name}\n\`\`\`${f.language}\n${f.content}\n\`\`\``).join('\n\n')

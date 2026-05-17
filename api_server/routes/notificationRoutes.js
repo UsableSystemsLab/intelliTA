@@ -1,10 +1,11 @@
 import express from "express";
 import NotificationController from "../controllers/notificationController.js";
 import { requireSelf } from "../middlewares/requireSelf.js";
+import { resolveUserParam } from "../utils/resolveUserParam.js";
 
 const router = express.Router();
 
-const targetFromParams = (req) => parseInt(req.params.userId, 10);
+const targetFromParams = (req) => resolveUserParam(req.params.userId);
 
 router.get(
     "/users/:userId/notifications",

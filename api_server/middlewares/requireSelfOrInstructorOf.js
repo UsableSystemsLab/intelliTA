@@ -13,7 +13,7 @@ import Enrollment from "../models/Enrollment.js";
 export function requireSelfOrInstructorOf(getTargetUserId) {
     return async (req, res, next) => {
         try {
-            const targetUserId = getTargetUserId(req);
+            const targetUserId = await getTargetUserId(req);
             if (!Number.isInteger(targetUserId)) {
                 return res.status(400).json({ error: "Invalid user id" });
             }

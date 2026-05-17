@@ -4,6 +4,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/utils/firebase";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import NotificationBell from "@/components/Notifications/NotificationBell";
 
 export default function Nav({ user }) {
   const { t, i18n } = useTranslation();
@@ -113,6 +114,8 @@ export default function Nav({ user }) {
             >
               {i18n.language === "en" ? "عربي" : "English"}
             </button>
+
+            {user && <NotificationBell user={user} />}
 
             {user ? (
               <div className="relative">

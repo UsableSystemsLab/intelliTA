@@ -191,11 +191,6 @@ const SignUp = () => {
         to="/"
         className="fixed top-8 right-8 flex items-center gap-2 h-10 no-underline z-10"
       >
-        <img
-          src="https://intellita-media-storage.s3.us-east-1.amazonaws.com/logos/IntelliTA.svg"
-          alt="IntelliTA Logo"
-          className="w-20 h-20 object-contain"
-        />
         <h1 className="text-2xl font-bold text-white tracking-tight italic leading-none">
           IntelliTA
         </h1>

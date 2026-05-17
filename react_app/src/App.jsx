@@ -20,6 +20,7 @@ import LabGuide from '@/pages/LabGuide.jsx'
 import DocsLayout from '@/components/Docs/DocsLayout'
 import DocsLanding from '@/components/Docs/DocsLanding'
 import DocsGitHubGuide from '@/components/Docs/DocsGitHubGuide'
+import RewardsToastContainer from '@/components/Rewards/RewardsToast'
 import '@/styles/App.css'
 import { applySize, FONT_SIZE_KEY, applyHighContrast, HIGH_CONTRAST_KEY, applyTheme, THEME_KEY } from '@/components/Settings/AccessibilitySettings'
 import ProtectedRoutes from '@/utils/ProtectedRoutes'
@@ -90,6 +91,7 @@ function App() {
 
   return (
     <Router>
+      <RewardsToastContainer />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home user={user} />} />

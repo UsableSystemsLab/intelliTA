@@ -1,5 +1,6 @@
 import Notification from "../models/Notification.js";
 import { resolveCallerUserId } from "../utils/resolveCaller.js";
+import { resolveUserParam } from "../utils/resolveUserParam.js";
 import {
     encodeCursor,
     decodeCursor,
@@ -23,7 +24,10 @@ function serialize(n) {
 const NotificationController = {
     async list(req, res) {
         try {
-            const userId = parseInt(req.params.userId, 10);
+            const userId = await resolveUserParam(req.params.userId);
+            if (!Number.isInteger(userId)) {
+                return res.status(400).json({ error: "Invalid user id" });
+            }
             const limit = clampLimit(req.query.limit);
             const cursor = decodeCursor(req.query.cursor);
             const unreadOnly = req.query.unread_only === "true";
@@ -56,7 +60,10 @@ const NotificationController = {
 
     async unreadCount(req, res) {
         try {
-            const userId = parseInt(req.params.userId, 10);
+            const userId = await resolveUserParam(req.params.userId);
+            if (!Number.isInteger(userId)) {
+                return res.status(400).json({ error: "Invalid user id" });
+            }
             const count = await Notification.count({
                 where: { user_id: userId, is_read: false },
             });
