@@ -13,6 +13,7 @@ jest.mock('../models/Submission.js', () => ({
   default: {
     findOne: jest.fn(),
     create: jest.fn(),
+    count: jest.fn().mockResolvedValue(0),
   },
 }));
 

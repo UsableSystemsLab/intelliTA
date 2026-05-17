@@ -352,10 +352,19 @@ const ActivityController = {
         submission.score = score || submission.score;
         await submission.save();
       } else {
+        const priorAttempts = await Submission.count({
+          where: { activity_id: activityId, user_id: user.id },
+        });
+        const finalScore = score == null ? 100 : score;
         submission = await Submission.create({
           activity_id: activityId,
           user_id: user.id,
-          score: score || 100
+          score: finalScore,
+          started_at: new Date(),
+          status: finalScore > 0 ? "PASSED" : "FAILED",
+          active_seconds: 0,
+          hints_used: 0,
+          attempt_number: priorAttempts + 1,
         });
       }
 
