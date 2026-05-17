@@ -61,7 +61,7 @@ export default function DocsGitHubGuide() {
 
   const callbackUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin.replace(/:\d+$/, "")}:3000/api/github/callback`
+      ? `${window.location.origin}/api/github/callback`
       : "https://your-intellita-host/api/github/callback";
 
   const homepageUrl =

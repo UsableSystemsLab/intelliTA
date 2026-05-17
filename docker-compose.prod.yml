@@ -136,6 +136,14 @@ services:
     container_name: piston_container
     restart: unless-stopped
     privileged: true
+    environment:
+      - PISTON_RUN_TIMEOUT=10000
+      - PISTON_COMPILE_TIMEOUT=10000
+      - PISTON_MAX_RUN_TIMEOUT=15000
+      - PISTON_MAX_COMPILE_TIMEOUT=15000
+      - PISTON_RUN_MEMORY_LIMIT=256000000
+      - PISTON_COMPILE_MEMORY_LIMIT=384000000
+      - PISTON_MAX_MEMORY_LIMIT=512000000
     mem_limit: 2g
     pids_limit: 512
     cpus: 2
