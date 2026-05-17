@@ -31,6 +31,8 @@ export const onAuthStateChanged = jest.fn((auth, cb) => {
 
 export const sendPasswordResetEmail = jest.fn(() => Promise.resolve());
 
+export const sendEmailVerification = jest.fn(() => Promise.resolve());
+
 export const updateProfile = jest.fn(() => Promise.resolve());
 
 export const updatePassword = jest.fn(() => Promise.resolve());

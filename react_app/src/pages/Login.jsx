@@ -51,7 +51,11 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      if (!userCredential.user.emailVerified) {
+        navigate("/verify-email");
+        return;
+      }
       navigate("/");
     } catch (err) {
       console.error("Login error:", err);

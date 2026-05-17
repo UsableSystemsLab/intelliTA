@@ -44,7 +44,7 @@ beforeEach(() => {
   getDoc.mockReset();
   setDoc.mockReset();
   signInWithEmailAndPassword.mockResolvedValue({
-    user: { uid: 'test-uid', email: KAU },
+    user: { uid: 'test-uid', email: KAU, emailVerified: true },
   });
   getDoc.mockResolvedValue({ exists: () => true, data: () => ({}) });
   setDoc.mockResolvedValue();
@@ -87,6 +87,26 @@ describe('Login — email/password flow', () => {
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/');
     });
+  });
+
+  test('sign-in with an unverified email navigates to /verify-email, not home', async () => {
+    signInWithEmailAndPassword.mockResolvedValueOnce({
+      user: { uid: 'test-uid', email: KAU, emailVerified: false },
+    });
+    const user = userEvent.setup();
+    renderWithProviders(<Login />);
+
+    await user.type(screen.getByLabelText('email'), KAU);
+    await user.type(screen.getByLabelText('password'), PASS);
+    await user.click(submitButton());
+
+    await waitFor(() => {
+      expect(signInWithEmailAndPassword).toHaveBeenCalledTimes(1);
+    });
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/verify-email');
+    });
+    expect(mockNavigate).not.toHaveBeenCalledWith('/');
   });
 
   test('wrong-password error displays errWrongPassword', async () => {

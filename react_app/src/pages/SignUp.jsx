@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
+  sendEmailVerification,
   GoogleAuthProvider
 } from 'firebase/auth';
 import { auth,db } from '@/utils/firebase';
@@ -85,7 +86,9 @@ const SignUp = () => {
         }),
       });
 
-      navigate('/');
+      await sendEmailVerification(userCredential.user);
+
+      navigate('/verify-email');
     } catch (err) {
       console.error('Sign up error:', err);
       setError(getErrorMessage(err.code));

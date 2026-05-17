@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import {
   createUserWithEmailAndPassword,
   signInWithPopup,
+  sendEmailVerification,
   updateProfile,
 } from 'firebase/auth';
 import { getDoc, setDoc } from 'firebase/firestore';
@@ -46,6 +47,8 @@ beforeEach(() => {
   mockNavigate.mockClear();
   createUserWithEmailAndPassword.mockReset();
   signInWithPopup.mockReset();
+  sendEmailVerification.mockReset();
+  sendEmailVerification.mockResolvedValue();
   updateProfile.mockReset();
   getDoc.mockReset();
   setDoc.mockReset();
@@ -99,7 +102,7 @@ describe('SignUp — email/password flow', () => {
     expect(createUserWithEmailAndPassword).not.toHaveBeenCalled();
   });
 
-  test('successful signup creates user, updates profile, writes Firestore + Postgres, navigates home', async () => {
+  test('successful signup creates user, updates profile, writes Firestore + Postgres, sends verification email, navigates to verify-email', async () => {
     const user = userEvent.setup();
     renderWithProviders(<SignUp />);
 
@@ -136,7 +139,14 @@ describe('SignUp — email/password flow', () => {
     expect(body.last_name).toBe('User');
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      expect(sendEmailVerification).toHaveBeenCalledTimes(1);
+    });
+    expect(sendEmailVerification.mock.calls[0][0]).toEqual(
+      expect.objectContaining({ uid: 'new-uid', email: KAU }),
+    );
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/verify-email');
     });
   });
 

@@ -103,6 +103,17 @@
     "errPassMismatch": "كلمتا المرور غير متطابقتين.",
     "signUpCancelled": "تم إلغاء التسجيل.",
 
+    "verifyTitle": "تأكيد بريدك الإلكتروني",
+    "verifyDesc": "لقد أرسلنا رابط تأكيد إلى:",
+    "verifyInstruction": "افتح البريد واضغط على الرابط، ثم عُد إلى هنا واضغط متابعة.",
+    "verifyResend": "إعادة إرسال البريد",
+    "verifyContinue": "لقد قمت بالتأكيد - متابعة",
+    "verifyChecking": "جارٍ التحقق…",
+    "verifyStillNot": "لم يتم التأكيد بعد. اضغط على الرابط في بريدك ثم حاول مرة أخرى.",
+    "verifyResent": "تم إرسال بريد التأكيد. تحقق من صندوق الوارد (والبريد العشوائي).",
+    "verifyResendError": "تعذّر إرسال البريد الآن. يرجى الانتظار قليلاً والمحاولة مرة أخرى.",
+    "verifyUseAnother": "تسجيل الخروج / استخدام حساب آخر",
+
     "started": "بدأت",
     "notStarted": "لم تبدأ",
 
@@ -850,6 +861,17 @@
     "errWeakPassword": "Password should be at least 6 characters.",
     "errPassMismatch": "Passwords don't match.",
     "signUpCancelled": "Sign up cancelled.",
+
+    "verifyTitle": "Verify your email",
+    "verifyDesc": "We've sent a verification link to:",
+    "verifyInstruction": "Open the email and click the link, then come back here and continue.",
+    "verifyResend": "Resend email",
+    "verifyContinue": "I've verified - continue",
+    "verifyChecking": "Checking…",
+    "verifyStillNot": "Still not verified. Click the link in your email, then try again.",
+    "verifyResent": "Verification email sent. Check your inbox (and spam).",
+    "verifyResendError": "Couldn't send the email right now. Please wait a moment and try again.",
+    "verifyUseAnother": "Log out / use another account",
 
     "started": "Started",
     "notStarted": "Not Started",
