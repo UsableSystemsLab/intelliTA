@@ -666,9 +666,10 @@ export default function Maincontent({ user }) {
         }
         setIsSubmitting(true);
         try {
-            const challenges = checkpoints.filter(cp => cp.type === 'challenge');
-            const totalCount = challenges.length;
-            const verifiedCount = challenges.filter(cp => cp.status === 'verified').length;
+            const GRADABLE_TYPES = ['challenge', 'mcq', 'true_false', 'fill_blank'];
+            const gradable = checkpoints.filter(cp => GRADABLE_TYPES.includes(cp.type));
+            const totalCount = gradable.length;
+            const verifiedCount = gradable.filter(cp => cp.status === 'verified').length;
             const calculatedScore = totalCount > 0 ? Math.round((verifiedCount / totalCount) * 100) : 100;
 
             const checkpointsPayload = checkpoints.map(cp => ({

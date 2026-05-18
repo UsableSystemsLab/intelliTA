@@ -217,6 +217,21 @@ describe("SubmissionController.create", () => {
         expect(Submission.create.mock.calls[0][0].attempt_number).toBe(4);
     });
 
+    test("activity with no test cases → PASSED with score 100", async () => {
+        ActivityTestCase.findAll.mockResolvedValue([]);
+        QuizQuestion.findAll.mockResolvedValue([]);
+        Submission.create.mockResolvedValue({
+            submission_id: 6, status: "PASSED", score: 100, attempt_number: 1,
+        });
+        SubmissionTestResult.bulkCreate.mockResolvedValue([]);
+        const req = baseReq();
+        const res = mockRes();
+        await SubmissionController.create(req, res);
+        const createArgs = Submission.create.mock.calls[0][0];
+        expect(createArgs.status).toBe("PASSED");
+        expect(createArgs.score).toBe(100);
+    });
+
     test("403 when caller is not enrolled in the course", async () => {
         Enrollment.count.mockResolvedValue(0);
         const req = baseReq();

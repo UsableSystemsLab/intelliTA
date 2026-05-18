@@ -59,18 +59,14 @@ describe("rebalancePoints", () => {
         expect(rows.map((r) => r.points)).toEqual([50, 50]);
     });
 
-    it("splits 70/30 across code + quiz", async () => {
+    it("distributes 100 evenly across code + quiz regardless of kind", async () => {
         const rows = [
             row("CODE", "a"), row("CODE", "b"),
             row("QUIZ", "1"), row("QUIZ", "2"), row("QUIZ", "3"),
         ];
         ActivityTestCase.findAll.mockResolvedValue(rows);
         await rebalancePoints(1);
-        expect(rows[0].points).toBe(35);
-        expect(rows[1].points).toBe(35);
-        expect(rows[2].points).toBe(10);
-        expect(rows[3].points).toBe(10);
-        expect(rows[4].points).toBe(10);
+        rows.forEach((r) => expect(r.points).toBe(20));
     });
 
     it("does not save rows whose points are already correct", async () => {

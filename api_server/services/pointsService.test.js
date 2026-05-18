@@ -74,6 +74,28 @@ describe("calculatePoints", () => {
         ]);
     });
 
+    test("activity with no test cases awards score as BASE on first attempt", () => {
+        const out = calculatePoints({
+            submission: { status: "PASSED", hints_used: 0, score: 100, attempt_number: 1 },
+            testResults: [],
+            priorPassedTestCaseIds: new Set(),
+        });
+        expect(out.lines).toEqual([
+            { event_type: "BASE", points: 100 },
+            { event_type: "NO_HINT_BONUS", points: NO_HINT_BONUS },
+        ]);
+        expect(out.total).toBe(100 + NO_HINT_BONUS);
+    });
+
+    test("activity with no test cases does not re-award on later attempts", () => {
+        const out = calculatePoints({
+            submission: { status: "PASSED", hints_used: 0, score: 100, attempt_number: 2 },
+            testResults: [],
+            priorPassedTestCaseIds: new Set(),
+        });
+        expect(out).toEqual({ lines: [], total: 0 });
+    });
+
     test("missing inputs default safely", () => {
         const out = calculatePoints({
             submission: undefined,

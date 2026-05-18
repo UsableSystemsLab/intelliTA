@@ -206,6 +206,45 @@ describe("rewardPipeline.process", () => {
         expect(userPointsRow.total_points).toBe(0);
     });
 
+    test("FAILED submission earns partial points but no badges", async () => {
+        Submission.findByPk.mockResolvedValue({
+            submission_id: 100,
+            user_id: 7,
+            activity_id: 42,
+            status: "FAILED",
+            attempt_number: 1,
+            hints_used: 0,
+        });
+        PointsLedger.count.mockResolvedValue(0);
+        Activity.findByPk.mockResolvedValue({ activity_id: 42, end_date: null });
+        SubmissionTestResult.findAll.mockResolvedValue([
+            { test_case_id: 1, passed: true, points_awarded: 20 },
+            { test_case_id: 2, passed: false, points_awarded: 0 },
+        ]);
+        const userPointsRow = {
+            user_id: 7, total_points: 0, last_activity_at: null,
+            save: jest.fn().mockResolvedValue(undefined),
+        };
+        UserPoints.findOrCreate.mockResolvedValue([userPointsRow, true]);
+        calculatePoints.mockReturnValue({
+            lines: [{ event_type: "BASE", points: 20 }],
+            total: 20,
+        });
+        PointsLedger.findOrCreate.mockImplementation(({ defaults }) =>
+            Promise.resolve([{ ...defaults }, true])
+        );
+        Notification.create.mockImplementation((attrs) =>
+            Promise.resolve({ notification_id: 1, ...attrs })
+        );
+
+        const out = await process({ submissionId: 100 });
+
+        expect(out.points_earned).toBe(20);
+        expect(out.badges_awarded).toEqual([]);
+        expect(checkAllBadges).not.toHaveBeenCalled();
+        expect(userPointsRow.total_points).toBe(20);
+    });
+
     test("throws 404 when submission missing", async () => {
         Submission.findByPk.mockResolvedValue(null);
         await expect(process({ submissionId: 999 })).rejects.toMatchObject({

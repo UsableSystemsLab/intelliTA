@@ -11,8 +11,9 @@ export default function SubmissionResultOverlay({
     const navigate = useNavigate();
     const { t } = useTranslation();
 
-    // Only count and show actual challenges (tasks), ignore instructor updates
-    const challenges = checkpoints.filter(cp => cp.type === 'challenge');
+    // Count every gradable task (code challenges + quizzes), ignore instructor updates
+    const GRADABLE_TYPES = ['challenge', 'mcq', 'true_false', 'fill_blank'];
+    const challenges = checkpoints.filter(cp => GRADABLE_TYPES.includes(cp.type));
     const verifiedCount = challenges.filter(cp => cp.status === 'verified').length;
     const totalChallenges = challenges.length;
 

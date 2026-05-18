@@ -1,9 +1,8 @@
 // Maintains activity_test_cases rows for an activity:
 //   - syncQuizTestCases keeps QUIZ rows aligned with the activity's quiz_questions
 //   - setCodeTestCases lets an instructor declare the CODE test names
-//   - rebalancePoints distributes the 100-point budget per the plan:
-//       only one kind  -> 100 spread evenly over its rows
-//       both kinds     -> 70 across CODE rows, 30 across QUIZ rows
+//   - rebalancePoints distributes the 100-point budget evenly across every
+//     test case regardless of kind (5 cases -> 20 each)
 import ActivityTestCase from "../models/ActivityTestCase.js";
 import QuizQuestion from "../models/QuizQuestion.js";
 
@@ -17,27 +16,12 @@ async function rebalancePoints(activityId, { txn } = {}) {
         where: { activity_id: activityId },
         transaction: txn,
     });
-    const codeRows = rows.filter((r) => r.kind === "CODE");
-    const quizRows = rows.filter((r) => r.kind === "QUIZ");
 
-    let codeBudget = 0;
-    let quizBudget = 0;
-    if (codeRows.length && quizRows.length) {
-        codeBudget = 70;
-        quizBudget = 30;
-    } else if (codeRows.length) {
-        codeBudget = 100;
-    } else if (quizRows.length) {
-        quizBudget = 100;
-    }
-
-    const codePoints = distribute(codeBudget, codeRows.length);
-    const quizPoints = distribute(quizBudget, quizRows.length);
+    const perCase = distribute(100, rows.length);
 
     for (const r of rows) {
-        const target = r.kind === "CODE" ? codePoints : quizPoints;
-        if (r.points !== target) {
-            r.points = target;
+        if (r.points !== perCase) {
+            r.points = perCase;
             await r.save({ transaction: txn });
         }
     }

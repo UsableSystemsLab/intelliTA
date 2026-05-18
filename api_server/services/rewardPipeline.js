@@ -169,9 +169,10 @@ async function process({ submissionId, localHour, txn: outerTxn }) {
         }
         await userPoints.save({ transaction: txn });
 
-        // Badge checks — only when the submission actually earned points.
+        // Badge checks — only when the student fully solved the activity.
+        // Partial submissions earn points but never badges.
         let badgesAwarded = [];
-        if (total > 0) {
+        if (submission.status === "PASSED" && total > 0) {
             const ctx = {
                 submission,
                 activity,

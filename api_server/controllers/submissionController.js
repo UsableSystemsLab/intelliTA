@@ -111,9 +111,18 @@ const SubmissionController = {
                     return { tc, passed, pointsAwarded };
                 });
 
-                const allPassed = perCase.length > 0 && perCase.every((r) => r.passed);
-                const status = allPassed ? "PASSED" : "FAILED";
-                const score = perCase.reduce((s, r) => s + r.pointsAwarded, 0);
+                // Activities with no test cases auto-pass at 100.
+                // Otherwise PASSED only when every case passed.
+                let status;
+                let score;
+                if (perCase.length === 0) {
+                    status = "PASSED";
+                    score = 100;
+                } else {
+                    const allPassed = perCase.every((r) => r.passed);
+                    status = allPassed ? "PASSED" : "FAILED";
+                    score = perCase.reduce((s, r) => s + r.pointsAwarded, 0);
+                }
 
                 const priorAttempts = await Submission.count({
                     where: { user_id: userId, activity_id: activityId },
