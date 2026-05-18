@@ -1,6 +1,7 @@
 import CodeFrame from "@/components/Landing-page/CodeFrame";
 import AnimateOnScroll from "@/components/lib/AnimateOnScroll";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   MoveRight,
@@ -20,6 +21,26 @@ import {
 export default function HomeMain({ user }) {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === "ar";
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.slice(1);
+    let cancelled = false;
+    const tryScroll = (attempt = 0) => {
+      if (cancelled) return;
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else if (attempt < 20) {
+        setTimeout(() => tryScroll(attempt + 1), 100);
+      }
+    };
+    tryScroll();
+    return () => {
+      cancelled = true;
+    };
+  }, [location.hash, location.key]);
 
   const features = [
     { icon: Zap, title: t("InsFeedback"), desc: t("feedbackDesc"), color: "from-blue-500 to-blue-600" },
