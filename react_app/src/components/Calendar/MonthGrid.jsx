@@ -166,18 +166,12 @@ export default function MonthGrid({ year, month, events }) {
   const eventsByDay = useMemo(() => {
     const map = new Map();
     for (const e of events) {
-      const s = startOfDay(e.start_date);
-      const en = startOfDay(e.end_date);
-      for (const d of cells) {
-        if (d >= s && d <= en) {
-          const key = d.toDateString();
-          if (!map.has(key)) map.set(key, []);
-          map.get(key).push(e);
-        }
-      }
+      const key = startOfDay(e.end_date).toDateString();
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(e);
     }
     return map;
-  }, [events, cells]);
+  }, [events]);
 
   return (
     <div className="rounded-2xl border border-gray-800 bg-gray-900/60 overflow-hidden">
