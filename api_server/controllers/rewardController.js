@@ -46,6 +46,25 @@ const RewardController = {
         }
     },
 
+    async getPassedActivities(req, res) {
+        try {
+            const userId = parseInt(req.params.userId, 10);
+            const rows = await Submission.findAll({
+                attributes: [
+                    [sequelize.fn("DISTINCT", sequelize.col("activity_id")), "activity_id"],
+                ],
+                where: { user_id: userId, status: "PASSED" },
+                raw: true,
+            });
+            return res.status(200).json({
+                activity_ids: rows.map((r) => r.activity_id),
+            });
+        } catch (err) {
+            console.error("getPassedActivities error:", err);
+            return res.status(500).json({ error: "Failed to load passed activities" });
+        }
+    },
+
     async getRewardsHistory(req, res) {
         try {
             const userId = parseInt(req.params.userId, 10);

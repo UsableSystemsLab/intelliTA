@@ -196,6 +196,40 @@ router.get("/users/:userId/badges", RewardController.getBadges);
 
 /**
  * @swagger
+ * /users/{userId}/passed-activities:
+ *   get:
+ *     summary: List activity_ids the user has passed (status=PASSED)
+ *     description: Returns distinct activity_ids for which the user has at least one PASSED submission. Used by the Calendar view to mark activities as solved.
+ *     tags: [Rewards]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Distinct passed activity ids
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 activity_ids:
+ *                   type: array
+ *                   items:
+ *                     type: integer
+ */
+router.get(
+    "/users/:userId/passed-activities",
+    requireSelfOrInstructorOf(targetFromParams),
+    RewardController.getPassedActivities,
+);
+
+/**
+ * @swagger
  * /badges/bug-hunter:
  *   post:
  *     summary: Award the Bug Hunter badge to a student (instructor-only)
