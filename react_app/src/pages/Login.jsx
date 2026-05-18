@@ -153,11 +153,6 @@ const Login = () => {
         to="/"
         className="fixed top-4 right-4 sm:top-8 sm:right-8 flex items-center gap-2 h-10 no-underline z-10"
       >
-        <img
-          src="https://intellita-media-storage.s3.us-east-1.amazonaws.com/logos/IntelliTA.svg"
-          alt="IntelliTA Logo"
-          className="w-12 h-12 sm:w-20 sm:h-20 object-contain"
-        />
         <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight italic leading-none">
           IntelliTA
         </h1>

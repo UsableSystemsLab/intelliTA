@@ -46,7 +46,7 @@ export default function Nav({ user }) {
 
   const navLinks = [
     { to: "/courses", label: t("courses"), match: (p) => p.startsWith("/courses") },
-    { href: "#comparison", label: t("about"), match: () => false, anchor: true },
+    { to: "/#comparison", label: t("about"), match: () => false },
     { to: "/docs", label: t("docs.breadcrumb", { defaultValue: "Docs" }), match: (p) => p.startsWith("/docs") },
   ];
 
