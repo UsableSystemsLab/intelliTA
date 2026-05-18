@@ -10,7 +10,9 @@ import SubmitButton from "./form/SubmitButton";
 import StarterCodeEditor from "./form/StarterCodeEditor";
 import QuizEditor from "./form/QuizEditor";
 import ChaptersEditor from "./form/ChaptersEditor";
+import CodeTestsEditor from "./form/CodeTestsEditor";
 import MarkdownEditor from "./form/MarkdownEditor";
+import { setActivityCodeTests } from "@/config/gamificationApi";
 import { ModalHeader, ErrorAlert, CloseButton } from "./form/ModalComponents";
 
 const markdownComponents = {
@@ -58,6 +60,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
   const [videoDuration, setVideoDuration] = useState(0);
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [chapters, setChapters] = useState([]);
+  const [codeTestNames, setCodeTestNames] = useState([]);
   const [githubClassroomUrl, setGithubClassroomUrl] = useState("");
   const [classroomAssignments, setClassroomAssignments] = useState([]);
   const [selectedAssignmentId, setSelectedAssignmentId] = useState("");
@@ -392,6 +395,17 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
           body: JSON.stringify(chaptersPayload),
         }
       );
+
+      const cleanedTestNames = codeTestNames.map((n) => n.trim()).filter(Boolean);
+      if (cleanedTestNames.length > 0) {
+        try {
+          await setActivityCodeTests(
+            auth.currentUser, courseId, activity.activity_id, cleanedTestNames,
+          );
+        } catch (codeTestErr) {
+          console.error("Failed to save code tests (non-fatal):", codeTestErr);
+        }
+      }
 
       onActivityUpdated(updatedActivity);
       handleClose();
@@ -752,6 +766,13 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                 videoUrl={activity?.video_url ?? null}
                 testFiles={testFiles}
                 testsLanguage={testsLanguage}
+              />
+
+              {/* Code Test Names (gamification scoring) */}
+              <CodeTestsEditor
+                testNames={codeTestNames}
+                onTestNamesChange={setCodeTestNames}
+                hasQuiz={(quizQuestions || []).length > 0}
               />
 
               {/* Video Chapters */}

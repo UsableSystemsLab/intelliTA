@@ -360,13 +360,15 @@ const ActivityController = {
         const status = finalScore > 0 ? "PASSED" : "FAILED";
         const localHour = req.body.local_hour;
 
-        const result = await sequelize.transaction(async (txn) => {
+        // Core submission + test results commit in their own transaction so
+        // they always persist, independent of the reward pipeline.
+        const created = await sequelize.transaction(async (txn) => {
           const priorAttempts = await Submission.count({
             where: { activity_id: activityId, user_id: user.id },
             transaction: txn,
           });
 
-          const created = await Submission.create(
+          const sub = await Submission.create(
             {
               activity_id: activityId,
               user_id: user.id,
@@ -399,7 +401,7 @@ const ActivityController = {
                 where: {
                   user_id: user.id,
                   activity_id: activityId,
-                  submission_id: { [sequelize.Sequelize.Op.ne]: created.submission_id },
+                  submission_id: { [sequelize.Sequelize.Op.ne]: sub.submission_id },
                 },
                 required: true,
               }],
@@ -410,7 +412,7 @@ const ActivityController = {
 
             await SubmissionTestResult.bulkCreate(
               testCases.map((tc) => ({
-                submission_id: created.submission_id,
+                submission_id: sub.submission_id,
                 test_case_id: tc.test_case_id,
                 passed,
                 points_awarded: passed && !priorPassedIds.has(tc.test_case_id) ? tc.points : 0,
@@ -419,17 +421,20 @@ const ActivityController = {
             );
           }
 
-          const r = await rewardPipeline.process({
-            submissionId: created.submission_id,
-            localHour,
-            txn,
-          });
-
-          return { created, rewards: r };
+          return sub;
         });
 
-        submission = result.created;
-        rewards = result.rewards;
+        try {
+          rewards = await rewardPipeline.process({
+            submissionId: created.submission_id,
+            localHour,
+          });
+        } catch (rewardErr) {
+          console.error("[submitActivity] reward pipeline failed (non-fatal):", rewardErr);
+          rewards = null;
+        }
+
+        submission = created;
       }
 
       // --- Push code to student's GitHub Classroom repo ---

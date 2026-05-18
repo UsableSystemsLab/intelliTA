@@ -268,7 +268,7 @@ const UserController = {
     try {
       const user = await User.findOne({
         where: { firebaseId: req.params.firebaseUid },
-        attributes: ["bio", "first_name", "last_name", "email", "github_username", "github_verified"],
+        attributes: ["id", "bio", "first_name", "last_name", "email", "github_username", "github_verified"],
       });
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -302,7 +302,7 @@ const UserController = {
       }
       const updatedUser = await User.findOne({
         where: { firebaseId: req.params.firebaseUid },
-        attributes: ["bio", "first_name", "last_name", "email", "github_username", "github_verified"],
+        attributes: ["id", "bio", "first_name", "last_name", "email", "github_username", "github_verified"],
       });
       res.status(200).json(updatedUser);
     } catch (error) {

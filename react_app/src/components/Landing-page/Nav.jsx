@@ -4,6 +4,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/utils/firebase";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import NotificationsBell from "@/components/Notifications/NotificationsBell";
 
 export default function Nav({ user }) {
   const { t, i18n } = useTranslation();
@@ -115,7 +116,9 @@ export default function Nav({ user }) {
             </button>
 
             {user ? (
-              <div className="relative">
+              <>
+                <NotificationsBell user={user} isArabic={isArabic} />
+                <div className="relative">
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
                   className="relative inline-flex items-center justify-center w-9 h-9 overflow-hidden rounded-full
@@ -146,6 +149,7 @@ export default function Nav({ user }) {
                     </div>
                     <ul className="py-1">
                       {[
+                        { to: "/rewards/me", label: t("rewards.myProgress", { defaultValue: "My Progress" }) },
                         { to: "/settings", label: t("settings") },
                       ].map((item) => (
                         <li key={item.to}>
@@ -169,7 +173,8 @@ export default function Nav({ user }) {
                     </div>
                   </div>
                 )}
-              </div>
+                </div>
+              </>
             ) : (
               <Link
                 to="/login"

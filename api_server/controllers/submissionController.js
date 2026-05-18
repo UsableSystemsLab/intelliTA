@@ -78,6 +78,10 @@ const SubmissionController = {
                 const submittedAnswerById = new Map(
                     quizAnswers.map((a) => [String(a.question_id), a.answer]),
                 );
+              
+                const submittedPassedById = new Map(
+                    quizAnswers.map((a) => [String(a.question_id), a.passed === true]),
+                );
 
                 const alreadyPassed = await loadAlreadyPassedTestCaseIds({
                     userId, activityId, txn,
@@ -90,9 +94,15 @@ const SubmissionController = {
                         passed = codeByRef.get(String(tc.external_ref)) === true;
                     } else if (tc.kind === "QUIZ") {
                         const q = quizById.get(String(tc.external_ref));
-                        const submitted = submittedAnswerById.get(String(tc.external_ref));
-                        if (q && submitted !== undefined) {
-                            passed = verifyAnswer(q.type, submitted, q.correct_answer);
+                        if (q && q.type === "coding") {
+                            // No server-gradeable answer for coding quizzes;
+                            // trust the client's regex verdict.
+                            passed = submittedPassedById.get(String(tc.external_ref)) === true;
+                        } else if (q) {
+                            const submitted = submittedAnswerById.get(String(tc.external_ref));
+                            if (submitted !== undefined) {
+                                passed = verifyAnswer(q.type, submitted, q.correct_answer);
+                            }
                         }
                     }
                     const pointsAwarded = passed && !alreadyPassed.has(tc.test_case_id)

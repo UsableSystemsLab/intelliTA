@@ -168,6 +168,7 @@ export default function MembersList({ courseId, user, onClose }) {
                             key={member.user_id}
                             member={member}
                             onKick={setMemberToKick}
+                            courseId={courseId}
                         />
                     ))}
                 </div>

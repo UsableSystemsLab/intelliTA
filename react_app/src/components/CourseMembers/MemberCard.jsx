@@ -1,5 +1,7 @@
-import { UserCircle, Mail, Calendar, Trash2 } from "lucide-react";
+import { UserCircle, Mail, Calendar, Trash2, Award } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import AwardBugHunterButton from "./AwardBugHunterButton";
 
 const StatusBadge = ({ status, t }) => {
     const config = {
@@ -32,7 +34,7 @@ const StatusBadge = ({ status, t }) => {
     );
 };
 
-export default function MemberCard({ member, onKick }) {
+export default function MemberCard({ member, onKick, courseId }) {
     const { t } = useTranslation();
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -92,6 +94,22 @@ export default function MemberCard({ member, onKick }) {
                 <div className="flex-shrink-0">
                     <StatusBadge status={member.status} t={t} />
                 </div>
+
+                {/* Award Bug Hunter (instructor-only; backend enforces) */}
+                <AwardBugHunterButton
+                    userId={member.user_id}
+                    studentName={`${member.first_name} ${member.last_name}`}
+                    courseId={courseId}
+                />
+
+                {/* View Badges */}
+                <Link
+                    to={`/users/${member.user_id}/badges`}
+                    className="flex-shrink-0 p-2 text-gray-500 hover:text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-all duration-200"
+                    title={t("rewards.viewBadges", { defaultValue: "View badges" })}
+                >
+                    <Award size={18} />
+                </Link>
 
                 {/* Kick Button */}
                 <button

@@ -12,6 +12,8 @@ import LoadingScreen from './LoadingScreen';
 import ErrorScreen from './ErrorScreen';
 import SubmissionResultOverlay from './SubmissionResultOverlay';
 import ActivityResetModal from './ActivityResetModal';
+import RewardsEarnedModal from '@/components/Rewards/RewardsEarnedModal';
+import { submitActivityV2 } from '@/config/gamificationApi';
 import { Play, FileText, Clock, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCheckpoints } from '@/components/Activity/useCheckpoints';
@@ -173,8 +175,25 @@ export default function Maincontent({ user }) {
     const [runOutput, setRunOutput] = useState(null);
     const [showResetModal, setShowResetModal] = useState(false);
     const [isAcknowledgingReset, setIsAcknowledgingReset] = useState(false);
+    const [rewardsToShow, setRewardsToShow] = useState(null);
+
+    // Gamification telemetry for the /submissions pipeline.
+    const startedAtRef = useRef(null);
+    const hintsUsedRef = useRef(0);
+    // Live accumulator of in-session answers (question_id -> {answer, passed}).
+    // Needed because `answeredQuestions` is loaded once at mount and never
+    // refreshed when the student answers during the session.
+    const recordedAnswersRef = useRef(new Map());
+
+    // Stamp the start time the first time the student enters solve mode.
+    useEffect(() => {
+        if (mode === 'solve' && !startedAtRef.current) {
+            startedAtRef.current = new Date().toISOString();
+        }
+    }, [mode]);
 
     const handleAskAI = useCallback((text) => {
+        hintsUsedRef.current += 1;
         setSelectedCodeForChat(text);
         setIsHintOpen(true);
     }, []);
@@ -184,6 +203,9 @@ export default function Maincontent({ user }) {
     };
 
     const recordAnswer = useCallback(async ({ question_id, answer, is_correct }) => {
+        // Capture every answer locally so the gamified submission can send
+        // real quiz_answers even on a first attempt.
+        recordedAnswersRef.current.set(question_id, { answer, passed: is_correct === true });
         if (!user?.uid || !courseId || !activityId) return;
         fetch(`${API_BASE}/courses/${courseId}/activities/${activityId}/answers`, {
             method: 'POST',
@@ -251,6 +273,7 @@ export default function Maincontent({ user }) {
                     setCheckpointHintText("Your code passes this checkpoint's test. Try the next step.");
                     markCheckpointPassed();
                 } else {
+                    hintsUsedRef.current += 1;
                     setCheckpointHintIsPass(false);
                     setCheckpointHintText(data.hint || 'No hint available.');
                 }
@@ -683,6 +706,55 @@ export default function Maincontent({ user }) {
                         ? ` (GitHub push failed: ${data.github.error})`
                         : "";
                 setFeedback({ type: 'success', message: `Submission successful!${ghMsg}` });
+
+                // Fire the gamified submission alongside the legacy one.
+                // Non-fatal: rewards are a bonus, never block the submit flow.
+                try {
+                    const startedAt = startedAtRef.current || new Date().toISOString();
+
+                    // All checkpoints here are quiz-derived (useCheckpoints
+                    // builds them from quiz_questions), and the backend grades
+                    // every quiz row from quiz_answers keyed by numeric
+                    // question_id. Seed from prior-attempt answers, then
+                    // overlay this session's live answers.
+                    const answerMap = new Map();
+                    (answeredQuestions || []).forEach(a => {
+                        if (a && a.question_id != null) {
+                            answerMap.set(a.question_id, {
+                                answer: a.answer,
+                                passed: a.is_correct === true,
+                            });
+                        }
+                    });
+                    recordedAnswersRef.current.forEach((v, qid) => answerMap.set(qid, v));
+
+                    const quizAnswers = [...answerMap.entries()].map(
+                        ([question_id, v]) => ({
+                            question_id,
+                            answer: v.answer,
+                            passed: v.passed === true,
+                        }),
+                    );
+
+                    const rewardData = await submitActivityV2(
+                        auth.currentUser, courseId, activityId,
+                        {
+                            started_at: startedAt,
+                            active_seconds: Math.max(
+                                0, Math.round((Date.now() - new Date(startedAt).getTime()) / 1000),
+                            ),
+                            hints_used: hintsUsedRef.current,
+                            local_hour: new Date().getHours(),
+                            code_test_outcomes: [],
+                            quiz_answers: quizAnswers,
+                        },
+                    );
+                    if (rewardData?.rewards?.points_earned > 0) {
+                        setRewardsToShow(rewardData.rewards);
+                    }
+                } catch (rewardErr) {
+                    console.error('Gamified submission failed (non-fatal):', rewardErr);
+                }
             } else {
                 setFeedback({ type: 'error', message: data.message || "Submission failed. Please try again." });
             }
@@ -868,6 +940,13 @@ export default function Maincontent({ user }) {
                     score={submissionScore}
                     courseId={courseId}
                     onClose={() => setShowResultOverlay(false)}
+                />
+            )}
+
+            {rewardsToShow && (
+                <RewardsEarnedModal
+                    rewards={rewardsToShow}
+                    onClose={() => setRewardsToShow(null)}
                 />
             )}
 

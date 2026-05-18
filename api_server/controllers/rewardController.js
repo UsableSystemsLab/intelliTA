@@ -24,13 +24,20 @@ const RewardController = {
                 col: "activity_id",
                 where: { user_id: userId, status: "PASSED" },
             });
-            const badgesEarned = await UserBadge.count({ where: { user_id: userId } });
+
+            const badgesEarned = await UserBadge.count({
+                where: { user_id: userId },
+                distinct: true,
+                col: "badge_id",
+            });
+            const badgesInstances = await UserBadge.count({ where: { user_id: userId } });
             const badgesTotal = await Badge.count();
 
             return res.status(200).json({
                 total_points: points ? points.total_points : 0,
                 completed_activities: completed,
                 badges_earned_count: badgesEarned,
+                badges_instances_count: badgesInstances,
                 badges_total_count: badgesTotal,
             });
         } catch (err) {

@@ -6,6 +6,7 @@ import { auth, db } from '@/utils/firebase.js' // Ensure db is exported from you
 import { doc, getDoc } from "firebase/firestore";
 import { useTranslation } from 'react-i18next';
 import { isKauEmail } from '@/utils/kauDomain';
+import { API_BASE, getAuthHeaders } from '@/config/api';
 
 import Login from '@/pages/Login.jsx'
 import SignUp from '@/pages/SignUp.jsx'
@@ -14,6 +15,8 @@ import Courses from "@/pages/Courses.jsx";
 import CourseLabs from "@/pages/CourseLabs.jsx";
 import CreateCourse from "@/pages/CreateCourse.jsx";
 import Settings from "@/pages/Settings.jsx";
+import Rewards from "@/pages/Rewards.jsx";
+import UserBadges from "@/pages/UserBadges.jsx";
 import Activity from './pages/Activity' // Added from incoming branch
 import TestExamples from '@/pages/TestExamples.jsx'
 import LabGuide from '@/pages/LabGuide.jsx'
@@ -48,13 +51,31 @@ function App() {
           const docRef = doc(db, "users", currentUser.uid);
           const docSnap = await getDoc(docRef);
 
+          let dbId;
+          try {
+            const profileRes = await fetch(
+              `${API_BASE}/users/${currentUser.uid}/profile`,
+              { headers: await getAuthHeaders(currentUser) },
+            );
+            if (profileRes.ok) {
+              dbId = (await profileRes.json())?.id;
+            }
+          } catch {
+            
+          }
+
           if (docSnap.exists()) {
             setUser({
               ...currentUser,
               ...docSnap.data(),
+              ...(dbId !== undefined ? { id: dbId } : {}),
             });
           } else {
-            setUser(currentUser);
+            setUser(
+              dbId !== undefined
+                ? Object.assign(currentUser, { id: dbId })
+                : currentUser,
+            );
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
@@ -114,6 +135,8 @@ function App() {
           <Route path="/courses/:courseId" element={<CourseLabs user={user} />} />
           <Route path="/courses/create" element={<CreateCourse user={user} />} />
           <Route path="/settings" element={<Settings user={user} setUser={setUser} />} />
+          <Route path="/rewards/me" element={<Rewards user={user} />} />
+          <Route path="/users/:userId/badges" element={<UserBadges user={user} />} />
           {/* Resolved: Added Activity route from incoming branch */}
           <Route path="/courses/:courseId/activities/:activityId" element={<Activity user={user} />} />
         </Route>

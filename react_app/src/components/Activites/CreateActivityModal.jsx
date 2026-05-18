@@ -11,7 +11,9 @@ import MarkdownEditor from "./form/MarkdownEditor";
 import StarterCodeEditor from "./form/StarterCodeEditor";
 import QuizEditor from "./form/QuizEditor";
 import ChaptersEditor from "./form/ChaptersEditor";
+import CodeTestsEditor from "./form/CodeTestsEditor";
 import { ModalHeader, ErrorAlert, CloseButton } from "./form/ModalComponents";
+import { setActivityCodeTests } from "@/config/gamificationApi";
 
 const markdownComponents = {
   h1: ({ children }) => <h1 className="text-2xl font-bold text-white mb-4 pb-2 border-b border-gray-700">{children}</h1>,
@@ -58,6 +60,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
   const [testsLanguage, setTestsLanguage] = useState(null);
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [chapters, setChapters] = useState([]);
+  const [codeTestNames, setCodeTestNames] = useState([]);
   const [createGithubRepo, setCreateGithubRepo] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -78,6 +81,7 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     setTestsLanguage(null);
     setQuizQuestions([]);
     setChapters([]);
+    setCodeTestNames([]);
     setCreateGithubRepo(false);
     setErrorMsg("");
   };
@@ -209,6 +213,18 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
             body: JSON.stringify(chaptersPayload),
           }
         );
+      }
+
+      // Declare CODE test names for gamification scoring (only when provided).
+      const cleanedTestNames = codeTestNames.map((n) => n.trim()).filter(Boolean);
+      if (cleanedTestNames.length > 0) {
+        try {
+          await setActivityCodeTests(
+            auth.currentUser, courseId, newActivity.activity_id, cleanedTestNames,
+          );
+        } catch (codeTestErr) {
+          console.error("Failed to save code tests (non-fatal):", codeTestErr);
+        }
       }
 
       onActivityCreated(newActivity);
@@ -545,6 +561,13 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               testsLanguage={testsLanguage}
               videoDuration={videoDuration}
               videoFile={videoFile}
+            />
+
+            {/* Code Test Names (gamification scoring) */}
+            <CodeTestsEditor
+              testNames={codeTestNames}
+              onTestNamesChange={setCodeTestNames}
+              hasQuiz={(quizQuestions || []).length > 0}
             />
 
             {/* Video Chapters */}

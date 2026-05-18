@@ -15,7 +15,6 @@ const SettingsLayout = ({ user, setUser }) => {
     { id: 'profile', label: t('tabProfile'), icon: User, component: ProfileSettings },
     { id: 'security', label: t('tabSecurity'), icon: Shield, component: SecuritySettings },
     { id: 'accessibility', label: t('tabAccessibility'), icon: PersonStanding, component: AccessibilitySettings },
-    { id: 'progress', label: t('tabProgress'), icon: Award, component: ProgressSettings },
     { id: 'ai-integration', label: t('tabAIIntegration'), icon: Bot, component: AIIntegrationSettings },
   ];
 
