@@ -16,6 +16,7 @@ import CourseLabs from "@/pages/CourseLabs.jsx";
 import CreateCourse from "@/pages/CreateCourse.jsx";
 import Settings from "@/pages/Settings.jsx";
 import Rewards from "@/pages/Rewards.jsx";
+import Leaderboard from "@/pages/Leaderboard.jsx";
 import UserBadges from "@/pages/UserBadges.jsx";
 import Activity from './pages/Activity' // Added from incoming branch
 import TestExamples from '@/pages/TestExamples.jsx'
@@ -136,6 +137,7 @@ function App() {
           <Route path="/courses/create" element={<CreateCourse user={user} />} />
           <Route path="/settings" element={<Settings user={user} setUser={setUser} />} />
           <Route path="/rewards/me" element={<Rewards user={user} />} />
+          <Route path="/leaderboard" element={<Leaderboard user={user} />} />
           <Route path="/users/:userId/badges" element={<UserBadges user={user} />} />
           {/* Resolved: Added Activity route from incoming branch */}
           <Route path="/courses/:courseId/activities/:activityId" element={<Activity user={user} />} />

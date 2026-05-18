@@ -15,7 +15,7 @@ export default function Sidebar() {
 
   const menuItems = [
     { path: "/courses", label: "courses", icon: <BookOpen className="w-5 h-5" /> },
-    { path: "#", label: "leaderboard", icon: <TrendingUp className="w-5 h-5" /> },
+    { path: "/leaderboard", label: "leaderboard", icon: <TrendingUp className="w-5 h-5" /> },
     { path: "#", label: "calendar", icon: <Calendar className="w-5 h-5" /> },
     { path: "/settings", label: "settings", icon: <Settings className="w-5 h-5" /> },
     { path: "#", label: "support", icon: <LifeBuoy className="w-5 h-5" /> },

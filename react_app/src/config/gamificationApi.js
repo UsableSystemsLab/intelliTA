@@ -58,6 +58,12 @@ export function awardBugHunter(user, { user_id, activity_id, reason }) {
   });
 }
 
+// --- Leaderboard ---
+
+export function getCourseLeaderboard(user, courseId, firebaseId) {
+  return request(user, `/courses/${courseId}/leaderboard${query({ firebaseId })}`);
+}
+
 // --- Notifications ---
 
 export function listNotifications(user, userId, { limit, cursor, unread_only } = {}) {

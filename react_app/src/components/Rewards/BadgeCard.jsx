@@ -29,7 +29,7 @@ export default function BadgeCard({ badge, locked, count = 1, labs = [] }) {
               text-[11px] font-bold flex items-center justify-center
               border border-gray-900 ${tc.text} bg-gray-900`}
           >
-            ·{count}
+            +{count}
           </span>
         )}
       </div>

@@ -1,5 +1,6 @@
-import { Op } from "sequelize";
+import { Op, QueryTypes } from "sequelize";
 import { Course, Lab, User, Enrollment } from "../models/index.js";
+import { sequelize } from "../configs/postgresDB.js";
 
 const CourseController = {
   /**
@@ -567,6 +568,150 @@ const CourseController = {
     } catch (error) {
       return res.status(500).json({
         message: "Error fetching enrolled students",
+        error: error.message,
+      });
+    }
+  },
+
+  /**
+   * @swagger
+   * /courses/{id}/leaderboard:
+   *   get:
+   *     summary: Course points leaderboard (active students ranked by points earned in this course)
+   *     description: Sums points_ledger entries for activities belonging to the course. Caller must be enrolled in or the instructor of the course.
+   *     tags: [Courses]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: integer
+   *       - in: query
+   *         name: firebaseId
+   *         required: true
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: Ranked leaderboard
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 course_title:
+   *                   type: string
+   *                 rows:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       rank: { type: integer }
+   *                       user_id: { type: integer }
+   *                       name: { type: string }
+   *                       photo_url: { type: string, nullable: true }
+   *                       points: { type: integer }
+   *                       is_me: { type: boolean }
+   *       400:
+   *         description: firebaseId is required
+   *       403:
+   *         description: Caller is not a member of this course
+   *       404:
+   *         description: Course or user not found
+   */
+  async getCourseLeaderboard(req, res) {
+    try {
+      const { id } = req.params;
+      const { firebaseId } = req.query;
+
+      if (!firebaseId) {
+        return res.status(400).json({ message: "firebaseId is required" });
+      }
+
+      const requestingUser = await User.findOne({ where: { firebaseId } });
+      if (!requestingUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const course = await Course.findByPk(id);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Authorize: instructor of the course, or an enrolled student.
+      const isInstructor = course.instructor_id === requestingUser.id;
+      if (!isInstructor) {
+        const enrolled = await Enrollment.count({
+          where: { user_id: requestingUser.id, course_id: id },
+        });
+        if (!enrolled) {
+          return res
+            .status(403)
+            .json({ message: "You are not a member of this course" });
+        }
+      }
+
+      // Active students joined with their total points earned on THIS course's
+      // activities (points_ledger -> activities filtered by course_id). Students
+      // with no points still appear (LEFT JOIN, COALESCE 0).
+      const rows = await sequelize.query(
+        `SELECT u.user_id                AS user_id,
+                u.fname                  AS first_name,
+                u.lname                  AS last_name,
+                e.enrolled_name          AS enrolled_name,
+                u.photo_url              AS photo_url,
+                COALESCE(p.points, 0)::int AS points
+           FROM enrollments e
+           JOIN users u ON u.user_id = e.user_id
+           LEFT JOIN (
+                SELECT pl.user_id, SUM(pl.points) AS points
+                  FROM points_ledger pl
+                  JOIN activities a ON a.activity_id = pl.activity_id
+                 WHERE a.course_id = :courseId
+                 GROUP BY pl.user_id
+           ) p ON p.user_id = e.user_id
+          WHERE e.course_id = :courseId
+            AND e.status = 'active'
+            AND u.deleted_at IS NULL
+          ORDER BY points DESC, u.lname ASC, u.fname ASC`,
+        { replacements: { courseId: id }, type: QueryTypes.SELECT },
+      );
+
+      // Competition ranking: equal points share a rank, the next rank skips.
+      let lastPoints = null;
+      let lastRank = 0;
+      const leaderboard = rows.map((r, i) => {
+        const rank = r.points === lastPoints ? lastRank : i + 1;
+        lastPoints = r.points;
+        lastRank = rank;
+        // enrolled_name is the real name picked from the roster, EXCEPT when
+        // the course has no roster — joinCourse then defaults it to the user's
+        // email (see joinCourse). Never show an email: in that case fall back
+        // to the account's first/last name.
+        const realName = `${r.first_name} ${r.last_name}`.trim();
+        const rosterName =
+          r.enrolled_name && !r.enrolled_name.includes("@")
+            ? r.enrolled_name
+            : null;
+        return {
+          rank,
+          user_id: r.user_id,
+          name: rosterName || realName || r.enrolled_name,
+          photo_url: r.photo_url || null,
+          points: r.points,
+          is_me: r.user_id === requestingUser.id,
+        };
+      });
+
+      return res.status(200).json({
+        course_title: course.title,
+        rows: leaderboard,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error fetching leaderboard",
         error: error.message,
       });
     }
