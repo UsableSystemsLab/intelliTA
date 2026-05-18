@@ -29,6 +29,26 @@ jest.mock('../models/index.js', () => ({
   __esModule: true,
   GitHubConnection: { findOne: jest.fn() },
   Enrollment: { findAll: jest.fn() },
+  ActivityTestCase: { findAll: jest.fn().mockResolvedValue([]) },
+  SubmissionTestResult: { findAll: jest.fn().mockResolvedValue([]), bulkCreate: jest.fn().mockResolvedValue([]) },
+}));
+
+jest.mock('../configs/postgresDB.js', () => ({
+  __esModule: true,
+  sequelize: {
+    transaction: jest.fn((fn) => fn({})),
+    Sequelize: { Op: { ne: Symbol('ne') } },
+  },
+}));
+
+jest.mock('../services/activityTestCaseService.js', () => ({
+  __esModule: true,
+  setCodeTestCases: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('../services/rewardPipeline.js', () => ({
+  __esModule: true,
+  default: { process: jest.fn().mockResolvedValue({ points_earned: 0, lines: [], badges_awarded: [], notifications: [] }) },
 }));
 
 jest.mock('../services/transcriptionService.js', () => ({
@@ -304,7 +324,8 @@ describe('ActivityController.submitActivity', () => {
     const res = makeRes();
     await ActivityController.submitActivity(req, res);
     expect(Submission.create).toHaveBeenCalledWith(
-      expect.objectContaining({ activity_id: '1', user_id: 1, score: 100 })
+      expect.objectContaining({ activity_id: '1', user_id: 1, score: 100 }),
+      expect.anything()
     );
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ submission })

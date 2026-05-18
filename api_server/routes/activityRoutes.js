@@ -165,6 +165,48 @@ router.get("/:activityId/github-acceptances", GitHubController.getAcceptances);
 router.get("/:activityId/quiz", QuizController.getQuiz);
 router.post("/:activityId/quiz", QuizController.setQuiz);
 
+/**
+ * @swagger
+ * /courses/{courseId}/activities/{activityId}/code-tests:
+ *   put:
+ *     summary: Declare the CODE test names for an activity (drives gamification scoring)
+ *     description: |
+ *       Replaces the set of CODE rows in `activity_test_cases` with the given test names.
+ *       Points are rebalanced automatically — 100 split evenly when only code tests exist,
+ *       or 70 across code + 30 across quiz when both kinds exist.
+ *     tags: [Activities]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: courseId
+ *         required: true
+ *         schema: { type: integer }
+ *       - in: path
+ *         name: activityId
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [test_names]
+ *             properties:
+ *               test_names:
+ *                 type: array
+ *                 items: { type: string }
+ *     responses:
+ *       200:
+ *         description: Current ActivityTestCase rows for the activity
+ *       400:
+ *         description: test_names must be an array
+ *       404:
+ *         description: Activity not found
+ */
+router.put("/:activityId/code-tests", ActivityController.setCodeTests);
+
 // Video progress
 router.get("/:activityId/progress", VideoProgressController.getProgress);
 router.put("/:activityId/progress", VideoProgressController.upsertProgress);

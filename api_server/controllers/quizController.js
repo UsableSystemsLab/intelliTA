@@ -1,5 +1,7 @@
 import Activity from "../models/Activity.js";
 import QuizQuestion from "../models/QuizQuestion.js";
+import { sequelize } from "../configs/postgresDB.js";
+import { syncQuizTestCases } from "../services/activityTestCaseService.js";
 
 
  // (same shape as the old S3 quiz JSON)
@@ -62,29 +64,35 @@ const QuizController = {
                 return res.status(404).json({ message: "Activity not found" });
             }
 
-            // Atomically replace all questions for this activity
-            await QuizQuestion.destroy({ where: { activity_id: activityId } });
+            const created = await sequelize.transaction(async (txn) => {
+                // Atomically replace all questions for this activity
+                await QuizQuestion.destroy({ where: { activity_id: activityId }, transaction: txn });
 
-            if (quizzes.length === 0) {
-                return res.json({ quizzes: [] });
-            }
+                if (quizzes.length === 0) {
+                    await syncQuizTestCases(activityId, { txn });
+                    return [];
+                }
 
-            const rows = quizzes.map(q => ({
-                activity_id: activityId,
-                time_seconds: q.time,
-                type: q.type,
-                question: q.question || null,
-                title: q.title || null,
-                instruction: q.instruction || null,
-                file_name: q.fileName || null,
-                check_regex: q.check || null,
-                test_name: q.test_name || null,
-                test_class: q.test_class || null,
-                options: q.options || null,
-                correct_answer: q.correctAnswer !== undefined ? q.correctAnswer : null,
-            }));
+                const rows = quizzes.map(q => ({
+                    activity_id: activityId,
+                    time_seconds: q.time,
+                    type: q.type,
+                    question: q.question || null,
+                    title: q.title || null,
+                    instruction: q.instruction || null,
+                    file_name: q.fileName || null,
+                    check_regex: q.check || null,
+                    test_name: q.test_name || null,
+                    test_class: q.test_class || null,
+                    options: q.options || null,
+                    correct_answer: q.correctAnswer !== undefined ? q.correctAnswer : null,
+                }));
 
-            const created = await QuizQuestion.bulkCreate(rows, { returning: true });
+                const inserted = await QuizQuestion.bulkCreate(rows, { returning: true, transaction: txn });
+                await syncQuizTestCases(activityId, { txn });
+                return inserted;
+            });
+
             res.status(201).json({ quizzes: toQuizJson(created) });
         } catch (error) {
             console.error("Set Quiz Error:", error);

@@ -12,6 +12,18 @@ jest.mock('../models/QuizQuestion.js', () => ({
   },
 }));
 
+jest.mock('../configs/postgresDB.js', () => ({
+  __esModule: true,
+  sequelize: {
+    transaction: jest.fn((fn) => fn({})),
+  },
+}));
+
+jest.mock('../services/activityTestCaseService.js', () => ({
+  __esModule: true,
+  syncQuizTestCases: jest.fn().mockResolvedValue(undefined),
+}));
+
 import Activity from '../models/Activity.js';
 import QuizQuestion from '../models/QuizQuestion.js';
 import QuizController from '../controllers/quizController.js';
@@ -110,7 +122,9 @@ describe('QuizController.setQuiz', () => {
     const req = { params: { activityId: '5' }, body: { quizzes: [] } };
     const res = makeRes();
     await QuizController.setQuiz(req, res);
-    expect(QuizQuestion.destroy).toHaveBeenCalledWith({ where: { activity_id: '5' } });
+    expect(QuizQuestion.destroy).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { activity_id: '5' } })
+    );
     expect(res.json).toHaveBeenCalledWith({ quizzes: [] });
   });
 

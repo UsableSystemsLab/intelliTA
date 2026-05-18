@@ -2,10 +2,13 @@ import Activity from "../models/Activity.js";
 import Submission from "../models/Submission.js";
 import User from "../models/User.js";
 import transcriptionService from "../services/transcriptionService.js";
-import { GitHubConnection, Enrollment } from "../models/index.js";
+import { GitHubConnection, Enrollment, ActivityTestCase, SubmissionTestResult } from "../models/index.js";
 import { decryptApiKey } from "../utils/encryption.js";
 import { createActivityRepo, resolveAssignmentId } from "./GitHubController.js";
 import GitHubController from "./GitHubController.js";
+import { sequelize } from "../configs/postgresDB.js";
+import { setCodeTestCases } from "../services/activityTestCaseService.js";
+import rewardPipeline from "../services/rewardPipeline.js";
 
 /**
  * Push activity files to a GitHub repo and create a Classroom assignment.
@@ -348,24 +351,85 @@ const ActivityController = {
         }
       });
 
+      let rewards = null;
       if (submission) {
         submission.score = score || submission.score;
         await submission.save();
       } else {
-        const priorAttempts = await Submission.count({
-          where: { activity_id: activityId, user_id: user.id },
-        });
         const finalScore = score == null ? 100 : score;
-        submission = await Submission.create({
-          activity_id: activityId,
-          user_id: user.id,
-          score: finalScore,
-          started_at: new Date(),
-          status: finalScore > 0 ? "PASSED" : "FAILED",
-          active_seconds: 0,
-          hints_used: 0,
-          attempt_number: priorAttempts + 1,
+        const status = finalScore > 0 ? "PASSED" : "FAILED";
+        const localHour = req.body.local_hour;
+
+        const result = await sequelize.transaction(async (txn) => {
+          const priorAttempts = await Submission.count({
+            where: { activity_id: activityId, user_id: user.id },
+            transaction: txn,
+          });
+
+          const created = await Submission.create(
+            {
+              activity_id: activityId,
+              user_id: user.id,
+              score: finalScore,
+              started_at: new Date(),
+              status,
+              active_seconds: 0,
+              hints_used: 0,
+              attempt_number: priorAttempts + 1,
+            },
+            { transaction: txn }
+          );
+
+          // Seed submission_test_results from activity_test_cases so the reward
+          // pipeline has something to grade. The legacy endpoint doesn't know
+          // which tests passed individually, so we mirror the overall status.
+          const testCases = await ActivityTestCase.findAll({
+            where: { activity_id: activityId },
+            transaction: txn,
+          });
+
+          if (testCases.length) {
+            const priorPassed = await SubmissionTestResult.findAll({
+              attributes: ["test_case_id"],
+              where: { passed: true },
+              include: [{
+                model: Submission,
+                as: "submission",
+                attributes: [],
+                where: {
+                  user_id: user.id,
+                  activity_id: activityId,
+                  submission_id: { [sequelize.Sequelize.Op.ne]: created.submission_id },
+                },
+                required: true,
+              }],
+              transaction: txn,
+            });
+            const priorPassedIds = new Set(priorPassed.map((r) => r.test_case_id));
+            const passed = status === "PASSED";
+
+            await SubmissionTestResult.bulkCreate(
+              testCases.map((tc) => ({
+                submission_id: created.submission_id,
+                test_case_id: tc.test_case_id,
+                passed,
+                points_awarded: passed && !priorPassedIds.has(tc.test_case_id) ? tc.points : 0,
+              })),
+              { transaction: txn }
+            );
+          }
+
+          const r = await rewardPipeline.process({
+            submissionId: created.submission_id,
+            localHour,
+            txn,
+          });
+
+          return { created, rewards: r };
         });
+
+        submission = result.created;
+        rewards = result.rewards;
       }
 
       // --- Push code to student's GitHub Classroom repo ---
@@ -423,6 +487,9 @@ const ActivityController = {
       if (githubResult) {
         response.github = githubResult;
       }
+      if (rewards) {
+        response.rewards = rewards;
+      }
 
       return res.status(submission.isNewRecord === false ? 200 : 201).json(response);
 
@@ -430,7 +497,40 @@ const ActivityController = {
       console.error("Submit Activity Error:", error);
       res.status(500).json({ message: "Failed to submit activity", error: error.message });
     }
-  }
+  },
+
+  async setCodeTests(req, res) {
+    try {
+      const { activityId } = req.params;
+      const { test_names } = req.body || {};
+      if (!Array.isArray(test_names)) {
+        return res.status(400).json({ message: "test_names must be an array" });
+      }
+      const activity = await Activity.findOne({ where: { activity_id: activityId } });
+      if (!activity) return res.status(404).json({ message: "Activity not found" });
+
+      await sequelize.transaction(async (txn) => {
+        await setCodeTestCases(activityId, test_names, { txn });
+      });
+
+      const rows = await ActivityTestCase.findAll({
+        where: { activity_id: activityId },
+        order: [["kind", "ASC"], ["position", "ASC"]],
+      });
+      return res.json({
+        test_cases: rows.map((r) => ({
+          test_case_id: r.test_case_id,
+          kind: r.kind,
+          external_ref: r.external_ref,
+          points: r.points,
+          position: r.position,
+        })),
+      });
+    } catch (error) {
+      console.error("setCodeTests error:", error);
+      return res.status(500).json({ message: "Failed to update code tests", error: error.message });
+    }
+  },
 };
 
 export default ActivityController;
