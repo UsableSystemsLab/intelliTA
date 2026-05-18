@@ -50,6 +50,7 @@ describe("RewardController.getRewards", () => {
             total_points: 1240,
             completed_activities: 12,
             badges_earned_count: 5,
+            badges_instances_count: 5,
             badges_total_count: 10,
         });
     });

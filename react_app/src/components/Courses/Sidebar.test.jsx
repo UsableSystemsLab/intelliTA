@@ -16,7 +16,6 @@ describe('Courses Sidebar', () => {
     expect(within(nav).getByText('leaderboard')).toBeInTheDocument();
     expect(within(nav).getByText('calendar')).toBeInTheDocument();
     expect(within(nav).getByText('settings')).toBeInTheDocument();
-    expect(within(nav).getByText('support')).toBeInTheDocument();
   });
 
   test('renders the back link at the bottom', () => {

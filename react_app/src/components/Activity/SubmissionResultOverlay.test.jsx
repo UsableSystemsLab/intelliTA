@@ -39,7 +39,7 @@ describe('SubmissionResultOverlay', () => {
     expect(screen.getByText('50%')).toBeInTheDocument();
   });
 
-  test('only shows challenge-type checkpoints in the list', () => {
+  test('shows gradable checkpoints (challenges + quizzes) and excludes instructor updates', () => {
     renderWithProviders(
       <SubmissionResultOverlay
         checkpoints={checkpoints}
@@ -49,12 +49,12 @@ describe('SubmissionResultOverlay', () => {
     );
     expect(screen.getByText('Sum two numbers')).toBeInTheDocument();
     expect(screen.getByText('Reverse string')).toBeInTheDocument();
-    // Non-challenge entries excluded
+    expect(screen.getByText('Quiz')).toBeInTheDocument();
+    // Instructor-update entries excluded
     expect(screen.queryByText('Look at this')).not.toBeInTheDocument();
-    expect(screen.queryByText('Quiz')).not.toBeInTheDocument();
   });
 
-  test('verified/total counts reflect challenges only', () => {
+  test('verified/total counts reflect all gradable tasks', () => {
     renderWithProviders(
       <SubmissionResultOverlay
         checkpoints={checkpoints}
@@ -62,11 +62,11 @@ describe('SubmissionResultOverlay', () => {
         courseId={42}
       />
     );
-    // 1 verified, 2 total (challenges only)
+    // 2 verified (Sum two numbers + Quiz), 3 total gradable
     const verifiedTile = screen.getByText('verified').parentElement;
-    expect(verifiedTile).toHaveTextContent('1');
+    expect(verifiedTile).toHaveTextContent('2');
     const totalTile = screen.getByText('totalTasks').parentElement;
-    expect(totalTile).toHaveTextContent('2');
+    expect(totalTile).toHaveTextContent('3');
   });
 
   test('clicking My Courses navigates to /courses', async () => {

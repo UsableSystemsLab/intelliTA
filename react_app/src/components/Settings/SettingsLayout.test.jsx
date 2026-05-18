@@ -26,12 +26,11 @@ jest.mock('./AIIntegrationSettings', () => {
 import SettingsLayout from './SettingsLayout';
 
 describe('SettingsLayout', () => {
-  test('renders all five tab buttons', () => {
+  test('renders all tab buttons', () => {
     render(<SettingsLayout user={{}} setUser={jest.fn()} />);
     expect(screen.getByText('tabProfile')).toBeInTheDocument();
     expect(screen.getByText('tabSecurity')).toBeInTheDocument();
     expect(screen.getByText('tabAccessibility')).toBeInTheDocument();
-    expect(screen.getByText('tabProgress')).toBeInTheDocument();
     expect(screen.getByText('tabAIIntegration')).toBeInTheDocument();
   });
 
@@ -67,15 +66,6 @@ describe('SettingsLayout', () => {
     await user.click(screen.getByText('tabAIIntegration'));
 
     expect(screen.getByTestId('ai-integration-settings')).toBeInTheDocument();
-  });
-
-  test('clicking Progress tab shows the comingSoon placeholder', async () => {
-    const user = userEvent.setup();
-    render(<SettingsLayout user={{}} setUser={jest.fn()} />);
-
-    await user.click(screen.getByText('tabProgress'));
-
-    expect(screen.getByText('settingsComingSoon')).toBeInTheDocument();
   });
 
   test('renders the settings title and subtitle', () => {

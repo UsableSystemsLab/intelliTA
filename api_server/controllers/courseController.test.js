@@ -4,6 +4,11 @@ jest.mock('sequelize', () => ({
   DataTypes: {},
 }));
 
+jest.mock('../configs/postgresDB.js', () => ({
+  __esModule: true,
+  sequelize: {},
+}));
+
 jest.mock('../models/index.js', () => ({
   __esModule: true,
   Course: {

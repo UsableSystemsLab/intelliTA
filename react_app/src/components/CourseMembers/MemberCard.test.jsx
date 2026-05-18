@@ -1,7 +1,10 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render as rtlRender, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import MemberCard from './MemberCard';
+
+const render = (ui) => rtlRender(<MemoryRouter>{ui}</MemoryRouter>);
 
 const baseMember = {
   first_name: 'Alice',
