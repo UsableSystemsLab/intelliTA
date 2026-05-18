@@ -27,6 +27,13 @@ API_SERVER_HOST = os.environ["API_SERVER_HOST"]
 API_SERVER_PORT = os.environ["API_SERVER_PORT"]
 NODE_API_URL = f"http://{API_SERVER_HOST}:{API_SERVER_PORT}/api"
 
+# - Piston (sandboxed code execution for hint-time unit tests)
+PISTON_URL = os.environ.get("PISTON_URL", "http://piston_container:2000")
+
+
+STORAGE_PUBLIC_URL = os.environ.get("STORAGE_PUBLIC_URL", "")
+STORAGE_INTERNAL_URL = os.environ.get("STORAGE_INTERNAL_URL", "")
+
 # - Thresholds
 LONG_MESSAGE_THRESHOLD = 200
 MAX_HISTORY_MESSAGES = 10  # Only send the last N messages to the LLM to keep context focused

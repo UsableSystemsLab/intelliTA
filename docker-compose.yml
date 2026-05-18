@@ -157,6 +157,9 @@ services:
       - GROQ_HINT_MODEL=${GROQ_HINT_MODEL:-llama-3.3-70b-versatile}
       - API_SERVER_HOST=api_server_container
       - API_SERVER_PORT=${API_SERVER_PORT}
+      - PISTON_URL=http://piston_container:2000
+      - STORAGE_PUBLIC_URL=http://localhost:9000
+      - STORAGE_INTERNAL_URL=http://rustfs_container:9000
     ports:
       - ${LLM_SERVER_PORT}:${LLM_SERVER_PORT}
     volumes:
@@ -164,6 +167,8 @@ services:
     restart: unless-stopped
     depends_on:
       db:
+        condition: service_healthy
+      piston_api:
         condition: service_healthy
     networks:
       - app_network
@@ -187,6 +192,38 @@ services:
       - RUSTFS_ROOT_PASSWORD=${S3_SECRET_KEY}
     networks:
       - app_network
+
+  piston_api:
+    build:
+      context: piston
+      dockerfile: Dockerfile
+      args:
+        PISTON_LANGS: ${PISTON_LANGS}
+    image: piston_api_image
+    container_name: piston_container
+    restart: unless-stopped
+    privileged: true
+    environment:
+      - PISTON_RUN_TIMEOUT=10000
+      - PISTON_COMPILE_TIMEOUT=15000
+      - PISTON_MAX_RUN_TIMEOUT=30000
+      - PISTON_MAX_COMPILE_TIMEOUT=30000
+      - PISTON_RUN_MEMORY_LIMIT=512000000
+      - PISTON_COMPILE_MEMORY_LIMIT=512000000
+      - PISTON_MAX_MEMORY_LIMIT=768000000
+    mem_limit: 2g
+    pids_limit: 512
+    cpus: 2
+    networks:
+      - app_network
+    tmpfs:
+      - /piston/jobs
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:2000/api/v2/runtimes',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   whisper_server:
     build:

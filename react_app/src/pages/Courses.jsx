@@ -1,4 +1,4 @@
-import Nav from '@/components/Courses/Nav';
+import Nav from '@/components/Landing-page/Nav';
 import Maincontent from '@/components/Courses/Maincontent';
 import Footer from '@/components/shared/Footer';
 import Sidebar from '@/components/Courses/Sidebar';

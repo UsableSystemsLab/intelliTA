@@ -1,4 +1,4 @@
-import Nav from '@/components/Courses/Nav';
+import Nav from '@/components/Landing-page/Nav';
 import SettingsLayout from '@/components/Settings/SettingsLayout';
 import Footer from '@/components/shared/Footer';
 

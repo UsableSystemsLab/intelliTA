@@ -49,6 +49,16 @@ const QuizQuestion = sequelize.define(
             type: DataTypes.TEXT,
             allowNull: true,
         },
+        // coding only — name of the test method this checkpoint runs against
+        test_name: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
+        // coding only, Java only — class containing the test method
+        test_class: {
+            type: DataTypes.STRING(255),
+            allowNull: true,
+        },
         // mcq only — array of option strings
         options: {
             type: DataTypes.JSONB,

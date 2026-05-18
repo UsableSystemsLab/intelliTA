@@ -2,9 +2,17 @@ import Editor from "@monaco-editor/react";
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from "react-markdown";
 import FileExplorer from './FileExplorer';
-import { Terminal, Code2, ChevronDown, ChevronUp, FileText, Sparkles } from 'lucide-react';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { Terminal, Code2, ChevronDown, ChevronUp, FileText, Sparkles, Eye, Play, Loader2 } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import Breadcrumb from '../shared/Breadcrumb';
+import PreviewPane from './PreviewPane';
+import { isRunnable } from '../../utils/languageRunMap';
+
+const WEB_EXTS = ['html', 'css', 'js'];
+const isWebFile = (name) => {
+    const ext = name?.split('.').pop()?.toLowerCase();
+    return WEB_EXTS.includes(ext);
+};
 
 // Markdown Preview Component
 function MarkdownPreview({ content }) {
@@ -60,10 +68,50 @@ export default function CodeEditorSection({
     courseName,
     courseId,
     activityTitle,
-    onAskAI
+    onAskAI,
+    onRun,
+    runState,
+    runOutput,
 }) {
     const { t } = useTranslation();
     const [consoleExpanded, setConsoleExpanded] = useState(true);
+    const [panelHeight, setPanelHeight] = useState(160);
+    const isResizingRef = useRef(false);
+
+    const handleResizeMouseDown = useCallback((e) => {
+        e.preventDefault();
+        isResizingRef.current = true;
+        const startY = e.clientY;
+        const startH = panelHeight;
+        const containerH = editorContainerRef.current?.getBoundingClientRect().height || window.innerHeight;
+        const onMove = (ev) => {
+            if (!isResizingRef.current) return;
+            const delta = startY - ev.clientY;
+            const next = Math.max(40, Math.min(containerH - 80, startH + delta));
+            setPanelHeight(next);
+        };
+        const onUp = () => {
+            isResizingRef.current = false;
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+    }, [panelHeight]);
+    const isWebProject = useMemo(
+        () => files.length > 0 && files.every((f) => isWebFile(f.name)),
+        [files]
+    );
+    const [bottomTab, setBottomTab] = useState('console');
+    const [previewFloating, setPreviewFloating] = useState(false);
+    useEffect(() => {
+        if (isWebProject) setBottomTab('preview');
+        else setBottomTab('console');
+    }, [isWebProject]);
+    const handleFloatingChange = useCallback((isFloating) => {
+        setPreviewFloating(isFloating);
+        if (isFloating) setConsoleExpanded(false);
+    }, []);
     const editorRef = useRef(null);
     const monacoRef = useRef(null);
     const [floatingBtn, setFloatingBtn] = useState(null); // { top, left }
@@ -164,6 +212,26 @@ export default function CodeEditorSection({
                     <span className="text-xs text-gray-600">
                         {activeFile?.name}
                     </span>
+                    {(isRunnable(activeFile?.name) || isWebProject) && onRun && (
+                        <button
+                            onClick={() => {
+                                if (runState === 'running') return;
+                                setBottomTab('console');
+                                setConsoleExpanded(true);
+                                onRun();
+                            }}
+                            disabled={runState === 'running'}
+                            className="ml-2 flex items-center gap-1.5 px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-900 disabled:cursor-not-allowed text-white text-xs font-medium transition-colors"
+                            title={t('runCode') || 'Run'}
+                        >
+                            {runState === 'running' ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                                <Play className="w-3.5 h-3.5" />
+                            )}
+                            <span>{runState === 'running' ? (t('running') || 'Running…') : (t('run') || 'Run')}</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -217,30 +285,79 @@ export default function CodeEditorSection({
                         </button>
                     )}
 
-                    {/* Console / Output Panel */}
-                    <div className={`border-t border-gray-800 bg-[#0d1117] flex flex-col transition-all duration-200 ${consoleExpanded ? 'h-28' : 'h-10'}`}>
-                        {/* Console Header */}
-                        <button 
-                            onClick={() => setConsoleExpanded(!consoleExpanded)}
-                            className="h-10 flex items-center justify-between px-4 hover:bg-gray-800/50 transition-colors shrink-0"
-                        >
-                            <div className="flex items-center gap-2 text-gray-500">
-                                <Terminal className="w-4 h-4" />
-                                <span className="text-xs font-medium uppercase tracking-wider">{t('consoleLabel')}</span>
-                                {feedback && (
-                                    <span className={`ml-2 w-2 h-2 rounded-full ${feedback.type === 'success' ? 'bg-emerald-400' : feedback.type === 'error' ? 'bg-red-400' : 'bg-blue-400'}`}></span>
+                    {/* Console / Preview Panel */}
+                    <div
+                        className="border-t border-gray-800 bg-[#0d1117] flex flex-col relative"
+                        style={{ height: consoleExpanded ? `${panelHeight}px` : '40px' }}
+                    >
+                        {/* Resize handle */}
+                        {consoleExpanded && (
+                            <div
+                                onMouseDown={handleResizeMouseDown}
+                                className="absolute top-0 left-0 right-0 h-1 -translate-y-1/2 cursor-row-resize hover:bg-blue-500/40 z-10"
+                                title="Drag to resize"
+                            />
+                        )}
+                        {/* Tab / Header bar */}
+                        <div className="h-10 flex items-center justify-between pr-2 shrink-0 border-b border-gray-800/60">
+                            <div className="flex items-stretch h-full">
+                                <button
+                                    onClick={() => {
+                                        if (bottomTab === 'console' && consoleExpanded) setConsoleExpanded(false);
+                                        else { setBottomTab('console'); setConsoleExpanded(true); }
+                                    }}
+                                    className={`flex items-center gap-2 px-4 text-xs font-medium uppercase tracking-wider transition-colors ${
+                                        bottomTab === 'console'
+                                            ? 'text-gray-200 bg-gray-800/40'
+                                            : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/30'
+                                    }`}
+                                >
+                                    <Terminal className="w-4 h-4" />
+                                    <span>{t('consoleTab')}</span>
+                                    {feedback && (
+                                        <span
+                                            className={`ml-1 w-2 h-2 rounded-full ${
+                                                feedback.type === 'success'
+                                                    ? 'bg-emerald-400'
+                                                    : feedback.type === 'error'
+                                                    ? 'bg-red-400'
+                                                    : 'bg-blue-400'
+                                            }`}
+                                        ></span>
+                                    )}
+                                </button>
+                                {isWebProject && (
+                                    <button
+                                        onClick={() => {
+                                            if (bottomTab === 'preview' && consoleExpanded) setConsoleExpanded(false);
+                                            else { setBottomTab('preview'); setConsoleExpanded(true); }
+                                        }}
+                                        className={`flex items-center gap-2 px-4 text-xs font-medium uppercase tracking-wider transition-colors ${
+                                            bottomTab === 'preview'
+                                                ? 'text-gray-200 bg-gray-800/40'
+                                                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/30'
+                                        }`}
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                        <span>{t('previewTab')}</span>
+                                    </button>
                                 )}
                             </div>
-                            {consoleExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-gray-600" />
-                            ) : (
-                                <ChevronUp className="w-4 h-4 text-gray-600" />
-                            )}
-                        </button>
-                        
-                        {/* Console Content */}
-                        {consoleExpanded && (
-                            <div className="flex-1 overflow-auto px-4 pb-3 font-mono text-xs">
+                            <button
+                                onClick={() => setConsoleExpanded(!consoleExpanded)}
+                                className="p-1.5 rounded hover:bg-gray-800/50 transition-colors"
+                            >
+                                {consoleExpanded ? (
+                                    <ChevronDown className="w-4 h-4 text-gray-600" />
+                                ) : (
+                                    <ChevronUp className="w-4 h-4 text-gray-600" />
+                                )}
+                            </button>
+                        </div>
+
+                        {/* Panel Content */}
+                        {consoleExpanded && bottomTab === 'console' && (
+                            <div className="flex-1 overflow-auto px-4 py-2 font-mono text-xs">
                                 <div className={`${feedback?.type === 'success' ? 'text-emerald-400' : feedback?.type === 'error' ? 'text-red-400' : 'text-gray-400'}`}>
                                     {feedback ? (
                                         <span className="flex items-center gap-2">
@@ -260,6 +377,52 @@ export default function CodeEditorSection({
                                         <span>{t('waitingForSolution')} <strong>{activeCheckpoint.title}</strong></span>
                                     </div>
                                 )}
+                                {runState === 'running' && (
+                                    <div className="text-blue-400 mt-2 flex items-center gap-2">
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        <span>{t('running') || 'Running…'}</span>
+                                    </div>
+                                )}
+                                {runState === 'done' && runOutput && (
+                                    <div className="mt-2 space-y-1">
+                                        {runOutput.compileStderr && (
+                                            <>
+                                                <div className="text-amber-400">{t('compileError') || 'Compile error:'}</div>
+                                                <pre className="text-red-400 whitespace-pre-wrap break-words">{runOutput.compileStderr}</pre>
+                                            </>
+                                        )}
+                                        {runOutput.stdout && (
+                                            <pre className="text-gray-200 whitespace-pre-wrap break-words">{runOutput.stdout}</pre>
+                                        )}
+                                        {runOutput.stderr && (
+                                            <pre className="text-red-400 whitespace-pre-wrap break-words">{runOutput.stderr}</pre>
+                                        )}
+                                        {runOutput.error && (
+                                            <pre className="text-red-400 whitespace-pre-wrap break-words">{runOutput.error}</pre>
+                                        )}
+                                        {!runOutput.error && (
+                                            <div className={runOutput.exitCode === 0 ? 'text-emerald-400' : 'text-red-400'}>
+                                                {runOutput.exitCode === 0 ? '✓' : '✗'} {(t('exitedWithCode') || 'Exited with code')} {runOutput.exitCode}
+                                                {typeof runOutput.durationMs === 'number' && (
+                                                    <span className="text-gray-500"> ({runOutput.durationMs}ms)</span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {isWebProject && (
+                            <div
+                                className="flex-1 min-h-0"
+                                style={{
+                                    display:
+                                        !previewFloating && consoleExpanded && bottomTab === 'preview'
+                                            ? 'block'
+                                            : 'none',
+                                }}
+                            >
+                                <PreviewPane files={files} onFloatingChange={handleFloatingChange} />
                             </div>
                         )}
                     </div>

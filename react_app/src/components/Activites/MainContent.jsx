@@ -28,7 +28,7 @@ import {
     Pencil,
     Users,
     Github,
-    ShieldCheck
+    ShieldCheck,
 } from "lucide-react";
 
 
@@ -86,10 +86,23 @@ const StatusBadge = ({ status, t }) => {
 };
 
 
+const extractClassroomSlug = (url) => {
+    if (!url) return null;
+    const invite = url.match(/classroom\.github\.com\/a\/([^/?#\s]+)/i);
+    if (invite) return invite[1];
+    const explicit = url.match(/classroom\.github\.com\/classrooms\/[^/]+\/assignments\/([^/?#\s]+)/i);
+    if (explicit) return explicit[1];
+    return null;
+};
+
 const ActivityCard = ({ activity, courseId, isInstructor, githubVerified, userId, onDelete, onEdit, onLinkUpdated, navigate, t }) => {
-    const [showLinkInput, setShowLinkInput] = useState(false);
-    const [linkValue, setLinkValue] = useState("");
-    const [savingLink, setSavingLink] = useState(false);
+    const [assignments, setAssignments] = useState([]);
+    const [assignmentsState, setAssignmentsState] = useState({ status: "idle", message: "" });
+    const [selectedAssignmentId, setSelectedAssignmentId] = useState(
+        activity.github_assignment_id ? String(activity.github_assignment_id) : ""
+    );
+    const [assignmentLinkInput, setAssignmentLinkInput] = useState("");
+    const [linkSaveStatus, setLinkSaveStatus] = useState("");
     const status = getActivityStatus(activity.start_date, activity.end_date);
 
     const acceptanceKey = `gh_accepted:${userId || "anon"}:${activity.activity_id}`;
@@ -122,30 +135,103 @@ const ActivityCard = ({ activity, courseId, isInstructor, githubVerified, userId
         });
     };
 
-    const handleSaveLink = async () => {
-        if (!linkValue.trim()) return;
-        setSavingLink(true);
+    // Fetch the course's Classroom assignments once for instructor
+    useEffect(() => {
+        if (!isInstructor) return;
+        let cancelled = false;
+        (async () => {
+            setAssignmentsState({ status: "loading", message: "" });
+            try {
+                const res = await fetch(`${API_BASE}/courses/${courseId}/github/assignments`, {
+                    headers: await getAuthHeaders(auth.currentUser),
+                });
+                if (cancelled) return;
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    setAssignments([]);
+                    setAssignmentsState({ status: "unavailable", message: data.message || "Couldn't load assignments." });
+                    return;
+                }
+                const data = await res.json();
+                setAssignments(Array.isArray(data) ? data : []);
+                setAssignmentsState({ status: "ready", message: "" });
+            } catch {
+                if (!cancelled) {
+                    setAssignments([]);
+                    setAssignmentsState({ status: "unavailable", message: "Couldn't reach server." });
+                }
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [isInstructor, courseId]);
+
+    const persistAssignmentId = async (newId) => {
         try {
+            const numericId = newId == null ? null : Number(newId);
+            const matched = numericId == null
+                ? null
+                : assignments.find(a => Number(a.id) === numericId);
             const res = await fetch(
-                `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}`,
+                `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}/github-assignment`,
                 {
-                    method: "PUT",
+                    method: "PATCH",
                     headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
-                    body: JSON.stringify({ github_classroom_url: linkValue.trim() }),
+                    body: JSON.stringify({
+                        assignment_id: numericId,
+                        invite_link: matched?.invite_link || null,
+                    }),
                 }
             );
-            if (res.ok) {
-                const updated = await res.json();
-                onLinkUpdated(updated);
-                setShowLinkInput(false);
-                setLinkValue("");
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setLinkSaveStatus(data.message || "Failed to link assignment.");
+                return false;
             }
-        } catch (err) {
-            console.error("Failed to save link:", err);
-        } finally {
-            setSavingLink(false);
+            const data = await res.json().catch(() => ({}));
+            setLinkSaveStatus(numericId == null ? "Unlinked." : "Linked.");
+            onLinkUpdated?.({
+                ...activity,
+                github_assignment_id: numericId,
+                github_classroom_url: data.github_classroom_url ?? null,
+            });
+            return true;
+        } catch {
+            setLinkSaveStatus("Network error linking assignment.");
+            return false;
         }
     };
+
+    const handleAssignmentDropdownChange = (newValue) => {
+        setSelectedAssignmentId(newValue);
+        setAssignmentLinkInput("");
+        setLinkSaveStatus("");
+    };
+
+    const handleAssignmentConfirm = async () => {
+        await persistAssignmentId(selectedAssignmentId || null);
+    };
+
+    const handleAssignmentLinkResolve = async () => {
+        const slug = extractClassroomSlug(assignmentLinkInput.trim());
+        if (!slug) {
+            setLinkSaveStatus("Couldn't read an assignment slug from that URL.");
+            return;
+        }
+        const match = assignments.find(a => a.slug === slug);
+        if (!match) {
+            setLinkSaveStatus(`No assignment with slug "${slug}" in this classroom.`);
+            return;
+        }
+        setSelectedAssignmentId(String(match.id));
+        const ok = await persistAssignmentId(match.id);
+        if (ok) setAssignmentLinkInput("");
+    };
+
+    const linkedAssignmentTitle = (() => {
+        if (!selectedAssignmentId) return null;
+        const a = assignments.find(x => String(x.id) === String(selectedAssignmentId));
+        return a?.title || null;
+    })();
 
     return (
         <div className="group relative bg-gray-800 border border-gray-700 rounded-2xl p-6 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-500/50 hover:-translate-y-1 flex flex-col h-full min-h-[280px]">
@@ -274,43 +360,79 @@ const ActivityCard = ({ activity, courseId, isInstructor, githubVerified, userId
                             </p>
                         )}
                     </div>
-                ) : isInstructor && (
-                    <div className="mb-2" onClick={(e) => e.stopPropagation()}>
-                        {showLinkInput ? (
-                            <div className="flex gap-2">
+                ) : null}
+
+
+                {/* Classroom Assignment binding (instructor only) */}
+                {isInstructor && (
+                    <div
+                        className="mb-2 p-3 bg-gray-900/40 border border-gray-700 rounded-xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <p className="text-xs font-semibold text-gray-300 mb-2 flex items-center gap-1.5">
+                            <Github className="w-3.5 h-3.5" />
+                            Classroom Assignment (for grading push)
+                        </p>
+                        <div className="flex flex-col gap-2">
+                            <div className="flex gap-2 min-w-0">
                                 <input
                                     type="url"
-                                    placeholder="https://classroom.github.com/a/..."
-                                    value={linkValue}
-                                    onChange={(e) => setLinkValue(e.target.value)}
-                                    className="flex-1 px-3 py-2.5 bg-gray-900 border border-gray-600 rounded-xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                                    placeholder="https://classroom.github.com/a/<slug>"
+                                    value={assignmentLinkInput}
+                                    onChange={(e) => setAssignmentLinkInput(e.target.value)}
+                                    onKeyDown={(e) => e.key === "Enter" && handleAssignmentLinkResolve()}
+                                    disabled={assignmentsState.status !== "ready"}
+                                    className="flex-1 min-w-0 px-2.5 py-2 bg-gray-900 border border-gray-600 rounded-lg text-xs text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 disabled:opacity-50"
                                 />
                                 <button
-                                    onClick={handleSaveLink}
-                                    disabled={savingLink || !linkValue.trim()}
-                                    className="px-3 py-2.5 bg-green-600 hover:bg-green-500 text-white rounded-xl text-sm font-medium transition-colors disabled:opacity-50"
+                                    onClick={handleAssignmentLinkResolve}
+                                    disabled={assignmentsState.status !== "ready" || !assignmentLinkInput.trim()}
+                                    className="shrink-0 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-medium transition-colors disabled:opacity-50"
                                 >
-                                    {savingLink ? "..." : t('save')}
-                                </button>
-                                <button
-                                    onClick={() => { setShowLinkInput(false); setLinkValue(""); }}
-                                    className="px-3 py-2.5 bg-gray-700 hover:bg-gray-600 text-white rounded-xl text-sm transition-colors"
-                                >
-                                    <X className="w-4 h-4" />
+                                    {t('linkBtn') || "Link"}
                                 </button>
                             </div>
-                        ) : (
-                            <button
-                                onClick={() => setShowLinkInput(true)}
-                                className="inline-flex items-center justify-center w-full px-4 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white rounded-xl font-medium transition-all duration-300 border border-dashed border-gray-600 hover:border-gray-500"
-                            >
-                                <Plus className="w-4 h-4 mr-2" />
-                                <span className="text-sm">{t('addAssignmentLink')}</span>
-                            </button>
-                        )}
+                            <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-gray-500">
+                                <span className="flex-1 h-px bg-gray-700" />
+                                <span>or</span>
+                                <span className="flex-1 h-px bg-gray-700" />
+                            </div>
+                            <div className="flex gap-2 min-w-0">
+                                <select
+                                    value={selectedAssignmentId}
+                                    onChange={(e) => handleAssignmentDropdownChange(e.target.value)}
+                                    disabled={assignmentsState.status !== "ready"}
+                                    className="flex-1 min-w-0 px-2.5 py-2 bg-gray-900 border border-gray-600 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500 disabled:opacity-50 truncate"
+                                >
+                                    <option value="">— Not linked —</option>
+                                    {assignments.map(a => (
+                                        <option key={a.id} value={a.id}>
+                                            {a.title}
+                                        </option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={handleAssignmentConfirm}
+                                    disabled={assignmentsState.status !== "ready"}
+                                    className="shrink-0 px-3 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {t('confirmBtn') || "Confirm"}
+                                </button>
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                            {assignmentsState.status === "loading" && "Loading assignments…"}
+                            {assignmentsState.status === "unavailable" && (assignmentsState.message || "Connect a GitHub Classroom to this course first.")}
+                            {assignmentsState.status === "ready" && (
+                                linkSaveStatus
+                                    ? linkSaveStatus
+                                    : linkedAssignmentTitle
+                                        ? `Linked: "${linkedAssignmentTitle}"`
+                                        : "Not linked. Student submissions won't push to GitHub."
+                            )}
+                        </p>
                     </div>
                 )}
-
 
                 {/* Action Button */}
                 <button

@@ -11,9 +11,12 @@ import HintChatSidebar from './HintChatSidebar';
 import LoadingScreen from './LoadingScreen';
 import ErrorScreen from './ErrorScreen';
 import SubmissionResultOverlay from './SubmissionResultOverlay';
+import ActivityResetModal from './ActivityResetModal';
 import { Play, FileText, Clock, ArrowLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useCheckpoints } from '@/components/Activity/useCheckpoints';
+import { runCode as runCodeApi } from '@/utils/runCode';
+import { getRunConfig, isRunnable } from '@/utils/languageRunMap';
 
 
 const DEFAULT_FILES = [
@@ -156,7 +159,9 @@ export default function Maincontent({ user }) {
     const [isHintOpen, setIsHintOpen] = useState(false);
     const [selectedCodeForChat, setSelectedCodeForChat] = useState('');
     const [checkpointHintText, setCheckpointHintText] = useState('');
+    const [checkpointHintIsPass, setCheckpointHintIsPass] = useState(false);
     const [isLoadingCheckpointHint, setIsLoadingCheckpointHint] = useState(false);
+    const [isLoadingVerify, setIsLoadingVerify] = useState(false);
     const [quizQuestions, setQuizQuestions] = useState([]);
     const [answeredQuestions, setAnsweredQuestions] = useState([]);
     const [captionSegmentsEn, setCaptionSegmentsEn] = useState([]);
@@ -164,6 +169,10 @@ export default function Maincontent({ user }) {
     const [captionsEnabled, setCaptionsEnabled] = useState(false);
     const [captionLang, setCaptionLang] = useState('en');
     const [chapters, setChapters] = useState([]);
+    const [runState, setRunState] = useState('idle');
+    const [runOutput, setRunOutput] = useState(null);
+    const [showResetModal, setShowResetModal] = useState(false);
+    const [isAcknowledgingReset, setIsAcknowledgingReset] = useState(false);
 
     const handleAskAI = useCallback((text) => {
         setSelectedCodeForChat(text);
@@ -179,7 +188,7 @@ export default function Maincontent({ user }) {
         fetch(`${API_BASE}/courses/${courseId}/activities/${activityId}/answers`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
-            body: JSON.stringify({ firebaseId: user.uid, question_id, answer })
+            body: JSON.stringify({ firebaseId: user.uid, question_id, answer, is_correct })
         }).catch(() => {});
     }, [user, courseId, activityId]);
 
@@ -192,7 +201,8 @@ export default function Maincontent({ user }) {
         skipCheckpoint,
         nextCheckpoint,
         prevCheckpoint,
-        retryCheckpoint
+        retryCheckpoint,
+        markCheckpointPassed
     } = useCheckpoints({
         currentTime,
         files,
@@ -220,35 +230,83 @@ export default function Maincontent({ user }) {
         if (!activeCheckpoint || isLoadingCheckpointHint) return;
         setIsLoadingCheckpointHint(true);
         try {
-            const fileName = activeCheckpoint.fileName || activeFile.name;
-            const targetFile = files.find(f => f.name === fileName) || activeFile;
-            const res = await fetch(`${LLM_BASE}/hint/generate`, {
+            const numericCheckpointId = typeof activeCheckpoint.id === 'string' && activeCheckpoint.id.startsWith('quiz_')
+                ? parseInt(activeCheckpoint.id.replace('quiz_', ''), 10)
+                : activeCheckpoint.id;
+            const res = await fetch(`${LLM_BASE}/hint/check-and-generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
                 body: JSON.stringify({
                     firebase_uid: user?.uid || 'anonymous',
                     activity_id: parseInt(activityId) || 0,
-                    checkpoint_instruction: activeCheckpoint.instruction,
-                    student_code: targetFile.content,
-                    file_name: targetFile.name,
+                    checkpoint_id: numericCheckpointId,
+                    files: files.map(f => ({ name: f.name, content: f.content })),
                 }),
             });
             if (res.ok) {
                 const data = await res.json();
-                setCheckpointHintText(data.hint || 'No hint available.');
+                console.log('[DEBUG hint/check-and-generate] checkpoint_id:', numericCheckpointId, 'response:', data);
+                if (data.correct) {
+                    setCheckpointHintIsPass(true);
+                    setCheckpointHintText("Your code passes this checkpoint's test. Try the next step.");
+                    markCheckpointPassed();
+                } else {
+                    setCheckpointHintIsPass(false);
+                    setCheckpointHintText(data.hint || 'No hint available.');
+                }
             } else {
+                setCheckpointHintIsPass(false);
                 setCheckpointHintText('Failed to generate hint. Please try again.');
             }
         } catch {
+            setCheckpointHintIsPass(false);
             setCheckpointHintText('Hint service is unavailable. Please try again later.');
         } finally {
             setIsLoadingCheckpointHint(false);
         }
-    }, [activeCheckpoint, isLoadingCheckpointHint, activeFile, files, user, activityId]);
+    }, [activeCheckpoint, isLoadingCheckpointHint, files, user, activityId]);
+
+    const handleVerifySolution = useCallback(async () => {
+        if (!activeCheckpoint || isLoadingVerify) return;
+        setIsLoadingVerify(true);
+        try {
+            const numericCheckpointId = typeof activeCheckpoint.id === 'string' && activeCheckpoint.id.startsWith('quiz_')
+                ? parseInt(activeCheckpoint.id.replace('quiz_', ''), 10)
+                : activeCheckpoint.id;
+            const res = await fetch(`${LLM_BASE}/hint/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
+                body: JSON.stringify({
+                    firebase_uid: user?.uid || 'anonymous',
+                    activity_id: parseInt(activityId) || 0,
+                    checkpoint_id: numericCheckpointId,
+                    files: files.map(f => ({ name: f.name, content: f.content })),
+                }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.correct) {
+                    markCheckpointPassed();
+                } else {
+                    setFeedback({ type: 'error', message: data.message || 'Incorrect. Try again or use a hint.' });
+                    setTimeout(() => setFeedback(null), 4000);
+                }
+            } else {
+                setFeedback({ type: 'error', message: 'Verification failed. Please try again.' });
+                setTimeout(() => setFeedback(null), 3000);
+            }
+        } catch {
+            setFeedback({ type: 'error', message: 'Verification service is unavailable.' });
+            setTimeout(() => setFeedback(null), 3000);
+        } finally {
+            setIsLoadingVerify(false);
+        }
+    }, [activeCheckpoint, isLoadingVerify, files, user, activityId, markCheckpointPassed, setFeedback]);
 
     // Clear hint when checkpoint changes
     useEffect(() => {
         setCheckpointHintText('');
+        setCheckpointHintIsPass(false);
     }, [activeCheckpoint?.id]);
 
     useEffect(() => {
@@ -385,6 +443,7 @@ export default function Maincontent({ user }) {
                     }
 
                     // Load student's previous answers
+                    let loadedAnswers = [];
                     if (user?.uid) {
                         try {
                             const answersRes = await fetch(
@@ -393,7 +452,8 @@ export default function Maincontent({ user }) {
                             );
                             if (answersRes.ok) {
                                 const { answers } = await answersRes.json();
-                                setAnsweredQuestions(answers || []);
+                                loadedAnswers = answers || [];
+                                setAnsweredQuestions(loadedAnswers);
                             }
                         } catch (answersErr) {
                             console.error("Failed to fetch student answers:", answersErr);
@@ -401,6 +461,8 @@ export default function Maincontent({ user }) {
                     }
 
                     // Load video progress (store in ref, apply when video loads)
+                    let lastSeenContentUpdatedAt = null;
+                    let lastWatchedSeconds = 0;
                     if (user?.uid) {
                         try {
                             const progressRes = await fetch(
@@ -408,13 +470,25 @@ export default function Maincontent({ user }) {
                                 { headers: await getAuthHeaders(auth.currentUser) }
                             );
                             if (progressRes.ok) {
-                                const { last_watched_seconds } = await progressRes.json();
-                                if (last_watched_seconds > 5) {
-                                    savedProgressRef.current = last_watched_seconds;
+                                const progressData = await progressRes.json();
+                                lastWatchedSeconds = progressData.last_watched_seconds || 0;
+                                lastSeenContentUpdatedAt = progressData.last_seen_content_updated_at;
+                                if (lastWatchedSeconds > 5) {
+                                    savedProgressRef.current = lastWatchedSeconds;
                                 }
                             }
                         } catch (progressErr) {
                             console.error("Failed to fetch video progress:", progressErr);
+                        }
+                    }
+
+                    // Detect instructor edit since the student's last interaction.
+                    if (data.content_updated_at && user?.uid) {
+                        const hasPriorWork = loadedAnswers.length > 0 || lastWatchedSeconds > 0;
+                        const isNewer = !lastSeenContentUpdatedAt
+                            || new Date(data.content_updated_at) > new Date(lastSeenContentUpdatedAt);
+                        if (hasPriorWork && isNewer) {
+                            setShowResetModal(true);
                         }
                     }
                 } else {
@@ -447,6 +521,23 @@ export default function Maincontent({ user }) {
         return () => clearInterval(interval);
     }, [isYouTube, isPlaying, activeCheckpoint, duration]);
 
+
+    const acknowledgeActivityReset = useCallback(async () => {
+        if (isAcknowledgingReset) return;
+        setIsAcknowledgingReset(true);
+        try {
+            await fetch(`${API_BASE}/courses/${courseId}/activities/${activityId}/acknowledge-update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...await getAuthHeaders(auth.currentUser) },
+                body: JSON.stringify({ firebaseId: user.uid }),
+            });
+        } catch (err) {
+            console.error("Failed to acknowledge activity update:", err);
+        } finally {
+            setShowResetModal(false);
+            setIsAcknowledgingReset(false);
+        }
+    }, [isAcknowledgingReset, courseId, activityId, user]);
 
     const saveVideoProgress = useCallback(async (seconds) => {
         if (!user?.uid || !courseId || !activityId) return;
@@ -490,6 +581,61 @@ export default function Maincontent({ user }) {
         setActiveFile(prev => ({ ...prev, content: newContent }));
     };
 
+    const handleRun = useCallback(async () => {
+        if (runState === 'running') return;
+
+        const runnableFiles = files.filter((f) => f.name !== 'README.md');
+
+        // Pick run target: active file if runnable, else first runnable file in project
+        let target = isRunnable(activeFile?.name) ? activeFile : runnableFiles.find((f) => isRunnable(f.name));
+        if (!target) {
+            setRunOutput({ error: 'No runnable file (Python, Java, or JavaScript).', exitCode: -1 });
+            setRunState('done');
+            return;
+        }
+
+        const cfg = getRunConfig(target.name);
+        if (!cfg) {
+            setRunOutput({ error: `Unsupported language for ${target.name}.`, exitCode: -1 });
+            setRunState('done');
+            return;
+        }
+
+        // For Java, send all .java files so multi-class projects compile together.
+        // For others, send just the target file.
+        let payloadFiles;
+        if (cfg.language === 'java') {
+            payloadFiles = runnableFiles.filter((f) => f.name.toLowerCase().endsWith('.java'));
+            if (payloadFiles.length === 0) payloadFiles = [target];
+            // Ensure file containing main() is first if we can detect it
+            const mainIdx = payloadFiles.findIndex((f) => /public\s+static\s+void\s+main\s*\(/.test(f.content || ''));
+            if (mainIdx > 0) {
+                const [mainFile] = payloadFiles.splice(mainIdx, 1);
+                payloadFiles.unshift(mainFile);
+            }
+        } else {
+            payloadFiles = [target];
+        }
+
+        setRunState('running');
+        setRunOutput(null);
+
+        try {
+            const result = await runCodeApi({
+                courseId,
+                activityId,
+                files: payloadFiles,
+                language: cfg.language,
+                version: cfg.version,
+            });
+            setRunOutput(result);
+            setRunState('done');
+        } catch (err) {
+            setRunOutput({ error: err.message || 'Run failed', exitCode: -1 });
+            setRunState('done');
+        }
+    }, [runState, files, activeFile, courseId, activityId]);
+
     const handleSubmit = async () => {
         if (!user) {
             setFeedback({ type: 'error', message: "You must be logged in to submit." });
@@ -502,6 +648,15 @@ export default function Maincontent({ user }) {
             const verifiedCount = challenges.filter(cp => cp.status === 'verified').length;
             const calculatedScore = totalCount > 0 ? Math.round((verifiedCount / totalCount) * 100) : 100;
 
+            const checkpointsPayload = checkpoints.map(cp => ({
+                id: typeof cp.id === 'string' && cp.id.startsWith('quiz_')
+                    ? parseInt(cp.id.replace('quiz_', ''), 10)
+                    : cp.id,
+                title: cp.title || cp.question || '',
+                type: cp.type,
+                passed: cp.status === 'verified',
+            }));
+
             const url = `${API_BASE}/courses/${courseId}/activities/${activityId}/submit`;
             const res = await fetch(url, {
                 method: 'POST',
@@ -513,6 +668,7 @@ export default function Maincontent({ user }) {
                     firebaseId: user.uid,
                     score: calculatedScore,
                     files: files.map(f => ({ name: f.name, content: f.content })),
+                    checkpoints: checkpointsPayload,
                 })
             });
 
@@ -548,10 +704,18 @@ export default function Maincontent({ user }) {
         />
     );
 
+    const resetModal = showResetModal ? (
+        <ActivityResetModal
+            onAcknowledge={acknowledgeActivityReset}
+            isAcknowledging={isAcknowledgingReset}
+        />
+    ) : null;
+
     // Preview mode - show markdown instructions with Start button
     if (mode === 'preview') {
         return (
             <div className="flex-1 flex flex-col overflow-hidden bg-[#0d1117] text-gray-100 font-sans h-full">
+                {resetModal}
                 {/* Preview Header */}
                 <div className="h-14 border-b border-gray-800 bg-gray-900/50 flex items-center justify-between px-6 shrink-0">
                     <div className="flex items-center gap-4">
@@ -657,6 +821,7 @@ export default function Maincontent({ user }) {
     // Solve mode - show the lab IDE
     return (
         <div className="flex-1 flex flex-col overflow-hidden bg-[#0d1117] text-gray-100 font-sans h-full">
+            {resetModal}
             <ActivityHeader
                 activityTitle={activity.title}
                 onBack={() => navigate(`/courses`)}
@@ -680,6 +845,9 @@ export default function Maincontent({ user }) {
                     courseId={courseId}
                     activityTitle={activity.title}
                     onAskAI={handleAskAI}
+                    onRun={handleRun}
+                    runState={runState}
+                    runOutput={runOutput}
                 />
 
                 <VideoSection
@@ -716,12 +884,14 @@ export default function Maincontent({ user }) {
                         <CheckpointOverlay
                             activeCheckpoint={activeCheckpoint}
                             feedback={feedback}
-                            onCheckSolution={checkSolution}
+                            onCheckSolution={handleVerifySolution}
                             onSubmitQuizAnswer={submitQuizAnswer}
                             onSkip={skipCheckpoint}
                             onHint={handleCheckpointHint}
                             hintText={checkpointHintText}
+                            hintIsPass={checkpointHintIsPass}
                             isLoadingHint={isLoadingCheckpointHint}
+                            isLoadingVerify={isLoadingVerify}
                         />
                     )}
                 />

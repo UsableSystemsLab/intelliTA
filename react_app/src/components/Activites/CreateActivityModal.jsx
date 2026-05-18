@@ -54,6 +54,8 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
   const [mdContent, setMdContent] = useState("");
   const [starterFiles, setStarterFiles] = useState([]);
   const [starterPrompt, setStarterPrompt] = useState("");
+  const [testFiles, setTestFiles] = useState([]);
+  const [testsLanguage, setTestsLanguage] = useState(null);
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [chapters, setChapters] = useState([]);
   const [createGithubRepo, setCreateGithubRepo] = useState(false);
@@ -72,6 +74,8 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
     setMdContent("");
     setStarterFiles([]);
     setStarterPrompt("");
+    setTestFiles([]);
+    setTestsLanguage(null);
     setQuizQuestions([]);
     setChapters([]);
     setCreateGithubRepo(false);
@@ -139,6 +143,19 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
       formData.append("starter_code", starterCodeFile);
     }
 
+    // Tests manifest: language + test files. Same bytes feed Piston (hint gate)
+    // and the GH Classroom autograder (final grading).
+    if (testsLanguage && testFiles && testFiles.length > 0) {
+      const manifest = {
+        language: testsLanguage,
+        test_files: testFiles.map((f) => ({ path: f.name, content: f.content })),
+      };
+      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
+      const manifestFile = new File([manifestBlob], "tests-manifest.json", { type: "application/json" });
+      formData.append("tests_manifest", manifestFile);
+      formData.append("tests_language", testsLanguage);
+    }
+
     try {
       const response = await fetch(`${API_BASE}/courses/${courseId}/activities`, {
         method: "POST",
@@ -157,12 +174,12 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
       // Save quiz questions to DB via API
       if (quizQuestions && quizQuestions.length > 0) {
         const quizPayload = {
-          quizzes: quizQuestions.map(({ id, time, type, question, options, correctAnswer, title, instruction, fileName, hint, check }) => {
+          quizzes: quizQuestions.map(({ id, time, type, question, options, correctAnswer, title, instruction, fileName, hint, check, test_name, test_class }) => {
             const base = { id, time, type };
             if (type === "mcq") return { ...base, question, options, correctAnswer };
             if (type === "true_false") return { ...base, question, correctAnswer };
             if (type === "fill_blank") return { ...base, question, correctAnswer };
-            if (type === "coding") return { ...base, title, instruction, fileName, hint, check };
+            if (type === "coding") return { ...base, title, instruction, fileName, hint, check, test_name, test_class };
             return base;
           }),
         };
@@ -485,6 +502,10 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               onFilesChange={setStarterFiles}
               prompt={starterPrompt}
               onPromptChange={setStarterPrompt}
+              testFiles={testFiles}
+              onTestFilesChange={setTestFiles}
+              testsLanguage={testsLanguage}
+              onTestsLanguageChange={setTestsLanguage}
             />
 
             {/* Create GitHub Template Repo */}
@@ -520,6 +541,8 @@ export default function CreateActivityModal({ isOpen, onClose, courseId, onActiv
               questions={quizQuestions}
               onQuestionsChange={setQuizQuestions}
               fileNames={starterFiles.map(f => f.name)}
+              testFiles={testFiles}
+              testsLanguage={testsLanguage}
               videoDuration={videoDuration}
               videoFile={videoFile}
             />

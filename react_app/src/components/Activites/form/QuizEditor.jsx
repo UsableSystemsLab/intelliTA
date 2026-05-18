@@ -99,6 +99,34 @@ const TYPE_COLORS = {
   coding: "text-purple-400 bg-purple-500/10 border-purple-500/30",
 };
 
+function extractTests(testFiles, testsLanguage) {
+  const out = [];
+  if (!testFiles || !testsLanguage) return out;
+  for (const f of testFiles) {
+    const content = f.content || "";
+    if (testsLanguage === "python") {
+      const re = /def\s+(test_\w+)\s*\(/g;
+      let m;
+      while ((m = re.exec(content)) !== null) out.push({ name: m[1], className: null, file: f.name });
+    } else if (testsLanguage === "javascript") {
+      const re = /\b(?:test|it)\s*\(\s*['"`]([^'"`]+)['"`]/g;
+      let m;
+      while ((m = re.exec(content)) !== null) out.push({ name: m[1], className: null, file: f.name });
+    } else if (testsLanguage === "java") {
+      const classMatch = /public\s+class\s+(\w+)/.exec(content);
+      const className = classMatch ? classMatch[1] : null;
+      const re = /public\s+void\s+(test\w+)\s*\(/g;
+      let m;
+      while ((m = re.exec(content)) !== null) out.push({ name: m[1], className, file: f.name });
+    }
+  }
+  return out;
+}
+
+function testKey(t) {
+  return t.className ? `${t.className}#${t.name}` : t.name;
+}
+
 function createEmptyQuestion(id) {
   return {
     id,
@@ -112,6 +140,8 @@ function createEmptyQuestion(id) {
     fileName: "",
     hint: "",
     check: "",
+    test_name: "",
+    test_class: "",
   };
 }
 
@@ -136,7 +166,7 @@ function findFreeTime(desired, otherTimes) {
   return t;
 }
 
-function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDuration, getVideoTime, otherTimes }) {
+function QuestionCard({ question, index, onChange, onDelete, fileNames, availableTests, videoDuration, getVideoTime, otherTimes }) {
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(true);
   const [adjustedNotice, setAdjustedNotice] = useState(null);
@@ -285,7 +315,7 @@ function QuestionCard({ question, index, onChange, onDelete, fileNames, videoDur
           </div>
 
           {question.type === "coding" ? (
-            <CodingFields question={question} onChange={onChange} fileNames={fileNames} />
+            <CodingFields question={question} onChange={onChange} fileNames={fileNames} availableTests={availableTests} />
           ) : (
             <QuizFields
               question={question}
@@ -420,9 +450,25 @@ function QuizFields({ question, onChange, update, updateOption, addOption, remov
   );
 }
 
-function CodingFields({ question, onChange, fileNames = [] }) {
+function CodingFields({ question, onChange, fileNames = [], availableTests = [] }) {
   const { t } = useTranslation();
   const update = (field, value) => onChange({ ...question, [field]: value });
+
+  const currentTestKey = question.test_class
+    ? `${question.test_class}#${question.test_name || ""}`
+    : (question.test_name || "");
+
+  const handleTestChange = (e) => {
+    const key = e.target.value;
+    if (!key) {
+      onChange({ ...question, test_name: "", test_class: "" });
+      return;
+    }
+    const picked = availableTests.find((t) => testKey(t) === key);
+    if (picked) {
+      onChange({ ...question, test_name: picked.name, test_class: picked.className || "" });
+    }
+  };
 
   return (
     <>
@@ -461,11 +507,38 @@ function CodingFields({ question, onChange, fileNames = [] }) {
           </div>
         )}
       </div>
+      <div>
+        <label className="text-xs font-medium text-gray-400 mb-1 block">
+          Bound test
+          <span className="text-gray-600 font-normal ml-1">(runs when the student clicks hint)</span>
+        </label>
+        {availableTests.length > 0 ? (
+          <select
+            value={currentTestKey}
+            onChange={handleTestChange}
+            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+          >
+            <option value="">No test (hint only)</option>
+            {availableTests.map((test) => (
+              <option key={testKey(test)} value={testKey(test)}>
+                {testKey(test)} {"·"} {test.file}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <div className="flex items-center gap-2 px-3 py-2 bg-purple-900/20 border border-purple-600/40 rounded-lg">
+            <span className="text-purple-400">{"⚙"}</span>
+            <p className="text-purple-300 text-xs">
+              Add tests in the Starter Code editor's Tests tab to bind one to this checkpoint.
+            </p>
+          </div>
+        )}
+      </div>
     </>
   );
 }
 
-function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNames, videoDuration, videoFile, videoUrl, activityId }) {
+function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNames, availableTests, videoDuration, videoFile, videoUrl, activityId }) {
   const { t } = useTranslation();
   const [nextId, setNextId] = useState(
     () => (questions.length > 0 ? Math.max(...questions.map((q) => q.id)) + 1 : 1)
@@ -636,6 +709,7 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
                   onChange={(updated) => handleChange(idx, updated)}
                   onDelete={() => handleDelete(idx)}
                   fileNames={fileNames}
+                  availableTests={availableTests}
                   videoDuration={videoDuration}
                   getVideoTime={getVideoTime}
                   otherTimes={new Set(questions.filter((_, i) => i !== idx).map((x) => x.time))}
@@ -684,11 +758,12 @@ function QuizEditorModal({ isOpen, onClose, questions, onQuestionsChange, fileNa
   );
 }
 
-export default function QuizEditor({ questions, onQuestionsChange, fileNames = [], videoDuration = 0, videoFile = null, videoUrl = null, activityId = null }) {
+export default function QuizEditor({ questions, onQuestionsChange, fileNames = [], testFiles = [], testsLanguage = null, videoDuration = 0, videoFile = null, videoUrl = null, activityId = null }) {
   const { t } = useTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const typeLabel = (type) => QUIZ_TYPES.find((tp) => tp.value === type)?.label || type;
+  const availableTests = extractTests(testFiles, testsLanguage);
 
   return (
     <div>
@@ -733,6 +808,7 @@ export default function QuizEditor({ questions, onQuestionsChange, fileNames = [
         questions={questions || []}
         onQuestionsChange={onQuestionsChange}
         fileNames={fileNames}
+        availableTests={availableTests}
         videoDuration={videoDuration}
         videoFile={videoFile}
         activityId={activityId}

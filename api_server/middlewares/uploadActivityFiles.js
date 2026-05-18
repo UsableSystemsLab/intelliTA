@@ -8,7 +8,8 @@ export const uploadActivityMulter = multer({ storage }).fields([
     { name: 'video', maxCount: 1 },
     { name: 'md_file', maxCount: 1 },
     { name: 'starter_code', maxCount: 1 },
-    { name: 'quiz_file', maxCount: 1 }
+    { name: 'quiz_file', maxCount: 1 },
+    { name: 'tests_manifest', maxCount: 1 }
 ]);
 
 export async function uploadActivityFilesToS3(req, res, next) {
@@ -55,6 +56,19 @@ export async function uploadActivityFilesToS3(req, res, next) {
         if (req.files['quiz_file'] && req.files['quiz_file'][0]) {
             const url = await uploadFile(req.files['quiz_file'][0], 'quizzes');
             req.body.quiz_url = url;
+        }
+
+        if (req.files['tests_manifest'] && req.files['tests_manifest'][0]) {
+            const file = req.files['tests_manifest'][0];
+            const url = await uploadFile(file, 'tests');
+            req.body.tests_url = url;
+            // Keep the parsed manifest in memory so the activity controller can
+            // push the test files to the GitHub assignment repo without re-fetching from S3.
+            try {
+                req.body._tests_manifest_parsed = JSON.parse(file.buffer.toString('utf-8'));
+            } catch (parseErr) {
+                console.warn('[tests_manifest] failed to parse JSON:', parseErr.message);
+            }
         }
         next();
     } catch (err) {

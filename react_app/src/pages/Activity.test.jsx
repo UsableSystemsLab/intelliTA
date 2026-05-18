@@ -8,7 +8,7 @@ jest.mock('@/components/Activity/Maincontent', () => {
 });
 
 // Activity.jsx imports Nav but doesn't use it
-jest.mock('@/components/Courses/Nav', () => {
+jest.mock('@/components/Landing-page/Nav', () => {
   const M = () => <nav data-testid="nav" />;
   M.displayName = 'MockNav';
   return M;

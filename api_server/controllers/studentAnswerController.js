@@ -13,7 +13,7 @@ const StudentAnswerController = {
     async recordAnswer(req, res) {
         try {
             const { activityId } = req.params;
-            const { firebaseId, question_id, answer } = req.body;
+            const { firebaseId, question_id, answer, is_correct: clientIsCorrect } = req.body;
 
             if (!firebaseId || question_id === undefined || answer === undefined) {
                 return res.status(400).json({ message: "firebaseId, question_id, and answer are required" });
@@ -29,7 +29,10 @@ const StudentAnswerController = {
                 return res.status(404).json({ message: "Question not found" });
             }
 
-            const is_correct = verifyAnswer(question.type, answer, question.correct_answer);
+
+            const is_correct = question.type === "coding"
+                ? !!clientIsCorrect
+                : verifyAnswer(question.type, answer, question.correct_answer);
 
             await StudentAnswer.create({
                 user_id: user.id,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 
-jest.mock('@/components/Courses/Nav', () => {
+jest.mock('@/components/Landing-page/Nav', () => {
   const M = ({ user }) => <nav data-testid="nav" data-user={user?.uid || ''} />;
   M.displayName = 'MockNav';
   return M;

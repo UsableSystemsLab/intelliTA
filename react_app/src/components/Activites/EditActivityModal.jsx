@@ -52,11 +52,16 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
   const [mdContent, setMdContent] = useState("");
   const [starterFiles, setStarterFiles] = useState([]);
   const [starterPrompt, setStarterPrompt] = useState("");
+  const [testFiles, setTestFiles] = useState([]);
+  const [testsLanguage, setTestsLanguage] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
   const [videoDuration, setVideoDuration] = useState(0);
   const [quizQuestions, setQuizQuestions] = useState([]);
   const [chapters, setChapters] = useState([]);
   const [githubClassroomUrl, setGithubClassroomUrl] = useState("");
+  const [classroomAssignments, setClassroomAssignments] = useState([]);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState("");
+  const [assignmentsState, setAssignmentsState] = useState({ status: "idle", message: "" });
   const [loading, setLoading] = useState(false);
   const [loadingContent, setLoadingContent] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -67,6 +72,7 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
       setStep(1);
       setTitle(activity.title || "");
       setGithubClassroomUrl(activity.github_classroom_url || "");
+      setSelectedAssignmentId(activity.github_assignment_id ? String(activity.github_assignment_id) : "");
       setVideoFile(null);
       setVideoDuration(0);
 
@@ -95,6 +101,59 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
     }
   }, [activity]);
 
+  // Load Classroom assignments for the dropdown when the modal opens.
+  useEffect(() => {
+    if (!isOpen || !courseId) return;
+    let cancelled = false;
+    (async () => {
+      setAssignmentsState({ status: "loading", message: "" });
+      try {
+        const res = await fetch(`${API_BASE}/courses/${courseId}/github/assignments`, {
+          headers: await getAuthHeaders(auth.currentUser),
+        });
+        if (cancelled) return;
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setClassroomAssignments([]);
+          setAssignmentsState({ status: "unavailable", message: data.message || "Couldn't load assignments." });
+          return;
+        }
+        const data = await res.json();
+        setClassroomAssignments(Array.isArray(data) ? data : []);
+        setAssignmentsState({ status: "ready", message: "" });
+      } catch {
+        if (!cancelled) {
+          setClassroomAssignments([]);
+          setAssignmentsState({ status: "unavailable", message: "Couldn't reach server." });
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isOpen, courseId]);
+
+  const handleAssignmentChange = async (newValue) => {
+    setSelectedAssignmentId(newValue);
+    if (!activity?.activity_id) return;
+    try {
+      const res = await fetch(
+        `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}/github-assignment`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...await getAuthHeaders(auth.currentUser) },
+          body: JSON.stringify({ assignment_id: newValue ? Number(newValue) : null }),
+        }
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setAssignmentsState({ status: "ready", message: data.message || "Failed to link assignment." });
+      } else {
+        setAssignmentsState({ status: "ready", message: "Assignment linked." });
+      }
+    } catch {
+      setAssignmentsState({ status: "ready", message: "Network error linking assignment." });
+    }
+  };
+
   const fetchContent = async (activity) => {
     setLoadingContent(true);
     try {
@@ -118,6 +177,25 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
         }
       } else {
         setStarterFiles([]);
+      }
+
+      // Load existing tests manifest if any
+      setTestsLanguage(activity.tests_language || null);
+      if (activity.tests_url) {
+        try {
+          const testsResponse = await fetch(activity.tests_url);
+          if (testsResponse.ok) {
+            const manifest = await testsResponse.json();
+            const loaded = (manifest.test_files || []).map((tf) => ({ name: tf.path, content: tf.content }));
+            setTestFiles(loaded);
+          } else {
+            setTestFiles([]);
+          }
+        } catch {
+          setTestFiles([]);
+        }
+      } else {
+        setTestFiles([]);
       }
       // Fetch quiz questions from DB
       try {
@@ -154,6 +232,8 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
       console.error("Failed to fetch content:", err);
       setMdContent("");
       setStarterFiles([]);
+      setTestFiles([]);
+      setTestsLanguage(null);
       setQuizQuestions([]);
       setChapters([]);
     } finally {
@@ -247,6 +327,18 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
         const starterCodeFile = new File([starterCodeBlob], "starter-code.json", { type: "application/json" });
         formData.append("starter_code", starterCodeFile);
       }
+
+      if (testsLanguage && testFiles && testFiles.length > 0) {
+        const manifest = {
+          language: testsLanguage,
+          test_files: testFiles.map((f) => ({ path: f.name, content: f.content })),
+        };
+        const manifestBlob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
+        const manifestFile = new File([manifestBlob], "tests-manifest.json", { type: "application/json" });
+        formData.append("tests_manifest", manifestFile);
+        formData.append("tests_language", testsLanguage);
+      }
+
       const response = await fetch(
         `${API_BASE}/courses/${courseId}/activities/${activity.activity_id}`,
         {
@@ -267,12 +359,12 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
 
       // Save quiz questions to DB via API
       const quizPayload = {
-        quizzes: (quizQuestions || []).map(({ id, time, type, question, options, correctAnswer, title, instruction, fileName, hint, check }) => {
+        quizzes: (quizQuestions || []).map(({ id, time, type, question, options, correctAnswer, title, instruction, fileName, hint, check, test_name, test_class }) => {
           const base = { id, time, type };
           if (type === "mcq") return { ...base, question, options, correctAnswer };
           if (type === "true_false") return { ...base, question, correctAnswer };
           if (type === "fill_blank") return { ...base, question, correctAnswer };
-          if (type === "coding") return { ...base, title, instruction, fileName, hint, check };
+          if (type === "coding") return { ...base, title, instruction, fileName, hint, check, test_name, test_class };
           return base;
         }),
       };
@@ -608,6 +700,10 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                 onFilesChange={setStarterFiles}
                 prompt={starterPrompt}
                 onPromptChange={setStarterPrompt}
+                testFiles={testFiles}
+                onTestFilesChange={setTestFiles}
+                testsLanguage={testsLanguage}
+                onTestsLanguageChange={setTestsLanguage}
               />
 
               {/* GitHub Classroom Link */}
@@ -619,6 +715,33 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                 onChange={setGithubClassroomUrl}
               />
 
+              {/* Classroom Assignment Link — controls where student submissions are pushed */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <Github className="inline w-4 h-4 mr-1.5 -mt-0.5" />
+                  Classroom Assignment
+                </label>
+                <select
+                  value={selectedAssignmentId}
+                  onChange={(e) => handleAssignmentChange(e.target.value)}
+                  disabled={assignmentsState.status === "loading" || assignmentsState.status === "unavailable"}
+                  className="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500 disabled:opacity-50"
+                >
+                  <option value="">— Not linked —</option>
+                  {classroomAssignments.map(a => (
+                    <option key={a.id} value={a.id}>
+                      {a.title}{a.starter_code_repository ? ` (starter: ${a.starter_code_repository})` : ""}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1.5">
+                  {assignmentsState.status === "loading" && "Loading assignments…"}
+                  {assignmentsState.status === "unavailable" && (assignmentsState.message || "Assignments unavailable.")}
+                  {assignmentsState.status === "ready" && (assignmentsState.message ||
+                    "Required for pushing student submissions to their Classroom repo on activity submit.")}
+                </p>
+              </div>
+
               {/* Video Quiz */}
               <QuizEditor
                 questions={quizQuestions}
@@ -627,6 +750,8 @@ export default function EditActivityModal({ isOpen, onClose, courseId, activity,
                 videoDuration={videoDuration}
                 activityId={activity?.activity_id ?? null}
                 videoUrl={activity?.video_url ?? null}
+                testFiles={testFiles}
+                testsLanguage={testsLanguage}
               />
 
               {/* Video Chapters */}

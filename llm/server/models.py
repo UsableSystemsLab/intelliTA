@@ -58,6 +58,18 @@ class HintGenerateRequest(BaseModel):
     file_name: str
 
 
+class StudentFile(BaseModel):
+    name: str
+    content: str
+
+
+class HintCheckAndGenerateRequest(BaseModel):
+    firebase_uid: str
+    activity_id: int
+    checkpoint_id: int
+    files: list[StudentFile]
+
+
 class TimeRange(BaseModel):
     start_seconds: int
     end_seconds: int
