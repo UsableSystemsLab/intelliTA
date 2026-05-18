@@ -98,10 +98,14 @@ export default function CodeEditorSection({
         window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseup', onUp);
     }, [panelHeight]);
-    const isWebProject = useMemo(
-        () => files.length > 0 && files.every((f) => isWebFile(f.name)),
-        [files]
-    );
+    const isWebProject = useMemo(() => {
+        // Ignore doc files (e.g. the injected README.md instructions) so they
+        // don't suppress the preview; still require real web code + an HTML file.
+        const code = files.filter((f) => !/\.(md|markdown|txt)$/i.test(f.name));
+        return code.length > 0
+            && code.every((f) => isWebFile(f.name))
+            && code.some((f) => f.name.toLowerCase().endsWith('.html'));
+    }, [files]);
     const [bottomTab, setBottomTab] = useState('console');
     const [previewFloating, setPreviewFloating] = useState(false);
     useEffect(() => {
