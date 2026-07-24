@@ -1,3 +1,6 @@
+[![codecov](https://codecov.io/gh/UsableSystemsLab/intelliTA/branch/unitTesting/graph/badge.svg?token=E7xyOxv7mt)](https://codecov.io/gh/UsableSystemsLab/intelliTA)
+[![Tests](https://github.com/UsableSystemsLab/intelliTA/actions/workflows/test.yml/badge.svg?branch=unitTesting)](https://github.com/UsableSystemsLab/intelliTA/actions/workflows/test.yml)
+
 # IntelliTA
 
 ### AI-guided programming labs with immediate, context-specific feedback
