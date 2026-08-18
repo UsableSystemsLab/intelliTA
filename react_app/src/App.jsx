@@ -9,6 +9,7 @@ import { isKauEmail } from '@/utils/kauDomain';
 
 import Login from '@/pages/Login.jsx'
 import SignUp from '@/pages/SignUp.jsx'
+import VerifyEmail from '@/pages/VerifyEmail.jsx'
 import Home from '@/pages/Home.jsx'
 import Courses from "@/pages/Courses.jsx";
 import CourseLabs from "@/pages/CourseLabs.jsx";
@@ -52,6 +53,8 @@ function App() {
             setUser({
               ...currentUser,
               ...docSnap.data(),
+              // Spreading a Firebase User drops the emailVerified getter; keep it explicit.
+              emailVerified: currentUser.emailVerified,
             });
           } else {
             setUser(currentUser);
@@ -93,8 +96,9 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<Home user={user} />} />
-        <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-        <Route path="/signup" element={!user ? <SignUp /> : <Navigate to="/" />} />
+        <Route path="/login" element={!user ? <Login /> : <Navigate to={user.emailVerified ? "/" : "/verify-email"} />} />
+        <Route path="/signup" element={!user ? <SignUp /> : <Navigate to={user.emailVerified ? "/" : "/verify-email"} />} />
+        <Route path="/verify-email" element={<VerifyEmail setUser={setUser} />} />
 
         {/* Docs portal */}
         <Route element={<DocsLayout user={user} />}>

@@ -11,14 +11,21 @@ const renderWithRouter = (user, initialEntries = ['/protected']) =>
           <Route path="/protected" element={<div>protected content</div>} />
         </Route>
         <Route path="/login" element={<div>login page</div>} />
+        <Route path="/verify-email" element={<div>verify page</div>} />
       </Routes>
     </MemoryRouter>
   );
 
 describe('ProtectedRoutes', () => {
-  test('renders the child route when user is truthy', () => {
-    renderWithRouter({ uid: 'abc' });
+  test('renders the child route when user is verified', () => {
+    renderWithRouter({ uid: 'abc', emailVerified: true });
     expect(screen.getByText('protected content')).toBeInTheDocument();
+  });
+
+  test('redirects to /verify-email when user is logged in but unverified', () => {
+    renderWithRouter({ uid: 'abc', emailVerified: false });
+    expect(screen.getByText('verify page')).toBeInTheDocument();
+    expect(screen.queryByText('protected content')).not.toBeInTheDocument();
   });
 
   test('redirects to /login when user is null', () => {
